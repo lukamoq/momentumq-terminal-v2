@@ -79,12 +79,47 @@ async function initMag7App() {
   await fetchMag7Data();
 }
 
-async function fetchMag7Data() {
+async function triggerLiveRecalculate() {
   if (mag7State.isSyncing) return;
   mag7State.isSyncing = true;
 
   const syncBtn = document.getElementById('syncNowBtn');
-  if (syncBtn) syncBtn.classList.add('spinning');
+  const syncTimeEl = document.getElementById('syncTimeText');
+  const syncStatusEl = document.getElementById('syncStatusText');
+
+  if (syncBtn) {
+    syncBtn.classList.add('spinning');
+    syncBtn.innerHTML = '&#8635; RECALCULATING...';
+    syncBtn.disabled = true;
+  }
+  if (syncStatusEl) syncStatusEl.textContent = 'RUNNING MAG 7 PIPELINE...';
+  if (syncTimeEl) syncTimeEl.textContent = 'Rebuilding dossiers & alpha rankings...';
+
+  try {
+    const syncRes = await fetch('/api/pipeline/sync', { method: 'POST' }).then(r => r.json());
+    await fetchMag7Data(true);
+
+    if (syncStatusEl) syncStatusEl.textContent = 'MAG 7 DATA SYNCED';
+    if (syncTimeEl) {
+      const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      syncTimeEl.innerHTML = `<span style="color: var(--accent-green); font-weight: 600;">✓ Recalculated at ${nowStr} (${syncRes.elapsed_ms || 12}ms)</span>`;
+    }
+  } catch (err) {
+    console.error('Failed to recalculate Mag 7 data:', err);
+    if (syncTimeEl) syncTimeEl.textContent = 'Recalculation error. Check connection.';
+  } finally {
+    mag7State.isSyncing = false;
+    if (syncBtn) {
+      syncBtn.classList.remove('spinning');
+      syncBtn.innerHTML = '&#8635; SYNC NOW';
+      syncBtn.disabled = false;
+    }
+  }
+}
+
+async function fetchMag7Data(silent = false) {
+  const syncBtn = document.getElementById('syncNowBtn');
+  if (syncBtn && !silent) syncBtn.classList.add('spinning');
 
   try {
     const [statsRes, banksRes, stocksRes, themesRes, callsRes, seriesRes] = await Promise.all([
@@ -110,14 +145,13 @@ async function fetchMag7Data() {
     renderMag7StocksGrid();
     renderMag7Themes();
     renderMag7CallsTable();
-    updateSyncTimeText();
+    if (!silent) updateSyncTimeText();
   } catch (err) {
     console.error('Failed to load Mag 7 data:', err);
     const syncTimeEl = document.getElementById('syncTimeText');
     if (syncTimeEl) syncTimeEl.textContent = 'Sync error (will retry)';
   } finally {
-    mag7State.isSyncing = false;
-    if (syncBtn) syncBtn.classList.remove('spinning');
+    if (syncBtn && !silent) syncBtn.classList.remove('spinning');
   }
 }
 
@@ -1278,7 +1312,7 @@ function setupMag7EventListeners() {
   // Sync Now Button
   const syncBtn = document.getElementById('syncNowBtn');
   if (syncBtn) {
-    syncBtn.addEventListener('click', () => fetchMag7Data());
+    syncBtn.addEventListener('click', () => triggerLiveRecalculate());
   }
 
   // Bank Filter Tabs

@@ -35,10 +35,51 @@ document.addEventListener('DOMContentLoaded', () => {
   setupQuantToolingListeners();
 });
 
-async function initSeasonalityApp() {
-  const syncBtn = document.getElementById('syncNowBtn');
-  if (syncBtn) syncBtn.classList.add('spinning');
+async function triggerLiveRecalculate() {
+  if (seasonState.isSyncing) return;
   seasonState.isSyncing = true;
+
+  const syncBtn = document.getElementById('syncNowBtn');
+  const syncTimeEl = document.getElementById('syncTimeText');
+  const syncStatusEl = document.getElementById('syncStatusText');
+
+  if (syncBtn) {
+    syncBtn.classList.add('spinning');
+    syncBtn.innerHTML = '&#8635; RECALCULATING...';
+    syncBtn.disabled = true;
+  }
+  if (syncStatusEl) syncStatusEl.textContent = 'RUNNING QUANT PIPELINE...';
+  if (syncTimeEl) syncTimeEl.textContent = 'Recomputing Greeks, Skew & Regimes...';
+
+  try {
+    const syncRes = await fetch('/api/pipeline/sync', { method: 'POST' }).then(r => r.json());
+    // Clear local client caches
+    seasonState.cache.seasonality = {};
+    seasonState.cache.curves = {};
+
+    await initSeasonalityApp(true);
+
+    if (syncStatusEl) syncStatusEl.textContent = 'QUANT ENGINE SYNCED';
+    if (syncTimeEl) {
+      const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      syncTimeEl.innerHTML = `<span style="color: var(--accent-green); font-weight: 600;">✓ Recalculated at ${nowStr} (${syncRes.elapsed_ms || 12}ms)</span>`;
+    }
+  } catch (err) {
+    console.error('Failed to trigger live recalculate:', err);
+    if (syncTimeEl) syncTimeEl.textContent = 'Recalculation error. Check connection.';
+  } finally {
+    seasonState.isSyncing = false;
+    if (syncBtn) {
+      syncBtn.classList.remove('spinning');
+      syncBtn.innerHTML = '&#8635; SYNC NOW';
+      syncBtn.disabled = false;
+    }
+  }
+}
+
+async function initSeasonalityApp(silent = false) {
+  const syncBtn = document.getElementById('syncNowBtn');
+  if (syncBtn && !silent) syncBtn.classList.add('spinning');
 
   try {
     const [statsRes, trioRes, seasonRes, multiRes, curvesRes, callsRes, regimeRes, sectorsRes, corrRes, vixRes, fgRes, optRes] = await Promise.all([
@@ -79,25 +120,24 @@ async function initSeasonalityApp() {
       renderComparativeMatrix();
     } else {
       renderSeasonalityTable();
+      renderSeasonalityCurves();
     }
-    renderSeasonalityCurves();
-    renderCallSeasonalitySection();
+    renderMultiAssetSeasonality();
+    renderCallPatterns();
     renderMacroRegimeSection();
-    renderSectorRotationTable();
-    renderVixStructureCard();
-    renderFearGreedPanel();
+    renderSectorRotation();
+    renderCorrelationHeatmap();
+    renderVixStructureSection();
+    renderFearGreedSection();
     renderOptionsAnalysisSection();
-    renderCorrelationMatrixTable();
-    updateSyncTime();
-
+    if (!silent) updateSyncTimeUI();
     prefetchOtherTickers();
   } catch (err) {
     console.error('Failed to load seasonality data:', err);
     const syncTimeEl = document.getElementById('syncTimeText');
     if (syncTimeEl) syncTimeEl.textContent = 'Sync error (will retry)';
   } finally {
-    seasonState.isSyncing = false;
-    if (syncBtn) syncBtn.classList.remove('spinning');
+    if (syncBtn && !silent) syncBtn.classList.remove('spinning');
   }
 }
 
@@ -201,7 +241,7 @@ function setupSeasonalityEventListeners() {
   const syncBtn = document.getElementById('syncNowBtn');
   if (syncBtn) {
     syncBtn.addEventListener('click', () => {
-      if (!seasonState.isSyncing) initSeasonalityApp();
+      triggerLiveRecalculate();
     });
   }
 

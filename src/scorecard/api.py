@@ -13,23 +13,25 @@ from fastapi.staticfiles import StaticFiles
 from starlette.responses import Response
 
 from scorecard.config import AS_OF_DATE, WEB_DIR
-from scorecard.db import get_connection
+from scorecard.db import db_session, get_connection, init_db
+from scorecard.ingest import run_ingest
+from scorecard.score import run_scoring
 
 app = FastAPI(
-    title="Sell-Side Direction Scorecard API",
-    description="S&P 500 sell-side direction, allocation, and probability scorecard for 2026",
-    version="0.1.0",
+    title="MomentumQ Terminal API",
+    description="Institutional quantitative scorecard, multi-asset seasonality, BSM options Greeks, and macro regime analytics",
+    version="2.0.0",
 )
 
 # GZip compression for ultra-fast network payload transfer
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
-# Read-only public API: wildcard origins are only legal without credentials.
+# Allow GET and POST for local and web requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=False,
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -49,6 +51,33 @@ def _cached_json_response(cache_key: str, loader_fn) -> Response:
 def clear_api_cache() -> None:
     """Clear all in-memory API caches."""
     _RESPONSE_CACHE.clear()
+
+
+@app.post("/api/pipeline/sync")
+@app.get("/api/pipeline/sync")
+def sync_and_recalculate() -> Dict[str, Any]:
+    """Execute live data sync, re-ingestion, and recalculation of all scoring & analytics engines."""
+    import time
+    start_time = time.time()
+
+    # 1. Clear in-memory API response cache
+    clear_api_cache()
+
+    # 2. Re-ingest curated data and rebuild all scoring tables
+    init_db()
+    with db_session() as conn:
+        ingest_summary = run_ingest(conn)
+        score_summary = run_scoring(conn)
+
+    elapsed_ms = round((time.time() - start_time) * 1000, 2)
+    return {
+        "status": "ok",
+        "message": "Data, scoring models, and quantitative analytics recalculated successfully.",
+        "as_of_date": AS_OF_DATE,
+        "elapsed_ms": elapsed_ms,
+        "ingest_summary": ingest_summary,
+        "score_summary": score_summary,
+    }
 
 
 @app.get("/api/scorecard")

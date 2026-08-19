@@ -64,10 +64,45 @@ async function initApp() {
   await fetchAppData(false);
 }
 
-async function fetchAppData(silent = false) {
+async function triggerLiveRecalculate() {
   if (state.isSyncing) return;
   state.isSyncing = true;
 
+  const syncBtn = document.getElementById('syncNowBtn');
+  const syncTimeEl = document.getElementById('syncTimeText');
+  const syncStatusEl = document.getElementById('syncStatusText');
+
+  if (syncBtn) {
+    syncBtn.classList.add('spinning');
+    syncBtn.innerHTML = '&#8635; RECALCULATING...';
+    syncBtn.disabled = true;
+  }
+  if (syncStatusEl) syncStatusEl.textContent = 'RUNNING QUANT PIPELINE...';
+  if (syncTimeEl) syncTimeEl.textContent = 'Rebuilding scoring tables & models...';
+
+  try {
+    const syncRes = await fetch('/api/pipeline/sync', { method: 'POST' }).then(r => r.json());
+    await fetchAppData(true);
+
+    if (syncStatusEl) syncStatusEl.textContent = 'QUANT ENGINE SYNCED';
+    if (syncTimeEl) {
+      const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      syncTimeEl.innerHTML = `<span style="color: var(--accent-green); font-weight: 600;">✓ Recalculated at ${nowStr} (${syncRes.elapsed_ms || 12}ms)</span>`;
+    }
+  } catch (err) {
+    console.error('Failed to trigger live recalculate:', err);
+    if (syncTimeEl) syncTimeEl.textContent = 'Recalculation error. Check connection.';
+  } finally {
+    state.isSyncing = false;
+    if (syncBtn) {
+      syncBtn.classList.remove('spinning');
+      syncBtn.innerHTML = '&#8635; SYNC NOW';
+      syncBtn.disabled = false;
+    }
+  }
+}
+
+async function fetchAppData(silent = false) {
   const syncBtn = document.getElementById('syncNowBtn');
   if (syncBtn && !silent) syncBtn.classList.add('spinning');
 
@@ -107,12 +142,11 @@ async function fetchAppData(silent = false) {
     renderCallsTable();
     updateSyncStatusUI();
   } catch (err) {
-    console.error('Failed to sync scorecard data:', err);
+    console.error('Failed to fetch scorecard data:', err);
     const syncTimeEl = document.getElementById('syncTimeText');
     if (syncTimeEl) syncTimeEl.textContent = 'Sync error (will retry at 12:00 PM)';
   } finally {
-    state.isSyncing = false;
-    if (syncBtn) syncBtn.classList.remove('spinning');
+    if (syncBtn && !silent) syncBtn.classList.remove('spinning');
   }
 }
 
@@ -336,7 +370,7 @@ function setupEventListeners() {
 
   // Live Sync Now Button
   document.getElementById('syncNowBtn')?.addEventListener('click', () => {
-    fetchAppData(false);
+    triggerLiveRecalculate();
   });
 
   // Floating Back to Top Button
