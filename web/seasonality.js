@@ -120,15 +120,17 @@ async function initSeasonalityApp(silent = false) {
       renderComparativeMatrix();
     } else {
       renderSeasonalityTable();
-      renderSeasonalityCurves();
     }
-    renderMultiAssetSeasonality();
-    renderCallPatterns();
+    // The cumulative-path chart is visible in every matrix mode, so it has to
+    // render outside the branch -- inside the else it never drew on first load,
+    // because the default ticker state is INDEX_TRIO.
+    renderSeasonalityCurves();
+    renderCallSeasonalitySection();
     renderMacroRegimeSection();
-    renderSectorRotation();
-    renderCorrelationHeatmap();
-    renderVixStructureSection();
-    renderFearGreedSection();
+    renderSectorRotationTable();
+    renderCorrelationMatrixTable();
+    renderVixStructureCard();
+    renderFearGreedPanel();
     renderOptionsAnalysisSection();
     if (!silent) updateSyncTimeUI();
     prefetchOtherTickers();
