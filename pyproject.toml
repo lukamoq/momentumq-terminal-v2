@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "momentumq-terminal"
-version = "1.0.0"
-description = "MomentumQ Quantitative Research & Analytics Terminal"
+name = "momentumq-terminal-v2"
+version = "2.0.0"
+description = "MomentumQ Quantitative Research & Analytics Terminal v2"
 requires-python = ">=3.11"
 dependencies = [
   "httpx>=0.27",

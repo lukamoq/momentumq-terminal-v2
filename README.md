@@ -1,4 +1,4 @@
-# MomentumQ Terminal
+# MomentumQ Terminal v2
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python: 3.11+](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue.svg)](https://www.python.org/)
@@ -95,8 +95,8 @@ research/
 ### 1. Installation
 ```bash
 # Clone the repository
-git clone https://github.com/lukamoq/momentumq-terminal.git
-cd momentumq-terminal
+git clone https://github.com/lukamoq/momentumq-terminal-v2.git
+cd momentumq-terminal-v2
 
 # Create and activate virtual environment
 python3 -m venv .venv

@@ -1,6 +1,6 @@
-# Contributing to MomentumQ Terminal
+# Contributing to MomentumQ Terminal v2
 
-Thank you for your interest in the MomentumQ Quantitative Research & Analytics Terminal!
+Thank you for your interest in the MomentumQ Quantitative Research & Analytics Terminal v2!
 
 ## Repository Policy: Read-Only Public Distribution
 
@@ -21,8 +21,8 @@ This repository is published as an **open-source public project**:
 ### 2. Clone and Install
 ```bash
 # Clone repository
-git clone https://github.com/lukamoq/momentumq-terminal.git
-cd momentumq-terminal
+git clone https://github.com/lukamoq/momentumq-terminal-v2.git
+cd momentumq-terminal-v2
 
 # Create virtual environment and install dependencies
 uv venv
