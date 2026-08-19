@@ -1,0 +1,227 @@
+institutions:
+  - id: JPM
+    name: JPMorgan
+    full_name: JPMorgan Chase & Co.
+    website: https://www.jpmorgan.com
+    notes: Global equity research strategy team led by Dubravko Lakos-Bujas and formerly Marko Kolanovic.
+
+  - id: GS
+    name: Goldman Sachs
+    full_name: The Goldman Sachs Group, Inc.
+    website: https://www.goldmansachs.com
+    notes: US equity strategy team led by David Kostin and Ben Snider.
+
+  - id: MS
+    name: Morgan Stanley
+    full_name: Morgan Stanley
+    website: https://www.morganstanley.com
+    notes: Chief US equity strategist Mike Wilson.
+
+  - id: BAC
+    name: BofA
+    full_name: Bank of America Securities
+    website: https://www.bofasecurities.com
+    notes: US equity & quantitative strategy led by Savita Subramanian.
+
+  - id: C
+    name: Citi
+    full_name: Citigroup Inc.
+    website: https://www.citigroup.com
+    notes: US equity strategy team led by Scott Chronert.
+
+  - id: DB
+    name: Deutsche Bank
+    full_name: Deutsche Bank AG
+    website: https://www.db.com
+    notes: Global equity strategy desk led by Binky Chadha.
+
+  - id: HSBC
+    name: HSBC
+    full_name: HSBC Holdings plc
+    website: https://www.hsbc.com
+    notes: Global research equity strategy.
+
+  - id: UBS
+    name: UBS
+    full_name: UBS Group AG
+    website: https://www.ubs.com
+    notes: US equity strategy led by David Lefkowitz and formerly Jonathan Golub.
+
+  - id: BARC
+    name: Barclays
+    full_name: Barclays PLC
+    website: https://www.cib.barclays
+    notes: US equity strategy team led by Venu Krishna.
+
+  - id: GLE
+    name: SocGen
+    full_name: Société Générale
+    website: https://www.societegenerale.com
+    notes: Global equity strategy team led by Manish Kabra.
+
+  # --- Added by the 2026-08 discovery sweep (see src/scorecard/discover.py) ---
+  - id: WFC
+    name: Wells Fargo
+    full_name: Wells Fargo Investment Institute
+    website: https://www.wellsfargo.com
+    notes: Equity strategy under CIO Darrell Cronk; index targets from Ohsung Kwon.
+
+  - id: RBC
+    name: RBC
+    full_name: RBC Capital Markets
+    website: https://www.rbccm.com
+    notes: US equity strategy led by Lori Calvasina.
+
+  - id: EVR
+    name: Evercore ISI
+    full_name: Evercore ISI
+    website: https://www.evercoreisi.com
+    notes: Chief equity and quantitative strategist Julian Emanuel.
+
+  - id: OPCO
+    name: Oppenheimer
+    full_name: Oppenheimer & Co. Inc.
+    website: https://www.oppenheimer.com
+    notes: Chief investment strategist John Stoltzfus; consistently among the Street's most bullish.
+
+  - id: BMO
+    name: BMO
+    full_name: BMO Capital Markets
+    website: https://www.bmocm.com
+    notes: Chief investment strategist Brian Belski.
+
+  - id: YARD
+    name: Yardeni Research
+    full_name: Yardeni Research, Inc.
+    website: https://www.yardeni.com
+    notes: Independent strategy shop; founder Ed Yardeni. Not a sell-side dealer.
+
+
+  - id: NDR
+    name: Ned Davis Research
+    full_name: Ned Davis Research, Inc.
+    website: https://www.ndr.com
+    notes: Independent macro research. Included for probability calls only.
+
+  - id: BE
+    name: Bloomberg Economics
+    full_name: Bloomberg Economics
+    website: https://www.bloomberg.com/economics
+    notes: In-house economics model. Included for probability calls only; not a sell-side dealer.
+
+strategists:
+  - id: dubravko-lakos-bujas
+    name: Dubravko Lakos-Bujas
+    title: Chief Global Equity Strategist
+    institution_id: JPM
+
+  - id: marko-kolanovic
+    name: Marko Kolanovic
+    title: Former Chief Global Markets Strategist
+    institution_id: JPM
+
+  - id: david-kostin
+    name: David Kostin
+    title: Chief US Equity Strategist
+    institution_id: GS
+
+  - id: ben-snider
+    name: Ben Snider
+    title: Senior US Equity Strategist
+    institution_id: GS
+
+  - id: mike-wilson
+    name: Mike Wilson
+    title: Chief US Equity Strategist & CIO
+    institution_id: MS
+
+  - id: savita-subramanian
+    name: Savita Subramanian
+    title: Head of US Equity & Quantitative Strategy
+    institution_id: BAC
+
+  - id: scott-chronert
+    name: Scott Chronert
+    title: Head of US Equity Strategy
+    institution_id: C
+
+  - id: binky-chadha
+    name: Binky Chadha
+    title: Chief US & Global Equity Strategist
+    institution_id: DB
+
+  - id: david-lefkowitz
+    name: David Lefkowitz
+    title: Head of US Equities
+    institution_id: UBS
+
+  - id: jonathan-golub
+    name: Jonathan Golub
+    title: Former Head of US Equity Strategy
+    institution_id: UBS
+
+  - id: venu-krishna
+    name: Venu Krishna
+    title: Head of US Equity Strategy
+    institution_id: BARC
+
+  - id: manish-kabra
+    name: Manish Kabra
+    title: Head of US Equity Strategy
+    institution_id: GLE
+
+  - id: keith-parker
+    name: Keith Parker
+    title: Former Head of US Equity Strategy
+    institution_id: UBS
+
+  - id: maneesh-deshpande
+    name: Maneesh Deshpande
+    title: Former Head of US Equity Strategy
+    institution_id: BARC
+
+  - id: tobias-levkovich
+    name: Tobias Levkovich
+    title: Former Chief US Equity Strategist
+    institution_id: C
+
+  - id: darrell-cronk
+    name: Darrell Cronk
+    title: President, Wells Fargo Investment Institute
+    institution_id: WFC
+
+  - id: ohsung-kwon
+    name: Ohsung Kwon
+    title: Equity Strategist
+    institution_id: WFC
+
+  - id: lori-calvasina
+    name: Lori Calvasina
+    title: Head of US Equity Strategy
+    institution_id: RBC
+
+  - id: julian-emanuel
+    name: Julian Emanuel
+    title: Chief Equity & Quantitative Strategist
+    institution_id: EVR
+
+  - id: john-stoltzfus
+    name: John Stoltzfus
+    title: Chief Investment Strategist
+    institution_id: OPCO
+
+  - id: brian-belski
+    name: Brian Belski
+    title: Chief Investment Strategist
+    institution_id: BMO
+
+  - id: ed-yardeni
+    name: Ed Yardeni
+    title: President, Yardeni Research
+    institution_id: YARD
+
+
+  - id: jan-hatzius
+    name: Jan Hatzius
+    title: Chief Economist
+    institution_id: GS

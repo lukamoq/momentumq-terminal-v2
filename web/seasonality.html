@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seasonality Matrix & Macro Analytics // MomentumQ Research</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+</head>
+<body class="theme-terminal">
+  <div class="app-container">
+    <!-- Top Global App Navigation -->
+    <div class="app-global-nav">
+      <div class="nav-brand-wrap">
+        <a href="index.html" class="nav-brand-link" style="display:flex; align-items:center; text-decoration:none;">
+          <img src="images/logo.png" alt="MomentumQ" class="nav-brand-logo" height="24">
+        </a>
+        <span class="nav-brand-divider">/</span>
+        <span class="nav-brand-suite">RESEARCH &amp; AUDIT</span>
+      </div>
+      <div class="nav-tabs-wrapper">
+        <a href="index.html" class="nav-page-btn"><span class="nav-page-num">01</span> S&amp;P 500 Direction</a>
+        <a href="mag7.html" class="nav-page-btn"><span class="nav-page-num">02</span> Magnificent 7 &amp; Big Tech</a>
+        <a href="seasonality.html" class="nav-page-btn active" aria-current="page"><span class="nav-page-num">03</span> Seasonality &amp; Analytics</a>
+      </div>
+      <div class="nav-status-badge">
+        <span class="live-pulse"></span>
+        <span>VERIFIED AUDIT // 2026</span>
+      </div>
+    </div>
+
+    <!-- Sticky section index -->
+    <nav class="section-rail" id="sectionRail" aria-label="Section navigation">
+      <span class="rail-label">JUMP TO</span>
+      <div class="rail-links">
+        <a class="rail-link" href="#secSeasonalityMatrix"><span class="rail-num">01</span> Seasonality matrix</a>
+        <a class="rail-link" href="#secSeasonalityCurves"><span class="rail-num">02</span> Cumulative path</a>
+        <a class="rail-link" href="#secCallSeasonality"><span class="rail-num">03</span> Call seasonality</a>
+        <a class="rail-link" href="#secMacroRegime"><span class="rail-num">04</span> Macro regime &amp; sectors</a>
+        <a class="rail-link" href="#secOptionsAnalysis"><span class="rail-num">05</span> Options skew &amp; positioning</a>
+        <a class="rail-link" href="#secCorrelation"><span class="rail-num">06</span> Correlation matrix</a>
+      </div>
+    </nav>
+
+    <!-- Header Section -->
+    <header class="header">
+      <div class="header-content">
+        <div class="brand-title">
+          <div class="brand-top-meta">
+            <span class="brand-tag">MQ-RESEARCH // SEASONAL CYCLES &amp; FORECAST DISPERSION</span>
+            <div class="sync-status-indicator" id="syncStatusIndicator">
+              <span class="sync-dot pulsing"></span>
+              <span class="sync-text" id="syncStatusText">DAILY SYNC: 12:00 PM</span>
+              <span class="sync-time" id="syncTimeText">Last refreshed: Checking...</span>
+              <button class="sync-now-btn" id="syncNowBtn" title="Fetch latest data immediately">&#8635; SYNC NOW</button>
+            </div>
+          </div>
+          <h1>SEASONALITY MATRIX &amp; ADVANCED MACRO ANALYTICS</h1>
+          <span class="subhead">HISTORICAL RETURN HEATMAPS &middot; TRADING-DAY TRAJECTORIES &middot; SELL-SIDE FORECAST DISPERSION // 2021–2026</span>
+        </div>
+        <div class="stats-ticker" id="seasonalityStatsTicker">
+          <div class="ticker-box">
+            <span class="ticker-label">SPY BEST MONTH</span>
+            <span class="ticker-val highlight-gold" id="statBestMonth">Nov (+4.0%)</span>
+          </div>
+          <div class="ticker-box">
+            <span class="ticker-label">SPY WORST MONTH</span>
+            <span class="ticker-val color-bear" id="statWorstMonth">Sep (-2.9%)</span>
+          </div>
+          <div class="ticker-box">
+            <span class="ticker-label">Q4 SANTA HIT%</span>
+            <span class="ticker-val highlight-gold" id="statQ4HitRate">75.0%</span>
+          </div>
+          <div class="ticker-box">
+            <span class="ticker-label">AUDITED CALLS</span>
+            <span class="ticker-val" id="statAuditedCalls">135</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Methodology Notice -->
+    <div class="alert-banner alert-banner-mag7">
+      <div class="alert-badge">EMPIRICAL MACRO CALENDAR</div>
+      <div class="alert-text">
+        <strong>Calendar Regularities vs Sell-Side Psychology:</strong> Wall Street research releases spike in late Q4 as annual outlooks are published with high bullish skew (77.4% overweight), yielding higher realization hit rates during the year-end Santa Rally. In contrast, Q3 summer doldrums historically feature the highest forecast revisions and lowest hit rates. Below is the multi-asset empirical heatmap and trading day path.
+      </div>
+    </div>
+
+    <!-- Section 01: Multi-Asset Seasonality Matrix -->
+    <section class="section" id="secSeasonalityMatrix">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">01 // PATTERN</span>
+          <h2>Multi-asset seasonality matrix</h2>
+          <span class="section-meta">Month-by-month returns, win rates and volatility profiles across the 2000&ndash;2026 historical window (27 Years). Pick an instrument to switch the matrix and trajectory.</span>
+        </div>
+      </div>
+
+      <!-- Quant Tooling Toolbar -->
+      <div class="quant-toolbar">
+        <div class="quant-toolbar-left">
+          <div class="quant-search-wrap">
+            <span class="quant-search-icon">&#9906;</span>
+            <input type="text" id="quantSearchInput" class="quant-search-input" placeholder="Quick filter assets (e.g. SPY, QQQ, NVDA, Tech)..." autocomplete="off">
+            <kbd class="quant-kbd">/</kbd>
+          </div>
+        </div>
+        <div class="quant-toolbar-right">
+          <button class="export-btn" id="exportCsvBtn" title="Export current seasonality dataset as CSV">
+            <span class="export-icon">&darr;</span> Export CSV
+          </button>
+          <button class="export-btn" id="exportJsonBtn" title="Export current seasonality dataset as JSON">
+            <span class="export-icon">&darr;</span> Export JSON
+          </button>
+        </div>
+      </div>
+
+      <div class="season-pills-bar" id="seasonAssetPills">
+        <div class="pill-group">
+          <span class="pill-group-label">Comparisons</span>
+          <button class="season-pill-btn season-pill-gold active" data-ticker="INDEX_TRIO">SPY vs QQQ vs IWM</button>
+          <button class="season-pill-btn" data-ticker="MULTI_COMPARE">All assets compared</button>
+        </div>
+        <div class="pill-group">
+          <span class="pill-group-label">Broad &amp; style</span>
+          <button class="season-pill-btn" data-ticker="SPY">SPY</button>
+          <button class="season-pill-btn" data-ticker="QQQ">QQQ</button>
+          <button class="season-pill-btn" data-ticker="IWM">IWM</button>
+          <button class="season-pill-btn" data-ticker="MDY">MDY</button>
+          <button class="season-pill-btn" data-ticker="RSP">RSP</button>
+          <button class="season-pill-btn" data-ticker="IWF">Growth</button>
+          <button class="season-pill-btn" data-ticker="IWD">Value</button>
+          <button class="season-pill-btn" data-ticker="MTUM">Momentum</button>
+          <button class="season-pill-btn" data-ticker="ACWI">ACWI</button>
+        </div>
+        <div class="pill-group">
+          <span class="pill-group-label">Sectors</span>
+          <button class="season-pill-btn" data-ticker="XLK">Tech</button>
+          <button class="season-pill-btn" data-ticker="XLC">Comm</button>
+          <button class="season-pill-btn" data-ticker="XLY">Cons disc</button>
+          <button class="season-pill-btn" data-ticker="XLP">Staples</button>
+          <button class="season-pill-btn" data-ticker="XLF">Financials</button>
+          <button class="season-pill-btn" data-ticker="XLI">Industrials</button>
+          <button class="season-pill-btn" data-ticker="XLV">Health</button>
+          <button class="season-pill-btn" data-ticker="XLE">Energy</button>
+          <button class="season-pill-btn" data-ticker="XLU">Utilities</button>
+          <button class="season-pill-btn" data-ticker="XLB">Materials</button>
+          <button class="season-pill-btn" data-ticker="XLRE">Real estate</button>
+        </div>
+        <div class="pill-group">
+          <span class="pill-group-label">Rates &amp; macro</span>
+          <button class="season-pill-btn" data-ticker="TLT">TLT 20y</button>
+          <button class="season-pill-btn" data-ticker="IEF">IEF 7-10y</button>
+          <button class="season-pill-btn" data-ticker="HYG">High yield</button>
+          <button class="season-pill-btn" data-ticker="LQD">IG credit</button>
+          <button class="season-pill-btn" data-ticker="GLD">Gold</button>
+          <button class="season-pill-btn" data-ticker="USO">Oil</button>
+          <button class="season-pill-btn" data-ticker="UUP">Dollar</button>
+          <button class="season-pill-btn" data-ticker="EFA">EAFE</button>
+          <button class="season-pill-btn" data-ticker="EEM">EM</button>
+        </div>
+        <div class="pill-group">
+          <span class="pill-group-label">Big tech &amp; AI</span>
+          <button class="season-pill-btn" data-ticker="MAG7">Mag 7 basket</button>
+          <button class="season-pill-btn" data-ticker="NVDA">NVDA</button>
+          <button class="season-pill-btn" data-ticker="AAPL">AAPL</button>
+          <button class="season-pill-btn" data-ticker="MSFT">MSFT</button>
+          <button class="season-pill-btn" data-ticker="AMZN">AMZN</button>
+          <button class="season-pill-btn" data-ticker="GOOGL">GOOGL</button>
+          <button class="season-pill-btn" data-ticker="META">META</button>
+          <button class="season-pill-btn" data-ticker="TSLA">TSLA</button>
+          <button class="season-pill-btn" data-ticker="AVGO">AVGO</button>
+          <button class="season-pill-btn" data-ticker="TSM">TSM</button>
+          <button class="season-pill-btn" data-ticker="AMD">AMD</button>
+          <button class="season-pill-btn" data-ticker="ORCL">ORCL</button>
+          <button class="season-pill-btn" data-ticker="NFLX">NFLX</button>
+          <button class="season-pill-btn" data-ticker="PLTR">PLTR</button>
+          <button class="season-pill-btn" data-ticker="MU">MU</button>
+          <button class="season-pill-btn" data-ticker="ASML">ASML</button>
+          <button class="season-pill-btn" data-ticker="INTC">INTC</button>
+          <button class="season-pill-btn" data-ticker="CRM">CRM</button>
+        </div>
+      </div>
+
+      <div class="table-responsive is-auto-height">
+        <table class="blotter-table" id="seasonalityTable">
+          <thead id="seasonalityTableThead">
+            <!-- Rendered by seasonality.js -->
+          </thead>
+          <tbody id="seasonalityTableTbody">
+            <!-- Rendered by seasonality.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 02: Trading-Day Cumulative Trajectory -->
+    <section class="section" id="secSeasonalityCurves">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">02 // TRAJECTORY</span>
+          <h2>Trading-day cumulative path &amp; composite cycle</h2>
+          <span class="section-meta" id="curveChartTitle">Average intra-year path, indexed to the first trading day of each year.</span>
+        </div>
+        <div class="section-controls">
+          <div class="chart-legend-box" id="curveLegendBox"></div>
+        </div>
+      </div>
+
+      <!-- Time Span Filter Toolbar -->
+      <div class="curve-span-toolbar">
+        <div class="curve-span-left">
+          <span class="span-label font-mono">CYCLE SPAN:</span>
+          <div class="curve-span-pills" id="curveSpanPills">
+            <button class="curve-span-pill active" data-span="ALL">ALL (27Y)</button>
+            <button class="curve-span-pill" data-span="20Y">20Y (2006–26)</button>
+            <button class="curve-span-pill" data-span="10Y">10Y (2016–26)</button>
+            <button class="curve-span-pill" data-span="5Y">5Y (2021–26)</button>
+            <button class="curve-span-pill" data-span="POST_COVID">POST-COVID (2020–26)</button>
+            <button class="curve-span-pill" data-span="ELECTION">ELECTION YEARS</button>
+            <button class="curve-span-pill" data-span="DECADE_2020S">2020s</button>
+            <button class="curve-span-pill" data-span="DECADE_2010S">2010s</button>
+            <button class="curve-span-pill" data-span="DECADE_2000S">2000s</button>
+          </div>
+        </div>
+        <div class="curve-span-right">
+          <div class="curve-span-stat-pill font-mono" id="curveSpanStats">
+            SPAN AVG: <strong style="color: #ffffff;">+7.1%</strong> &middot; WIN RATE: <strong style="color: #34d399;">73%</strong> (26 Years)
+          </div>
+        </div>
+      </div>
+
+      <div class="mag7-chart-container" id="curveChartContainer">
+        <svg id="curveSvg" preserveAspectRatio="none"></svg>
+        <div class="chart-tooltip" id="curveTooltip"></div>
+      </div>
+
+      <div class="cycle-phases-grid">
+        <div class="cycle-phase-card">
+          <span class="cycle-phase-num">PHASE 01</span>
+          <span class="cycle-phase-title">Q1 momentum &amp; rebalancing</span>
+          <p class="cycle-phase-desc">January-effect inflows and the first earnings season drive early positioning.</p>
+        </div>
+        <div class="cycle-phase-card">
+          <span class="cycle-phase-num">PHASE 02</span>
+          <span class="cycle-phase-title">Spring tech surge (May)</span>
+          <p class="cycle-phase-desc">Mega-cap developer conferences and capex guidance concentrate gains in the index leaders.</p>
+        </div>
+        <div class="cycle-phase-card">
+          <span class="cycle-phase-num">PHASE 03</span>
+          <span class="cycle-phase-title">Late-summer doldrums (Aug&ndash;Sep)</span>
+          <p class="cycle-phase-desc">Thin liquidity and macro uncertainty produce the highest realised volatility of the year.</p>
+        </div>
+        <div class="cycle-phase-card">
+          <span class="cycle-phase-num">PHASE 04</span>
+          <span class="cycle-phase-title">Q4 year-end run</span>
+          <p class="cycle-phase-desc">Window dressing, buybacks and year-ahead outlook publication cluster into November and December.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 03: Research Call Seasonality & Desk Bias Patterns -->
+    <section class="section" id="secCallSeasonality">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">03 // DESK BEHAVIOUR</span>
+          <h2>Sell-side call seasonality &amp; desk bias</h2>
+          <span class="section-meta">When desks publish, what they publish, and how that call cohort actually scored. Bullish skew is the share of the month&rsquo;s calls that were bullish.</span>
+        </div>
+      </div>
+
+      <div class="quarter-cards-grid" id="quarterCardsContainer">
+        <!-- Rendered by seasonality.js -->
+      </div>
+
+      <div class="table-responsive is-auto-height">
+        <table class="blotter-table" id="callMonthTable">
+          <thead>
+            <tr>
+              <th>MONTH</th>
+              <th class="text-center">CALLS</th>
+              <th>BULLISH SKEW</th>
+              <th class="text-center">HITS / RESOLVED</th>
+              <th class="text-right">HIT RATE</th>
+              <th class="text-right">AVG ALPHA</th>
+              <th>SEASONAL NOTE</th>
+            </tr>
+          </thead>
+          <tbody id="callMonthTbody">
+            <!-- Rendered by seasonality.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 04: Macro Market Regime & Sector Rotation (Inspired by moq-terminal) -->
+    <section class="section" id="secMacroRegime">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">04 // REGIME &amp; SECTORS</span>
+          <h2>Macro market regime &amp; sector rotation</h2>
+          <span class="section-meta">Multi-factor macro environment meter and 11-sector relative performance vs S&amp;P 500 benchmark.</span>
+        </div>
+      </div>
+
+      <div class="macro-regime-grid">
+        <div class="macro-card" id="macroRegimeCard">
+          <div class="macro-card-header">
+            <span class="macro-kicker">ENVIRONMENT CLASSIFICATION</span>
+            <span class="regime-status-badge" id="macroRegimeBadge">LOADING...</span>
+          </div>
+          <div class="macro-headline" id="macroRegimeHeadline">Analyzing Multi-Factor Price Structure...</div>
+          <div class="macro-factors-grid" id="macroFactorsGrid">
+            <!-- Rendered by seasonality.js -->
+          </div>
+        </div>
+
+        <div class="macro-card">
+          <div class="macro-card-header">
+            <span class="macro-kicker">11-SECTOR RELATIVE STRENGTH</span>
+            <span class="macro-meta-tag">VS SPY BENCHMARK</span>
+          </div>
+          <div class="table-responsive is-auto-height">
+            <table class="blotter-table" id="sectorRotationTable">
+              <thead>
+                <tr>
+                  <th>SECTOR</th>
+                  <th class="text-right">1M RET</th>
+                  <th class="text-right">3M RET</th>
+                  <th class="text-right">3M ALPHA</th>
+                  <th class="text-center">QUADRANT</th>
+                </tr>
+              </thead>
+              <tbody id="sectorRotationTbody">
+                <!-- Rendered by seasonality.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- VIX Term Structure & Contango Monitor -->
+        <div class="macro-card macro-card-full" id="vixStructureCard">
+          <div class="macro-card-header">
+            <span class="macro-kicker">VIX TERM STRUCTURE &amp; CONTANGO DECAY</span>
+            <div class="vix-badge-group">
+              <span class="regime-status-badge" id="vixStateBadge">CONTANGO</span>
+              <span class="macro-meta-tag" id="vixPercentileTag">1Y PCT: 1%</span>
+            </div>
+          </div>
+          <div class="vix-summary-row">
+            <div class="vix-metric-box">
+              <span class="vm-label">VIX PROXY (VIXY)</span>
+              <span class="vm-val font-mono highlight-gold" id="vixProxyVal">$18.86</span>
+            </div>
+            <div class="vix-metric-box">
+              <span class="vm-label">CONTANGO RATIO (20D)</span>
+              <span class="vm-val font-mono color-bull" id="vixContangoVal">-2.4% / 5d</span>
+            </div>
+            <div class="vix-metric-box">
+              <span class="vm-label">VIXY vs SPY CORRELATION</span>
+              <span class="vm-val font-mono color-bull" id="vixSpyCorrVal">-0.70</span>
+            </div>
+            <div class="vix-metric-box">
+              <span class="vm-label">VOLATILITY REGIME</span>
+              <span class="vm-val font-mono" id="vixRegimeVal" style="color:#34d399;">COMPLACENT</span>
+            </div>
+          </div>
+          <div class="vix-narrative-box" id="vixNarrativeText">
+            <!-- Rendered by seasonality.js -->
+          </div>
+        </div>
+
+        <!-- MoQ Fear & Greed Index 2.0 Panel -->
+        <div class="macro-card macro-card-full" id="fearGreedCard">
+          <div class="macro-card-header">
+            <span class="macro-kicker">MoQ FEAR &amp; GREED INDEX 2.0 (10 MULTI-FACTOR CATEGORIES)</span>
+            <div class="vix-badge-group">
+              <span class="regime-status-badge" id="fgLabelBadge">NEUTRAL</span>
+              <span class="macro-meta-tag" id="fgAsOfTag">AS OF: TODAY</span>
+            </div>
+          </div>
+          
+          <div class="fg-composite-row">
+            <div class="fg-score-display">
+              <div class="fg-score-line">
+                <span class="fg-score-num font-mono" id="fgScoreNum">55.9</span>
+                <span class="fg-score-scale font-mono">/ 100</span>
+              </div>
+              <span class="fg-label-text" id="fgLabelText">NEUTRAL SENTIMENT</span>
+            </div>
+            <div class="fg-gauge-track-wrap">
+              <div class="fg-gauge-track">
+                <div class="fg-gauge-indicator" id="fgGaugeIndicator" style="left: 55.9%;"></div>
+                <div class="fg-gauge-gradient"></div>
+              </div>
+              <div class="fg-gauge-labels">
+                <span>0 EXTREME FEAR</span>
+                <span>25 FEAR</span>
+                <span>50 NEUTRAL</span>
+                <span>75 GREED</span>
+                <span>100 EXTREME GREED</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="fg-categories-grid" id="fgCategoriesGrid">
+            <!-- 10 Categories Rendered by seasonality.js -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 05: Options Volatility Skew, BSM Greeks & Dealer Positioning (SPY, QQQ, IWM) -->
+    <section class="section" id="secOptionsAnalysis">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">05 // OPTIONS, GREEKS &amp; VOLATILITY</span>
+          <h2>Index options volatility skew, BSM Greeks &amp; dealer positioning (SPY, QQQ, IWM)</h2>
+          <span class="section-meta">Multi-horizon Black-Scholes-Merton 1st &amp; 2nd order Greeks (Delta, Gamma, Theta, Vega, Rho, Vanna, Charm), 25-delta volatility skew, max pain pinning, market-maker gamma exposure (GEX), and expected move cones.</span>
+        </div>
+      </div>
+
+      <!-- Greeks Horizon Filter Toolbar -->
+      <div class="curve-span-toolbar" style="margin-bottom: var(--sp-4);">
+        <div class="curve-span-left">
+          <span class="curve-span-label">GREEKS OUTLOOK HORIZON:</span>
+          <div class="curve-span-pills" id="optionsHorizonPills">
+            <button class="curve-span-pill active" data-horizon="1_week">1 WEEK (7 DTE)</button>
+            <button class="curve-span-pill" data-horizon="next_week">NEXT WEEK (14 DTE)</button>
+            <button class="curve-span-pill" data-horizon="1_month">1 MONTH (30 DTE)</button>
+            <button class="curve-span-pill" data-horizon="all_horizons">ALL HORIZONS MATRIX</button>
+          </div>
+        </div>
+        <div class="curve-span-right">
+          <span class="curve-span-stat-pill" id="optionsHorizonTag">HORIZON: <strong>1-WEEK (7 DTE) &middot; PEAK GAMMA RISK</strong></span>
+        </div>
+      </div>
+
+      <!-- Comparative Options & Greeks Summary Table -->
+      <div class="table-responsive is-auto-height" style="margin-bottom: var(--sp-4);">
+        <table class="blotter-table" id="optionsTrioTable">
+          <thead>
+            <tr>
+              <th style="min-width: 130px;">INDEX / SPOT</th>
+              <th class="text-center" style="min-width: 75px;">HORIZON IV</th>
+              <th class="text-center" style="min-width: 75px;">20D VOL</th>
+              <th class="text-center" style="min-width: 80px;">DELTA (&Delta;)</th>
+              <th class="text-center" style="min-width: 80px;">GAMMA (&Gamma;)</th>
+              <th class="text-center" style="min-width: 85px;">THETA (&Theta;/d)</th>
+              <th class="text-center" style="min-width: 80px;">VEGA (V)</th>
+              <th class="text-center" style="min-width: 75px;">RHO (&rho;)</th>
+              <th class="text-center" style="min-width: 75px;">VANNA</th>
+              <th class="text-center" style="min-width: 75px;">CHARM</th>
+              <th class="text-right" style="min-width: 90px;">MAX PAIN</th>
+              <th class="text-center" style="min-width: 120px;">GAMMA REGIME</th>
+              <th class="text-right" style="min-width: 110px;" id="optionsExpMoveHeader">EXP MOVE (&plusmn;1&sigma;)</th>
+            </tr>
+          </thead>
+          <tbody id="optionsTrioTbody">
+            <!-- Rendered by seasonality.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Options Detail Cards for SPY, QQQ, IWM -->
+      <div class="options-detail-grid" id="optionsCardsGrid">
+        <!-- Rendered by seasonality.js -->
+      </div>
+    </section>
+
+    <!-- Section 06: Cross-Asset Rolling Correlation Matrix (Inspired by moq-terminal) -->
+    <section class="section" id="secCorrelation">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">06 // DIVERSIFICATION</span>
+          <h2>Cross-asset rolling correlation matrix</h2>
+          <span class="section-meta">60-day rolling pairwise return correlation across equities, fixed income, commodities, and safe havens.</span>
+        </div>
+        <div class="section-controls">
+          <div class="corr-stats-box" id="corrStatsBox">
+            <!-- Rendered by seasonality.js -->
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive is-auto-height">
+        <table class="blotter-table corr-matrix-table" id="corrMatrixTable">
+          <thead id="corrMatrixThead">
+            <!-- Rendered by seasonality.js -->
+          </thead>
+          <tbody id="corrMatrixTbody">
+            <!-- Rendered by seasonality.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-meta">
+        <span>MQ-RESEARCH // SEASONALITY MATRIX &amp; ADVANCED ANALYTICS ENGINE</span>
+        <span>AUDITED DATA AS OF: <strong class="highlight-gold">2026-08-18</strong></span>
+        <span>METHODOLOGY: EMPIRICAL PRICE SERIES &amp; REALIZED FORECAST DISPERSION</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="seasonality.js"></script>
+</body>
+</html>

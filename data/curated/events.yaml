@@ -1,0 +1,25 @@
+events:
+  - event_key: us_recession_2026
+    name: US Recession in Calendar Year 2026
+    description: NBER-defined recession occurring within calendar year 2026.
+    climatology_prior: 0.16666666666666666
+    resolved: 0
+    outcome: null
+    resolved_on: null
+    notes: As of 2026-08-18, the outcome for calendar year 2026 is unresolved (too_early).
+
+  - event_key: us_recession_2023
+    name: US Recession in Calendar Year 2023
+    description: >-
+      NBER-defined US recession beginning within calendar year 2023. The NBER
+      Business Cycle Dating Committee has declared no recession beginning in
+      2023, so the event resolved FALSE. This is the canonical forecasting miss
+      of the period: consensus probabilities ran 65-100% through late 2022.
+    climatology_prior: 0.16666666666666666
+    resolved: 1
+    outcome: 0
+    resolved_on: "2024-12-31"
+    notes: >-
+      Resolved false. No NBER-dated recession began in 2023; US real GDP grew in
+      every quarter of 2023. Prior is the ~1-in-6 unconditional base rate for a
+      recession beginning in any given calendar year.

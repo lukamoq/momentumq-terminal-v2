@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Magnificent 7 &amp; Big Tech Scorecard — Sell-Side Audit (2022–2026)</title>
+  <meta name="description" content="Audit evaluating sell-side research calls on the Magnificent 7 (NVDA, AAPL, MSFT, AMZN, GOOGL, META, TSLA) and Big Tech concentration against realized market outcomes.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="blotter-container">
+    <!-- Top Global App Navigation -->
+    <div class="app-global-nav">
+      <div class="nav-brand-wrap">
+        <a href="index.html" class="nav-brand-link" style="display:flex; align-items:center; text-decoration:none;">
+          <img src="images/logo.png" alt="MomentumQ" class="nav-brand-logo" height="24">
+        </a>
+        <span class="nav-brand-divider">/</span>
+        <span class="nav-brand-suite">RESEARCH &amp; AUDIT</span>
+      </div>
+      <div class="nav-tabs-wrapper">
+        <a href="index.html" class="nav-page-btn"><span class="nav-page-num">01</span> S&amp;P 500 Direction</a>
+        <a href="mag7.html" class="nav-page-btn active" aria-current="page"><span class="nav-page-num">02</span> Magnificent 7 &amp; Big Tech</a>
+        <a href="seasonality.html" class="nav-page-btn"><span class="nav-page-num">03</span> Seasonality &amp; Analytics</a>
+      </div>
+      <div class="nav-status-badge">
+        <span class="live-pulse"></span>
+        <span>VERIFIED AUDIT // 2026</span>
+      </div>
+    </div>
+
+    <!-- Sticky section index -->
+    <nav class="section-rail" id="sectionRail" aria-label="Section navigation">
+      <span class="rail-label">JUMP TO</span>
+      <div class="rail-links">
+        <a class="rail-link" href="#mag7Leaderboard"><span class="rail-num">01</span> Desk leaderboard</a>
+        <a class="rail-link" href="#mag7Chart"><span class="rail-num">02</span> Performance trails</a>
+        <a class="rail-link" href="#mag7Stocks"><span class="rail-num">03</span> Stock by stock</a>
+        <a class="rail-link" href="#mag7Themes"><span class="rail-num">04</span> Thematic dossiers</a>
+        <a class="rail-link" href="#mag7Calls"><span class="rail-num">05</span> Calls blotter</a>
+      </div>
+    </nav>
+
+    <!-- Header -->
+    <header class="blotter-header">
+      <div class="brand-row">
+        <div class="brand-title">
+          <div class="brand-top-meta">
+            <span class="brand-tag">MQ-RESEARCH // MAGNIFICENT 7 &amp; AI AUDIT</span>
+            <div class="sync-status-indicator" id="syncStatusIndicator">
+              <span class="sync-dot pulsing"></span>
+              <span class="sync-text" id="syncStatusText">DAILY SYNC: 12:00 PM</span>
+              <span class="sync-time" id="syncTimeText">Last refreshed: Checking...</span>
+              <button class="sync-now-btn" id="syncNowBtn" title="Fetch latest data immediately">&#8635; SYNC NOW</button>
+            </div>
+          </div>
+          <h1>MAGNIFICENT 7 &amp; BIG TECH SCORECARD</h1>
+          <span class="subhead">WHO WAS RIGHT &amp; WRONG // NVDA &middot; AAPL &middot; MSFT &middot; AMZN &middot; GOOGL &middot; META &middot; TSLA // 2022–2026 AUDIT</span>
+        </div>
+        <div class="stats-ticker" id="mag7StatsTicker">
+          <div class="ticker-box">
+            <span class="ticker-label">MAG 7 MKT CAP</span>
+            <span class="ticker-val highlight-gold" id="tickerMag7Cap">$16.2T</span>
+          </div>
+          <div class="ticker-box">
+            <span class="ticker-label">SPY YTD RETURN</span>
+            <span class="ticker-val" id="tickerSpyYtd">+12.4%</span>
+          </div>
+          <div class="ticker-box">
+            <span class="ticker-label">AUDITED DESKS</span>
+            <span class="ticker-val" id="tickerBanks">10</span>
+          </div>
+          <div class="ticker-box">
+            <span class="ticker-label">RESEARCH CALLS</span>
+            <span class="ticker-val" id="tickerCalls">50</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Methodology & Key Findings Notice -->
+    <div class="alert-banner alert-banner-mag7">
+      <div class="alert-badge">BIG TECH INFLECTION AUDIT</div>
+      <div class="alert-text">
+        <strong>The Great Divergence:</strong> Between 2022 and 2026, Wall Street split sharply between fundamental AI believers (Goldman Sachs, BofA, HSBC) who rode triple-digit tech gains, and permabear concentration skeptics (JPMorgan's Marko Kolanovic, Morgan Stanley's Mike Wilson, SocGen's Albert Edwards) who warned of 1999-style bubble collapses and cost clients enormous upside. Below is the full empirical record.
+      </div>
+    </div>
+
+    <!-- Section 01: Bank-by-Bank Mag 7 Leaderboard -->
+    <section class="section-mag7-leaderboard" id="mag7Leaderboard">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">01 // COMPARISON</span>
+          <h2>Institutional Mag&nbsp;7 leaderboard</h2>
+          <span class="section-meta">Ranked on hit rate and average alpha against the benchmark each call was measured on. Verdicts are derived from realised alpha, never read from the note &mdash; where a hand-written verdict disagreed, the row says so.</span>
+        </div>
+        <div class="section-controls">
+          <div class="table-filter-tabs">
+            <button class="tab-btn active" data-bank-filter="all" id="tabBankAll">All Desks (10)</button>
+            <button class="tab-btn" data-bank-filter="top_tier" id="tabBankTop">Top Tier (A/A+)</button>
+            <button class="tab-btn" data-bank-filter="mixed" id="tabBankMixed">Mixed / Cautious</button>
+          </div>
+          <button class="export-btn" id="exportMag7CsvBtn" title="Export Mag 7 Leaderboard as CSV">
+            <span class="export-icon">&darr;</span> Export CSV
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="blotter-table" id="mag7BankTable">
+          <thead>
+            <tr>
+              <th class="sortable" data-sort="name">INSTITUTION <span class="sort-icon">&updownarrow;</span></th>
+              <th class="text-center">GRADE</th>
+              <th class="text-right sortable" data-sort="hit_rate">HIT RATE <span class="sort-icon">&updownarrow;</span></th>
+              <th class="text-right sortable" data-sort="avg_alpha">AVG ALPHA VS SPY <span class="sort-icon">&updownarrow;</span></th>
+              <th class="text-center">HITS / CALLS</th>
+              <th>STANDOUT BEST CALL (HIT)</th>
+              <th>BIGGEST BLUNDER (MISS)</th>
+              <th>STRATEGIC NARRATIVE &amp; PROFILE</th>
+            </tr>
+          </thead>
+          <tbody id="mag7BankTbody">
+            <!-- Rendered by mag7.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 02: Interactive Mag 7 Chart & Call Overlays -->
+    <section class="section-mag7-chart" id="mag7Chart">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">02 // EVIDENCE</span>
+          <h2>Performance trails &amp; call overlays</h2>
+          <span class="section-meta"><span id="chartBaseLabel">Normalized Price Returns with Sell-Side Entry &amp; Exit Markers</span></span>
+        </div>
+        <div class="stock-pills-bar" id="stockPillsBar">
+          <button class="stock-pill-btn active" data-ticker="ALL">ALL MAG 7</button>
+          <button class="stock-pill-btn" data-ticker="NVDA">NVDA</button>
+          <button class="stock-pill-btn" data-ticker="AAPL">AAPL</button>
+          <button class="stock-pill-btn" data-ticker="MSFT">MSFT</button>
+          <button class="stock-pill-btn" data-ticker="AMZN">AMZN</button>
+          <button class="stock-pill-btn" data-ticker="GOOGL">GOOGL</button>
+          <button class="stock-pill-btn" data-ticker="META">META</button>
+          <button class="stock-pill-btn" data-ticker="TSLA">TSLA</button>
+          <button class="stock-pill-btn" data-ticker="BENCHMARKS">BENCHMARKS (MAG7 / SPY / QQQ / RSP)</button>
+        </div>
+      </div>
+
+      <div class="chart-sub-header">
+        <div class="chart-stats-badge" id="chartStatsBadge">
+          <span class="range-dot"></span>
+          <span id="chartStatsText">VIEWING: Normalized Returns (2022–2026) // Hover chart for dates &amp; calls</span>
+        </div>
+        <div class="chart-legend-box" id="chartLegendBox">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <div class="mag7-chart-container" id="mag7ChartContainer">
+        <svg id="mag7Svg" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="timeline-crosshair" id="chartCrosshair" style="display: none;"></div>
+        <div class="timeline-tooltip" id="chartTooltip" style="display: none;"></div>
+      </div>
+    </section>
+
+    <!-- Section 03: Stock-by-Stock Deep Dive Matrix -->
+    <section class="section-mag7-stocks" id="mag7Stocks">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">03 // BY INSTRUMENT</span>
+          <h2>Stock by stock &amp; consensus dispersion</h2>
+          <span class="section-meta">Audited performance and desk hit rates across the seven constituents plus the equal-weight basket.</span>
+        </div>
+        <div class="timeline-presets" id="stockExitModeToggle">
+          <span class="preset-label">EXIT VIEW MODE:</span>
+          <button class="preset-btn active" data-stock-exit-mode="dual" id="stockExitDual">DUAL (BOTH EXITS)</button>
+          <button class="preset-btn" data-stock-exit-mode="horizon" id="stockExitHorizon">12M / YE HORIZON</button>
+          <button class="preset-btn" data-stock-exit-mode="switch" id="stockExitSwitch">POSITION SWITCH / FLIP</button>
+        </div>
+      </div>
+
+      <div class="stocks-grid" id="mag7StocksGrid">
+        <!-- Rendered dynamically by mag7.js -->
+      </div>
+    </section>
+
+    <!-- Section 04: The 4 Big Tech Thematic Audits -->
+    <section class="section-mag7-themes" id="mag7Themes">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">04 // SYNTHESIS</span>
+          <h2>Thematic audit dossiers</h2>
+          <span class="section-meta">The four debates that separated the desks. Each named winner and loser carries that desk&rsquo;s real record on the dossier&rsquo;s stocks; claims the record does not support are flagged.</span>
+        </div>
+      </div>
+
+      <div class="themes-container" id="themesContainer">
+        <!-- Rendered dynamically by mag7.js -->
+      </div>
+    </section>
+
+    <!-- Section 05: All Curated Mag 7 Calls Blotter -->
+    <section class="section-mag7-calls" id="mag7Calls">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">05 // RAW RECORD</span>
+          <h2>Complete calls blotter &amp; citations</h2>
+          <span class="section-meta">Every audited rating, target, spot calculation, realised return and primary source citation.</span>
+        </div>
+        <div class="calls-filter-controls">
+          <div class="search-input-wrapper">
+            <span class="search-icon">&telrec;</span>
+            <input type="text" id="mag7SearchInput" placeholder="Filter by bank, analyst, ticker, headline, or keyword..." aria-label="Search Mag 7 calls">
+          </div>
+          <div class="horizon-filter-pills" id="tickerFilterPills">
+            <button class="pill-btn active" data-filter-ticker="all">ALL</button>
+            <button class="pill-btn" data-filter-ticker="NVDA">NVDA</button>
+            <button class="pill-btn" data-filter-ticker="AAPL">AAPL</button>
+            <button class="pill-btn" data-filter-ticker="MSFT">MSFT</button>
+            <button class="pill-btn" data-filter-ticker="AMZN">AMZN</button>
+            <button class="pill-btn" data-filter-ticker="GOOGL">GOOGL</button>
+            <button class="pill-btn" data-filter-ticker="META">META</button>
+            <button class="pill-btn" data-filter-ticker="TSLA">TSLA</button>
+            <button class="pill-btn" data-filter-ticker="MAG7_BASKET">BASKET</button>
+          </div>
+          <div class="horizon-filter-pills" id="verdictFilterPills">
+            <button class="pill-btn active" data-filter-verdict="all">ALL VERDICTS</button>
+            <button class="pill-btn" data-filter-verdict="HIT">HITS ONLY</button>
+            <button class="pill-btn" data-filter-verdict="MISS">MISSES ONLY</button>
+          </div>
+          <div class="horizon-filter-pills" id="exitFilterPills">
+            <button class="pill-btn active" data-filter-exit="dual">ALL / DUAL EXITS</button>
+            <button class="pill-btn" data-filter-exit="horizon">HORIZON EXITS</button>
+            <button class="pill-btn" data-filter-exit="switch">SWITCH EXITS</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="blotter-table" id="mag7CallsTable">
+          <thead>
+            <tr>
+              <th>WHEN SAID (PUB DATE)</th>
+              <th>WHEN HAPPENED (REALIZATION)</th>
+              <th>INSTITUTION</th>
+              <th>TICKER</th>
+              <th>ANALYST / DESK</th>
+              <th>STANCE / TARGET</th>
+              <th>SPOT AT PUB &rarr; EXIT</th>
+              <th class="text-right">STOCK RETURN</th>
+              <th class="text-right">SPY RETURN</th>
+              <th class="text-right">ALPHA VS SPY</th>
+              <th>VERDICT</th>
+              <th>MARKET OUTCOME &amp; CITATION</th>
+            </tr>
+          </thead>
+          <tbody id="mag7CallsTbody">
+            <!-- Rendered by mag7.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="blotter-footer">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <h4>ALPHA &amp; BENCHMARK METRICS</h4>
+          <p>
+            Relative alpha is calculated as <code>Realized Stock Return &minus; Realized SPY Return</code> over the identical forecast holding window. A buy recommendation on a stock that rose 10% while SPY rose 25% represents negative alpha (-15%).
+          </p>
+        </div>
+        <div class="footer-col">
+          <h4>EQUAL-WEIGHT S&amp;P 500 (RSP)</h4>
+          <p>
+            The Invesco S&amp;P 500 Equal Weight ETF (RSP) is tracked as the benchmark for "broadening out" and cyclical rotation calls. Repeated calls predicting equal-weight outperformance consistently lagged the cap-weighted S&amp;P 500.
+          </p>
+        </div>
+        <div class="footer-col">
+          <h4>EXACT SPOT AT PUBLICATION</h4>
+          <p>
+            Entry spots are locked to the closing price on or immediately preceding report publication date. Target percentage returns are evaluated against actual subsequent market highs and horizon realizations.
+          </p>
+        </div>
+        <div class="footer-col">
+          <h4>EDITORIAL INDEPENDENCE &amp; CITATIONS</h4>
+          <p>
+            All price targets, strategist ratings, and commentary are sourced directly from verified financial media records (Bloomberg, Reuters, CNBC, WSJ, and institutional research notes).
+          </p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>MOMENTUMQ QUANTITATIVE RESEARCH // MAGNIFICENT 7 &amp; BIG TECH AUDIT (2022–2026)</span>
+        <span>OPEN SPECIFICATION // VERIFIED HISTORICAL RECORD</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Call Inspector Modal -->
+  <div class="modal-backdrop" id="mag7ModalBackdrop" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <span class="modal-tag" id="mag7ModalTag">MAG 7 CALL INSPECTOR</span>
+          <h3 id="mag7ModalTitle">Nvidia — Bank of America (Vivek Arya)</h3>
+        </div>
+        <button class="modal-close-btn" id="mag7ModalCloseBtn">&times;</button>
+      </div>
+      <div class="modal-body" id="mag7ModalBody">
+        <!-- Rendered by mag7.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Back to Top Button -->
+  <button id="backToTopBtn" class="back-to-top-btn" title="Back to top">&uarr;</button>
+
+  <script src="mag7.js"></script>
+</body>
+</html>

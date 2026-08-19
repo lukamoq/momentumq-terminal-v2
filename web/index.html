@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sell-Side Direction Scorecard — S&amp;P 500 (2026)</title>
+  <meta name="description" content="Directional and allocation scorecard evaluating 2026 S&amp;P 500 sell-side research calls against realized market moves and benchmark performance.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="blotter-container">
+    <!-- Top Global App Navigation -->
+    <div class="app-global-nav">
+      <div class="nav-brand-wrap">
+        <a href="index.html" class="nav-brand-link" style="display:flex; align-items:center; text-decoration:none;">
+          <img src="images/logo.png" alt="MomentumQ" class="nav-brand-logo" height="24">
+        </a>
+        <span class="nav-brand-divider">/</span>
+        <span class="nav-brand-suite">RESEARCH &amp; AUDIT</span>
+      </div>
+      <div class="nav-tabs-wrapper">
+        <a href="index.html" class="nav-page-btn active" aria-current="page"><span class="nav-page-num">01</span> S&amp;P 500 Direction</a>
+        <a href="mag7.html" class="nav-page-btn"><span class="nav-page-num">02</span> Magnificent 7 &amp; Big Tech</a>
+        <a href="seasonality.html" class="nav-page-btn"><span class="nav-page-num">03</span> Seasonality &amp; Analytics</a>
+      </div>
+      <div class="nav-status-badge">
+        <span class="live-pulse"></span>
+        <span>VERIFIED AUDIT // 2026</span>
+      </div>
+    </div>
+
+    <!-- Sticky section index: a 6-screen page needs a way back -->
+    <nav class="section-rail" id="sectionRail" aria-label="Section navigation">
+      <span class="rail-label">JUMP TO</span>
+      <div class="rail-links">
+        <a class="rail-link" href="#sectionFindings"><span class="rail-num">01</span> Findings</a>
+        <a class="rail-link" href="#sectionTimeline"><span class="rail-num">02</span> Stance timeline</a>
+        <a class="rail-link" href="#sectionScorecard"><span class="rail-num">03</span> Desk scorecard</a>
+        <a class="rail-link" href="#sectionPartners"><span class="rail-num">04</span> Trust matrix</a>
+        <a class="rail-link" href="#sectionMacro"><span class="rail-num">05</span> Allocation &amp; probability</a>
+        <a class="rail-link" href="#sectionCalls"><span class="rail-num">06</span> Call log</a>
+      </div>
+    </nav>
+
+    <!-- Header -->
+    <header class="blotter-header">
+      <div class="brand-row">
+        <div class="brand-title">
+          <div class="brand-top-meta">
+            <span class="brand-tag">MQ-RESEARCH // DIRECTION SCORECARD</span>
+            <div class="sync-status-indicator" id="syncStatusIndicator">
+              <span class="sync-dot pulsing"></span>
+              <span class="sync-text" id="syncStatusText">DAILY SYNC: 12:00 PM</span>
+              <span class="sync-time" id="syncTimeText">Last refreshed: Checking...</span>
+              <button class="sync-now-btn" id="syncNowBtn" title="Fetch latest data from database immediately">&#8635; SYNC NOW</button>
+            </div>
+          </div>
+          <h1>SELL-SIDE DIRECTION SCORECARD</h1>
+          <span class="subhead">S&amp;P 500 // 2026 FORECAST AUDIT // SPY&times;10 PROXY // AS-OF AUG 18, 2026</span>
+        </div>
+        <div class="stats-ticker" id="statsTicker">
+          <div class="ticker-box">
+            <span class="ticker-label">SPX PROXY</span>
+            <span class="ticker-val" id="tickerSpx">7,675.95</span>
+          </div>
+          <div class="ticker-box">
+            <span class="ticker-label">YTD RETURN</span>
+            <span class="ticker-val highlight-gold" id="tickerYtd">+12.4%</span>
+          </div>
+          <div class="ticker-box">
+            <span class="ticker-label">AUDITED DESKS</span>
+            <span class="ticker-val" id="tickerDesks">10</span>
+          </div>
+          <div class="ticker-box">
+            <span class="ticker-label">STANCE EVALS</span>
+            <span class="ticker-val" id="tickerObs">43,000+</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Findings: the page states its result before showing the evidence -->
+    <section class="section-findings" id="sectionFindings">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">01 // RESULT</span>
+          <h2>What the five-year record shows</h2>
+          <span class="section-meta">Every figure below is computed from the scored tables on this page. Sections 02&ndash;06 are the evidence chain behind them.</span>
+        </div>
+      </div>
+      <div class="findings-grid" id="findingsGrid">
+        <!-- Rendered by app.js -->
+      </div>
+      <div class="alert-banner">
+        <div class="alert-badge">METHODOLOGY NOTICE</div>
+        <div class="alert-text">
+          <strong>Anti-Failure Guardrail:</strong> In a market that rose over the window, an always-bullish forecast earns a high nominal hit rate for free. Every hit rate here is printed beside that naive baseline, and desks with no bearish or neutral call render <code>NO DISCRIMINATING CALLS</code> rather than unearned accuracy.
+        </div>
+      </div>
+    </section>
+
+    <!-- Hero Stance Timeline Section -->
+    <section class="section-timeline" id="sectionTimeline">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">02 // EVIDENCE</span>
+          <h2>Stance timeline &amp; S&amp;P&nbsp;500 path</h2>
+          <span class="section-meta">One lane per desk, coloured by the stance standing that day. Drag or swipe to explore 2021&ndash;2026; diamonds mark direction flips.</span>
+        </div>
+        <div class="timeline-controls-bar">
+          <div class="timeline-presets">
+            <span class="preset-label">RANGE:</span>
+            <button class="preset-btn active" data-range="all" id="rangeAll">ALL (2021–26)</button>
+            <button class="preset-btn" data-range="2026" id="range2026">2026</button>
+            <button class="preset-btn" data-range="2025" id="range2025">2025</button>
+            <button class="preset-btn" data-range="2024" id="range2024">2024</button>
+            <button class="preset-btn" data-range="2023" id="range2023">2023</button>
+            <button class="preset-btn" data-range="2022" id="range2022">2022</button>
+            <button class="preset-btn" data-range="6m" id="range6m">LAST 6M</button>
+          </div>
+          <div class="timeline-pan-nav">
+            <button class="nav-btn" id="panLeftBtn" title="Pan Left (Earlier)">&larr; PAN LEFT</button>
+            <button class="nav-btn" id="zoomInBtn" title="Zoom In">+</button>
+            <button class="nav-btn" id="zoomOutBtn" title="Zoom Out">&minus;</button>
+            <button class="nav-btn" id="panResetBtn" title="Reset Range">RESET</button>
+            <button class="nav-btn" id="panRightBtn" title="Pan Right (Later)">PAN RIGHT &rarr;</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-status-row">
+        <div class="timeline-range-badge" id="timelineRangeBadge">
+          <span class="range-dot"></span>
+          <span id="rangeBadgeText">VIEWING: 2023-01-03 &rarr; 2026-08-18 (Drag or Swipe to Explore)</span>
+        </div>
+        <div class="timeline-legend">
+          <span class="legend-item"><span class="legend-box stance-bullish"></span> Bullish (&gt;+2%)</span>
+          <span class="legend-item"><span class="legend-box stance-bearish"></span> Bearish (&lt;-2%)</span>
+          <span class="legend-item"><span class="legend-box stance-neutral"></span> Neutral (&plusmn;2%)</span>
+          <span class="legend-item"><span class="legend-dot call-dot-icon"></span> Target Call</span>
+          <span class="legend-item"><span class="legend-flip-icon">&olarr;</span> Stance Flip</span>
+        </div>
+      </div>
+
+      <div class="timeline-canvas-container" id="timelineContainer">
+        <!-- Dynamic Interactive Timeline SVG rendered here -->
+        <svg id="timelineSvg" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="timeline-crosshair" id="timelineCrosshair" style="display: none;"></div>
+        <div class="timeline-tooltip" id="timelineTooltip" style="display: none;"></div>
+      </div>
+
+      <!-- Mini-Map Overview Navigator -->
+      <div class="minimap-container" id="minimapContainer">
+        <div class="minimap-label">DATASET OVERVIEW &amp; VIEWPORT BRUSH (DRAG BRUSH TO PAN)</div>
+        <div class="minimap-canvas-box">
+          <svg id="minimapSvg" preserveAspectRatio="none"></svg>
+          <div class="minimap-brush" id="minimapBrush"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scorecard Blotter Section -->
+    <section class="section-scorecard" id="sectionScorecard">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">03 // COMPARISON</span>
+          <h2>Strategy desk scorecard</h2>
+          <span class="section-meta">Ranked on edge &mdash; hit rate minus the always-bullish baseline over the same windows. A desk that only ever says &ldquo;up&rdquo; scores zero edge by construction.</span>
+        </div>
+        <div class="section-controls">
+          <div class="table-filter-tabs" id="scorecardFilterTabs">
+            <button class="tab-btn active" data-filter="all" id="tabAll">All desks</button>
+            <button class="tab-btn" data-filter="discriminating" id="tabDiscrim">Discriminating</button>
+            <button class="tab-btn" data-filter="always_bullish" id="tabAlwaysBullish">Always-bullish</button>
+          </div>
+          <button class="export-btn" id="exportScorecardCsvBtn" title="Export Desk Scorecard as CSV">
+            <span class="export-icon">&darr;</span> Export CSV
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="blotter-table" id="scorecardTable">
+          <thead>
+            <tr class="col-groups">
+              <th colspan="2">WHO &amp; WHAT THEY SAY NOW</th>
+              <th colspan="2" class="group-start">DID IT BEAT DOING NOTHING?</th>
+              <th colspan="2" class="group-start">HOW FAST DO THEY TURN?</th>
+            </tr>
+            <tr>
+              <th class="sortable" data-sort="name">DESK <span class="sort-icon">&updownarrow;</span></th>
+              <th>ACTIVE CALL</th>
+              <th class="sortable text-right group-start" data-sort="stance_day_edge">EDGE VS BASELINE <span class="sort-icon">&updownarrow;</span></th>
+              <th class="sortable text-right" data-sort="stance_day_hit_rate">HIT RATE / BASELINE <span class="sort-icon">&updownarrow;</span></th>
+              <th class="text-right group-start">LAG RATIO</th>
+              <th>FINDING</th>
+            </tr>
+          </thead>
+          <tbody id="scorecardTbody">
+            <!-- Rendered by app.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Most Reliable Partner & Trust Matrix Section -->
+    <section class="section-partners" id="sectionPartners">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">04 // SYNTHESIS</span>
+          <h2>Most reliable partner &amp; trust matrix</h2>
+          <span class="section-meta">A composite of directional edge, target error, pivot agility and bear-market defence. Switch regime to re-rank on a single dimension.</span>
+        </div>
+        <div class="section-controls">
+          <div class="table-filter-tabs" id="partnerRegimeTabs">
+            <button class="tab-btn active" data-regime="overall" id="tabRegimeOverall">Overall</button>
+            <button class="tab-btn" data-regime="bear" id="tabRegimeBear">2022 bear</button>
+            <button class="tab-btn" data-regime="bull" id="tabRegimeBull">2023&ndash;26 bull</button>
+            <button class="tab-btn" data-regime="agility" id="tabRegimeAgility">Pivot agility</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="section-meta" id="partnerExclusionNote" style="margin-bottom:1rem;"></p>
+
+      <!-- Spotlight #1 Partner Hero Box -->
+      <div class="spotlight-partner-box" id="spotlightPartnerBox">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+
+      <!-- Partner Reliability Cards Grid -->
+      <div class="partner-cards-grid" id="partnerCardsGrid">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+    </section>
+
+    <!-- Allocation & Macro Calls Section -->
+    <section class="section-macro" id="sectionMacro">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">05 // OTHER CALL TYPES</span>
+          <h2>Allocation &amp; probability audit</h2>
+          <span class="section-meta">Allocation calls are scored on the spread against their benchmark, never on a rising tide. Probability calls are scored on Brier skill against the climatological prior.</span>
+        </div>
+      </div>
+      <div class="macro-grid">
+        <!-- Allocation Table -->
+        <div class="macro-card">
+          <div class="card-header">
+            <h3>RELATIVE ASSET ALLOCATION (SPX VS ACWI)</h3>
+            <span class="card-note">Scored against benchmark return spread, not zero</span>
+          </div>
+          <table class="blotter-table compact-table">
+            <thead>
+              <tr>
+                <th>BANK</th>
+                <th>DATE</th>
+                <th>STANCE</th>
+                <th>ASSET / BENCH</th>
+                <th>REALIZED SPREAD</th>
+                <th>VERDICT</th>
+              </tr>
+            </thead>
+            <tbody id="allocationTbody">
+              <!-- Rendered by app.js -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Probability Table -->
+        <div class="macro-card">
+          <div class="card-header">
+            <h3>PROBABILITY FORECASTS (BRIER SKILL)</h3>
+            <span class="card-note">Evaluated against climatological prior (1/6)</span>
+          </div>
+          <table class="blotter-table compact-table">
+            <thead>
+              <tr>
+                <th>BANK</th>
+                <th>EVENT</th>
+                <th>FORECAST PROB</th>
+                <th>CLIMATOLOGY</th>
+                <th>OUTCOME</th>
+                <th>VERDICT</th>
+              </tr>
+            </thead>
+            <tbody id="probabilityTbody">
+              <!-- Rendered by app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Detailed Call Log Section -->
+    <section class="section-calls-log" id="sectionCalls">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">06 // RAW RECORD</span>
+          <h2>All curated calls &amp; sources</h2>
+          <span class="section-meta">Click any row to audit its spot calculation, band arithmetic, supersession lineage and primary citation.</span>
+        </div>
+        <div class="calls-filter-controls">
+          <div class="search-input-wrapper">
+            <span class="search-icon">&telrec;</span>
+            <input type="text" id="callsSearchInput" placeholder="Filter by bank, strategist, target, or keyword..." aria-label="Search calls">
+          </div>
+          <div class="horizon-filter-pills" id="horizonFilterPills">
+            <button class="pill-btn active" data-horizon="all">ALL</button>
+            <button class="pill-btn" data-horizon="YE_2026">2026</button>
+            <button class="pill-btn" data-horizon="YE_2025">2025</button>
+            <button class="pill-btn" data-horizon="YE_2024">2024</button>
+            <button class="pill-btn" data-horizon="YE_2023">2023</button>
+            <button class="pill-btn" data-horizon="YE_2022">2022</button>
+          </div>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="blotter-table" id="callsTable">
+          <thead>
+            <tr>
+              <th>DATE</th>
+              <th>INSTITUTION</th>
+              <th>TYPE</th>
+              <th>TARGET / STANCE</th>
+              <th>SPOT AT PUB</th>
+              <th>IMPLIED RETURN</th>
+              <th>SCORED STANCE</th>
+              <th>LINGUISTIC READ</th>
+              <th>SOURCE</th>
+            </tr>
+          </thead>
+          <tbody id="callsTbody">
+            <!-- Rendered by app.js -->
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footnote">
+        <span class="result-count" id="callsResultCount"></span>
+        <button class="load-more-btn" id="callsLoadMoreBtn" hidden>SHOW MORE</button>
+      </div>
+    </section>
+
+    <!-- Technical Footnotes -->
+    <footer class="blotter-footer">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <h4>SPY &times; 10 INDEX PROXY</h4>
+          <p>
+            Due to licensing restrictions on direct cash index feeds, the S&amp;P 500 index level is proxied as <code>SPY closing price &times; 10.0</code> from Massive daily bars. The cash-to-proxy tracking error is &lt;0.2%, well inside the 2.0% directional indifference band.
+          </p>
+        </div>
+        <div class="footer-col">
+          <h4>2% DIRECTION BAND &amp; AUGUST TARGET</h4>
+          <p>
+            Direction derives strictly as <code>implied = (target / spot) - 1</code>. Implied &gt; +2% is bullish; &lt; -2% is bearish. JPM's 10 Aug 2026 raise to 8,000 against spot ~7,730 implies +3.49% upside, which derives as <strong>bullish</strong>, not neutral.
+          </p>
+        </div>
+        <div class="footer-col">
+          <h4>OVERLAPPING WINDOW AUTOCORRELATION</h4>
+          <p>
+            Multi-horizon evaluations and daily stance-days utilize overlapping time windows. These observations are autocorrelated and presented for descriptive empirical tracking, not independent hypothesis tests.
+          </p>
+        </div>
+        <div class="footer-col">
+          <h4>LEGAL &amp; DATA CITATION</h4>
+          <p>
+            Call dates, strategist names, and price targets are compiled from licensed Tavily search index results and accredited financial news publishers (Reuters, Bloomberg, CNBC, WSJ). No proprietary login-walled portals were scraped.
+          </p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>MOMENTUMQ QUANTITATIVE RESEARCH // OPEN SCORECARD SPECIFICATION 2026</span>
+        <span>REPRODUCIBLE BUILD // DETERMINISTIC SQLITE</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Call Detail Modal / Drawer -->
+  <div class="modal-backdrop" id="modalBackdrop" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <span class="modal-tag" id="modalTag">CALL DETAIL INSPECTOR</span>
+          <h3 id="modalTitle">JPMorgan — 2026-08-10 Target 8,000</h3>
+        </div>
+        <button class="modal-close-btn" id="modalCloseBtn">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- Rendered by app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Back to Top Button -->
+  <button id="backToTopBtn" class="back-to-top-btn" title="Back to top">&uarr;</button>
+
+  <script src="app.js"></script>
+</body>
+</html>

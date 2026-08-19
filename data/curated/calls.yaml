@@ -1,0 +1,1384 @@
+calls:
+  # ==========================================
+  # 2022 YEAR-END S&P 500 CALLS (HISTORICAL)
+  # ==========================================
+
+  # JPMorgan (Marko Kolanovic — Bullish Call into Bear Market)
+  - id: call_jpm_20211208_dir_22
+    institution_id: JPM
+    strategist_id: marko-kolanovic
+    call_type: direction
+    published_on: "2021-12-08"
+    approximate_date: 0
+    target_level: 5050
+    forecast_horizon: YE_2022
+    confidence: verified
+    source_url: "https://www.reuters.com/business/finance/jpmorgan-sees-sp-500-hitting-5050-by-end-2022-2021-12-08"
+    notes: Kolanovic targets 5,050 for year-end 2022, arguing consumer strength will overcome rate hikes (bullish).
+
+  # Morgan Stanley (Mike Wilson — 2022 Bear Market Call)
+  - id: call_ms_20211115_dir_22
+    institution_id: MS
+    strategist_id: mike-wilson
+    call_type: direction
+    published_on: "2021-11-15"
+    approximate_date: 0
+    target_level: 4400
+    forecast_horizon: YE_2022
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2021-11-15/morgan-stanley-s-wilson-sees-s-p-500-falling-in-2022-on-valuation"
+    notes: Wilson targets 4,400 citing multiple compression and margin compression (cautious/bearish stance).
+
+  # Goldman Sachs (David Kostin — 2022 Ladder Cuts)
+  - id: call_gs_20211116_dir_22
+    institution_id: GS
+    strategist_id: david-kostin
+    call_type: direction
+    published_on: "2021-11-16"
+    approximate_date: 0
+    target_level: 5100
+    forecast_horizon: YE_2022
+    confidence: verified
+    source_url: "https://www.goldmansachs.com/insights/pages/us-equity-outlook-2022.html"
+    notes: Kostin sets initial 2022 target of 5,100.
+
+  - id: call_gs_20220518_dir_22
+    institution_id: GS
+    strategist_id: david-kostin
+    call_type: direction
+    published_on: "2022-05-18"
+    approximate_date: 0
+    target_level: 4300
+    forecast_horizon: YE_2022
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/goldman-cuts-sp-500-target-4300-recession-risks-2022-05-18"
+    notes: Kostin cuts year-end 2022 target to 4,300 amid Fed tightening.
+
+  - id: call_gs_20220923_dir_22
+    institution_id: GS
+    strategist_id: david-kostin
+    call_type: direction
+    published_on: "2022-09-23"
+    approximate_date: 0
+    target_level: 3600
+    forecast_horizon: YE_2022
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/europe/goldman-slashes-year-end-sp-500-target-3600-rising-rates-2022-09-23"
+    notes: Kostin cuts target to 3,600 as terminal rate expectations surge.
+
+  # Bank of America (Savita Subramanian)
+  - id: call_bac_20211123_dir_22
+    institution_id: BAC
+    strategist_id: savita-subramanian
+    call_type: direction
+    published_on: "2021-11-23"
+    approximate_date: 0
+    target_level: 4600
+    forecast_horizon: YE_2022
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2021-11-23/bofa-sees-s-p-500-falling-to-4-600-next-year-as-fed-tightens"
+    notes: Subramanian forecasts 4,600 target for 2022 citing rising discount rates.
+
+  - id: call_bac_20220713_dir_22
+    institution_id: BAC
+    strategist_id: savita-subramanian
+    call_type: direction
+    published_on: "2022-07-13"
+    approximate_date: 0
+    target_level: 3600
+    forecast_horizon: YE_2022
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/bofa-cuts-sp-500-year-end-target-3600-mild-recession-2022-07-13"
+    notes: BofA lowers 2022 target to 3,600 pricing in mild recession.
+
+  # Deutsche Bank (Binky Chadha)
+  - id: call_db_20211202_dir_22
+    institution_id: DB
+    strategist_id: binky-chadha
+    call_type: direction
+    published_on: "2021-12-02"
+    approximate_date: 0
+    target_level: 5000
+    forecast_horizon: YE_2022
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/deutsche-bank-sees-sp-500-reaching-5000-by-end-2022-2021-12-02"
+    notes: Chadha targets 5,000 for 2022 on robust corporate earnings growth.
+
+  # Citigroup (Scott Chronert)
+  - id: call_c_20211209_dir_22
+    institution_id: C
+    strategist_id: scott-chronert
+    call_type: direction
+    published_on: "2021-12-09"
+    approximate_date: 0
+    target_level: 4900
+    forecast_horizon: YE_2022
+    confidence: verified
+    source_url: "https://www.citigroup.com/citi/news/2021/211209a.htm"
+    notes: Chronert targets 4,900 for year-end 2022.
+
+  - id: call_c_20220715_dir_22
+    institution_id: C
+    strategist_id: scott-chronert
+    call_type: direction
+    published_on: "2022-07-15"
+    approximate_date: 0
+    target_level: 4200
+    forecast_horizon: YE_2022
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/citi-lowers-sp-500-year-end-target-4200-2022-07-15"
+    notes: Chronert cuts 2022 year-end target to 4,200.
+
+  # UBS (Keith Parker)
+  - id: call_ubs_20211119_dir_22
+    institution_id: UBS
+    strategist_id: keith-parker
+    call_type: direction
+    published_on: "2021-11-19"
+    approximate_date: 0
+    target_level: 4850
+    forecast_horizon: YE_2022
+    confidence: verified
+    source_url: "https://www.ubs.com/global/en/wealth-management/our-approach/marketnews/article.1550920.html"
+    notes: Parker sets 4,850 year-end 2022 baseline.
+
+  # Barclays (Maneesh Deshpande)
+  - id: call_barc_20211122_dir_22
+    institution_id: BARC
+    strategist_id: maneesh-deshpande
+    call_type: direction
+    published_on: "2021-11-22"
+    approximate_date: 0
+    target_level: 4800
+    forecast_horizon: YE_2022
+    confidence: verified
+    source_url: "https://www.cib.barclays/our-insights/2022-equity-outlook.html"
+    notes: Deshpande targets 4,800 for 2022.
+
+  # Société Générale (Manish Kabra)
+  - id: call_gle_20211125_dir_22
+    institution_id: GLE
+    strategist_id: manish-kabra
+    call_type: direction
+    published_on: "2021-11-25"
+    approximate_date: 0
+    target_level: 4700
+    forecast_horizon: YE_2022
+    confidence: verified
+    source_url: "https://www.societegenerale.com/en/news/press-release/equity-market-outlook-2022"
+    notes: Kabra forecasts 4,700 for year-end 2022.
+
+  # ==========================================
+  # 2023 YEAR-END S&P 500 CALLS (HISTORICAL)
+  # ==========================================
+
+  # JPMorgan (Marko Kolanovic — 2023 Bearish Call)
+  - id: call_jpm_20221201_dir_23
+    institution_id: JPM
+    strategist_id: marko-kolanovic
+    call_type: direction
+    published_on: "2022-12-01"
+    approximate_date: 0
+    target_level: 4200
+    forecast_horizon: YE_2023
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/jpmorgan-sees-sp-500-re-testing-lows-4200-year-end-2023-2022-12-01"
+    notes: Kolanovic targets 4,200 for 2023, warning of market re-testing lows as Fed hikes bite.
+
+  # Morgan Stanley (Mike Wilson — 2023 Cautious Call)
+  - id: call_ms_20221114_dir_23
+    institution_id: MS
+    strategist_id: mike-wilson
+    call_type: direction
+    published_on: "2022-11-14"
+    approximate_date: 0
+    target_level: 3900
+    forecast_horizon: YE_2023
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2022-11-14/morgan-stanley-s-wilson-sees-sp-500-ending-2023-at-3-900"
+    notes: Wilson forecasts 3,900 target for year-end 2023 citing severe earnings recession risk.
+
+  # Goldman Sachs (David Kostin — 2023 Target Hikes)
+  - id: call_gs_20221121_dir_23
+    institution_id: GS
+    strategist_id: david-kostin
+    call_type: direction
+    published_on: "2022-11-21"
+    approximate_date: 0
+    target_level: 4000
+    forecast_horizon: YE_2023
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/goldman-sachs-forecasts-sp-500-end-2023-4000-2022-11-21"
+    notes: Kostin sets initial 2023 baseline at 4,000.
+
+  - id: call_gs_20230609_dir_23
+    institution_id: GS
+    strategist_id: david-kostin
+    call_type: direction
+    published_on: "2023-06-09"
+    approximate_date: 0
+    target_level: 4500
+    forecast_horizon: YE_2023
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2023-06-09/goldman-lifts-s-p-500-target-to-4-500-on-ai-and-earnings-resilience"
+    notes: Kostin lifts 2023 target to 4,500 following AI rally.
+
+  - id: call_gs_20231115_dir_23
+    institution_id: GS
+    strategist_id: david-kostin
+    call_type: direction
+    published_on: "2023-11-15"
+    approximate_date: 0
+    target_level: 4700
+    forecast_horizon: YE_2023
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/goldman-raises-2023-year-end-target-4700-2023-11-15"
+    notes: Kostin raises year-end 2023 target to 4,700 as market advances.
+
+  # Bank of America (Savita Subramanian)
+  - id: call_bac_20221128_dir_23
+    institution_id: BAC
+    strategist_id: savita-subramanian
+    call_type: direction
+    published_on: "2022-11-28"
+    approximate_date: 0
+    target_level: 4000
+    forecast_horizon: YE_2023
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2022-11-28/bofa-sees-s-p-500-finishing-2023-at-4-000-in-choppy-trading"
+    notes: Subramanian targets 4,000 for 2023.
+
+  - id: call_bac_20230920_dir_23
+    institution_id: BAC
+    strategist_id: savita-subramanian
+    call_type: direction
+    published_on: "2023-09-20"
+    approximate_date: 0
+    target_level: 4600
+    forecast_horizon: YE_2023
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/bofa-raises-year-end-sp-500-target-4600-2023-09-20"
+    notes: Subramanian lifts 2023 year-end target to 4,600 on US manufacturing reshoring and AI.
+
+  # Deutsche Bank (Binky Chadha)
+  - id: call_db_20221128_dir_23
+    institution_id: DB
+    strategist_id: binky-chadha
+    call_type: direction
+    published_on: "2022-11-28"
+    approximate_date: 0
+    target_level: 4500
+    forecast_horizon: YE_2023
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/deutsche-bank-sees-sp-500-rebounding-4500-by-end-2023-2022-11-28"
+    notes: Chadha forecasts 4,500 target for 2023.
+
+  # Citigroup (Scott Chronert)
+  - id: call_c_20221206_dir_23
+    institution_id: C
+    strategist_id: scott-chronert
+    call_type: direction
+    published_on: "2022-12-06"
+    approximate_date: 0
+    target_level: 3900
+    forecast_horizon: YE_2023
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/citi-sees-sp-500-at-3900-by-end-2023-2022-12-06"
+    notes: Chronert targets 3,900 for year-end 2023.
+
+  - id: call_c_20230710_dir_23
+    institution_id: C
+    strategist_id: scott-chronert
+    call_type: direction
+    published_on: "2023-07-10"
+    approximate_date: 0
+    target_level: 4600
+    forecast_horizon: YE_2023
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/citi-lifts-sp-500-target-4600-soft-landing-hopes-2023-07-10"
+    notes: Chronert raises 2023 target to 4,600 citing soft landing.
+
+  # UBS (Jonathan Golub)
+  - id: call_ubs_20221117_dir_23
+    institution_id: UBS
+    strategist_id: jonathan-golub
+    call_type: direction
+    published_on: "2022-11-17"
+    approximate_date: 0
+    target_level: 3900
+    forecast_horizon: YE_2023
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2022-11-17/ubs-s-golub-sees-s-p-500-ending-2023-at-3-900-on-profit-drop"
+    notes: Golub sets initial 2023 target at 3,900.
+
+  # Barclays (Venu Krishna)
+  - id: call_barc_20221121_dir_23
+    institution_id: BARC
+    strategist_id: venu-krishna
+    call_type: direction
+    published_on: "2022-11-21"
+    approximate_date: 0
+    target_level: 3675
+    forecast_horizon: YE_2023
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/barclays-sets-sp-500-2023-year-end-target-3675-2022-11-21"
+    notes: Krishna targets 3,675 for year-end 2023.
+
+  - id: call_barc_20230801_dir_23
+    institution_id: BARC
+    strategist_id: venu-krishna
+    call_type: direction
+    published_on: "2023-08-01"
+    approximate_date: 0
+    target_level: 4150
+    forecast_horizon: YE_2023
+    confidence: verified
+    source_url: "https://www.cib.barclays/our-insights/mid-year-equity-outlook-2023.html"
+    notes: Krishna raises 2023 target to 4,150.
+
+  # Société Générale (Manish Kabra)
+  - id: call_gle_20221130_dir_23
+    institution_id: GLE
+    strategist_id: manish-kabra
+    call_type: direction
+    published_on: "2022-11-30"
+    approximate_date: 0
+    target_level: 3800
+    forecast_horizon: YE_2023
+    confidence: verified
+    source_url: "https://www.societegenerale.com/en/news/press-release/equity-market-outlook-2023"
+    notes: Kabra targets 3,800 for 2023.
+
+  - id: call_gle_20230921_dir_23
+    institution_id: GLE
+    strategist_id: manish-kabra
+    call_type: direction
+    published_on: "2023-09-21"
+    approximate_date: 0
+    target_level: 4750
+    forecast_horizon: YE_2023
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/socgen-boosts-year-end-sp-500-target-4750-2023-09-21"
+    notes: Kabra raises year-end 2023 target to 4,750 on broad-based profit recovery.
+  # ==========================================
+  # 2024 YEAR-END S&P 500 CALLS (HISTORICAL)
+  # ==========================================
+
+  # JPMorgan (Marko Kolanovic / Dubravko Lakos-Bujas — Famous Bearish Stance)
+  - id: call_jpm_20231129_dir_24
+    institution_id: JPM
+    strategist_id: marko-kolanovic
+    call_type: direction
+    published_on: "2023-11-29"
+    approximate_date: 0
+    target_level: 4200
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/jpmorgan-sees-sp-500-falling-4200-by-end-2024-challenging-macro-backdrop-2023-11-29"
+    notes: Kolanovic and team forecast 4,200 year-end 2024 target citing tight monetary policy and slowing consumer demand (bearish).
+
+  # Morgan Stanley (Mike Wilson — 2024 Stance Evolution)
+  - id: call_ms_20231113_dir_24
+    institution_id: MS
+    strategist_id: mike-wilson
+    call_type: direction
+    published_on: "2023-11-13"
+    approximate_date: 0
+    target_level: 4500
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2023-11-13/morgan-stanley-s-wilson-sees-flat-2024-for-us-stocks-as-risks-remain"
+    notes: Wilson targets 4,500 year-end 2024, expecting persistent earnings risk.
+
+  - id: call_ms_20240520_dir_24
+    institution_id: MS
+    strategist_id: mike-wilson
+    call_type: direction
+    published_on: "2024-05-20"
+    approximate_date: 0
+    target_level: 5400
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2024-05-20/morgan-stanley-s-wilson-capitulates-boosts-s-p-500-view-by-20"
+    notes: Wilson abandons bearish stance, lifting target to 5,400 citing resilient big-tech earnings.
+
+  # Goldman Sachs (David Kostin / Ben Snider — 2024 Raising Series)
+  - id: call_gs_20231115_dir_24
+    institution_id: GS
+    strategist_id: david-kostin
+    call_type: direction
+    published_on: "2023-11-15"
+    approximate_date: 0
+    target_level: 4700
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/goldman-sachs-forecasts-sp-500-rise-4700-by-end-2024-2023-11-15"
+    notes: Kostin sets initial 2024 year-end baseline of 4,700.
+
+  - id: call_gs_20231215_dir_24
+    institution_id: GS
+    strategist_id: david-kostin
+    call_type: direction
+    published_on: "2023-12-15"
+    approximate_date: 0
+    target_level: 5100
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2023-12-15/goldman-sachs-raises-s-p-500-target-to-5-100-on-fed-pivot"
+    notes: Raises target to 5,100 following Fed's dovish December pivot.
+
+  - id: call_gs_20240216_dir_24
+    institution_id: GS
+    strategist_id: david-kostin
+    call_type: direction
+    published_on: "2024-02-16"
+    approximate_date: 0
+    target_level: 5200
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/goldman-sachs-lifts-sp-500-target-5200-profit-growth-2024-02-16"
+    notes: Lifts target to 5,200 citing robust mega-cap earnings.
+
+  - id: call_gs_20240614_dir_24
+    institution_id: GS
+    strategist_id: david-kostin
+    call_type: direction
+    published_on: "2024-06-14"
+    approximate_date: 0
+    target_level: 5600
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2024-06-14/goldman-lifts-s-p-500-target-again-to-5-600-on-tech-rally"
+    notes: Raises target to 5,600 as tech and AI rally broadens.
+
+  - id: call_gs_20241004_dir_24
+    institution_id: GS
+    strategist_id: david-kostin
+    call_type: direction
+    published_on: "2024-10-04"
+    approximate_date: 0
+    target_level: 6000
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/goldman-sachs-raises-sp-500-year-end-target-6000-2024-10-04"
+    notes: Raises year-end target to 6,000.
+
+  # Bank of America (Savita Subramanian)
+  - id: call_bac_20231120_dir_24
+    institution_id: BAC
+    strategist_id: savita-subramanian
+    call_type: direction
+    published_on: "2023-11-20"
+    approximate_date: 0
+    target_level: 5000
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2023-11-20/bofa-sees-s-p-500-reaching-record-5-000-in-2024-on-efficiency-gains"
+    notes: Subramanian forecasts 5,000 target citing corporate efficiency and disinflation.
+
+  - id: call_bac_20240303_dir_24
+    institution_id: BAC
+    strategist_id: savita-subramanian
+    call_type: direction
+    published_on: "2024-03-03"
+    approximate_date: 0
+    target_level: 5400
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.cnbc.com/2024/03/03/bofa-raises-sp-500-target-to-5400-one-of-the-highest-on-wall-street.html"
+    notes: Lifts target to 5,400 citing margin expansion.
+
+  # Citigroup (Scott Chronert)
+  - id: call_c_20231208_dir_24
+    institution_id: C
+    strategist_id: scott-chronert
+    call_type: direction
+    published_on: "2023-12-08"
+    approximate_date: 0
+    target_level: 5100
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/citi-sees-sp-500-reaching-5100-by-end-2024-2023-12-08"
+    notes: Chronert sets 5,100 year-end 2024 target.
+
+  - id: call_c_20240617_dir_24
+    institution_id: C
+    strategist_id: scott-chronert
+    call_type: direction
+    published_on: "2024-06-17"
+    approximate_date: 0
+    target_level: 5600
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2024-06-17/citi-raises-year-end-s-p-500-target-to-5-600-on-tech-gains"
+    notes: Lifts target to 5,600.
+
+  # Deutsche Bank (Binky Chadha)
+  - id: call_db_20231127_dir_24
+    institution_id: DB
+    strategist_id: binky-chadha
+    call_type: direction
+    published_on: "2023-11-27"
+    approximate_date: 0
+    target_level: 5100
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/deutsche-bank-sees-sp-500-ending-2024-5100-2023-11-27"
+    notes: Chadha forecasts 5,100 on economic resilience and disinflation.
+
+  - id: call_db_20240517_dir_24
+    institution_id: DB
+    strategist_id: binky-chadha
+    call_type: direction
+    published_on: "2024-05-17"
+    approximate_date: 0
+    target_level: 5500
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2024-05-17/deutsche-bank-lifts-s-p-500-target-to-5-500-from-5-100"
+    notes: Lifts target to 5,500.
+
+  - id: call_db_20240912_dir_24
+    institution_id: DB
+    strategist_id: binky-chadha
+    call_type: direction
+    published_on: "2024-09-12"
+    approximate_date: 0
+    target_level: 5750
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/deutsche-bank-raises-sp-500-target-5750-2024-09-12"
+    notes: Raises target to 5,750 on strong inflows.
+
+  # UBS (Jonathan Golub / David Lefkowitz)
+  - id: call_ubs_20231114_dir_24
+    institution_id: UBS
+    strategist_id: jonathan-golub
+    call_type: direction
+    published_on: "2023-11-14"
+    approximate_date: 0
+    target_level: 4850
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/ubs-sets-sp-500-target-4850-by-end-2024-2023-11-14"
+    notes: Golub sets 4,850 initial 2024 target.
+
+  - id: call_ubs_20240116_dir_24
+    institution_id: UBS
+    strategist_id: jonathan-golub
+    call_type: direction
+    published_on: "2024-01-16"
+    approximate_date: 0
+    target_level: 5150
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2024-01-16/ubs-raises-s-p-500-target-to-5-150-on-easing-inflation-fed-pivot"
+    notes: Raises to 5,150.
+
+  - id: call_ubs_20240220_dir_24
+    institution_id: UBS
+    strategist_id: jonathan-golub
+    call_type: direction
+    published_on: "2024-02-20"
+    approximate_date: 0
+    target_level: 5400
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/ubs-raises-sp-500-target-5400-highest-wall-street-2024-02-20"
+    notes: Raises to 5,400.
+
+  - id: call_ubs_20240528_dir_24
+    institution_id: UBS
+    strategist_id: jonathan-golub
+    call_type: direction
+    published_on: "2024-05-28"
+    approximate_date: 0
+    target_level: 5600
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2024-05-28/ubs-lifts-s-p-500-target-to-street-high-5-600-on-earnings-strength"
+    notes: Raises to 5,600.
+
+  # Barclays (Venu Krishna)
+  - id: call_barc_20231120_dir_24
+    institution_id: BARC
+    strategist_id: venu-krishna
+    call_type: direction
+    published_on: "2023-11-20"
+    approximate_date: 0
+    target_level: 4800
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/barclays-sees-sp-500-ending-2024-4800-2023-11-20"
+    notes: Krishna sets initial 4,800 target for 2024.
+
+  - id: call_barc_20240227_dir_24
+    institution_id: BARC
+    strategist_id: venu-krishna
+    call_type: direction
+    published_on: "2024-02-27"
+    approximate_date: 0
+    target_level: 5300
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2024-02-27/barclays-lifts-s-p-500-target-to-5-300-on-big-tech-resilience"
+    notes: Lifts target to 5,300.
+
+  - id: call_barc_20240905_dir_24
+    institution_id: BARC
+    strategist_id: venu-krishna
+    call_type: direction
+    published_on: "2024-09-05"
+    approximate_date: 0
+    target_level: 5600
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/barclays-raises-sp-500-target-5600-2024-09-05"
+    notes: Lifts target to 5,600.
+
+  # Société Générale (Manish Kabra)
+  - id: call_gle_20231130_dir_24
+    institution_id: GLE
+    strategist_id: manish-kabra
+    call_type: direction
+    published_on: "2023-11-30"
+    approximate_date: 0
+    target_level: 4750
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/socgen-sees-sp-500-reaching-record-4750-by-end-2024-2023-11-30"
+    notes: Kabra targets 4,750 for year-end 2024.
+
+  - id: call_gle_20240321_dir_24
+    institution_id: GLE
+    strategist_id: manish-kabra
+    call_type: direction
+    published_on: "2024-03-21"
+    approximate_date: 0
+    target_level: 5500
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2024-03-21/socgen-raises-s-p-500-target-to-5-500-citing-us-resilience"
+    notes: Lifts target to 5,500.
+
+  # ==========================================
+  # 2025 YEAR-END S&P 500 CALLS (HISTORICAL)
+  # ==========================================
+
+  # JPMorgan (Dubravko Lakos-Bujas)
+  - id: call_jpm_20241125_dir_25
+    institution_id: JPM
+    strategist_id: dubravko-lakos-bujas
+    call_type: direction
+    published_on: "2024-11-25"
+    approximate_date: 0
+    target_level: 6500
+    forecast_horizon: YE_2025
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/jpmorgan-sees-sp-500-reaching-6500-by-end-2025-2024-11-25"
+    notes: Lakos-Bujas sets initial 2025 year-end target of 6,500.
+
+  - id: call_jpm_20250515_dir_25
+    institution_id: JPM
+    strategist_id: dubravko-lakos-bujas
+    call_type: direction
+    published_on: "2025-05-15"
+    approximate_date: 0
+    target_level: 6800
+    forecast_horizon: YE_2025
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2025-05-15/jpmorgan-lifts-s-p-500-target-to-6-800"
+    notes: Raises 2025 target to 6,800.
+
+  # Goldman Sachs (David Kostin / Ben Snider)
+  - id: call_gs_20241118_dir_25
+    institution_id: GS
+    strategist_id: david-kostin
+    call_type: direction
+    published_on: "2024-11-18"
+    approximate_date: 0
+    target_level: 6500
+    forecast_horizon: YE_2025
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/goldman-sachs-forecasts-sp-500-6500-by-end-2025-2024-11-18"
+    notes: Kostin sets 6,500 baseline target for 2025.
+
+  - id: call_gs_20250610_dir_25
+    institution_id: GS
+    strategist_id: david-kostin
+    call_type: direction
+    published_on: "2025-06-10"
+    approximate_date: 0
+    target_level: 6900
+    forecast_horizon: YE_2025
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2025-06-10/goldman-lifts-2025-s-p-500-target-to-6-900"
+    notes: Raises 2025 target to 6,900.
+
+  # Morgan Stanley (Mike Wilson)
+  - id: call_ms_20241118_dir_25
+    institution_id: MS
+    strategist_id: mike-wilson
+    call_type: direction
+    published_on: "2024-11-18"
+    approximate_date: 0
+    target_level: 6500
+    forecast_horizon: YE_2025
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2024-11-18/morgan-stanley-s-wilson-sees-s-p-500-rising-to-6-500-by-end-2025"
+    notes: Wilson targets 6,500 for year-end 2025.
+
+  # Bank of America (Savita Subramanian)
+  - id: call_bac_20241126_dir_25
+    institution_id: BAC
+    strategist_id: savita-subramanian
+    call_type: direction
+    published_on: "2024-11-26"
+    approximate_date: 0
+    target_level: 6666
+    forecast_horizon: YE_2025
+    confidence: verified
+    source_url: "https://www.cnbc.com/2024/11/26/bofas-savita-subramanian-sets-6666-target-for-sp-500-in-2025.html"
+    notes: Subramanian sets 6,666 target for 2025.
+
+  # Citigroup (Scott Chronert)
+  - id: call_c_20241209_dir_25
+    institution_id: C
+    strategist_id: scott-chronert
+    call_type: direction
+    published_on: "2024-12-09"
+    approximate_date: 0
+    target_level: 6600
+    forecast_horizon: YE_2025
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/citi-sees-sp-500-reaching-6600-by-end-2025-2024-12-09"
+    notes: Chronert sets 6,600 target for 2025.
+
+  # Deutsche Bank (Binky Chadha)
+  - id: call_db_20241125_dir_25
+    institution_id: DB
+    strategist_id: binky-chadha
+    call_type: direction
+    published_on: "2024-11-25"
+    approximate_date: 0
+    target_level: 7000
+    forecast_horizon: YE_2025
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/deutsche-bank-forecasts-sp-500-7000-by-end-2025-2024-11-25"
+    notes: Chadha sets Street-high 7,000 target for 2025.
+
+  # UBS (David Lefkowitz)
+  - id: call_ubs_20241119_dir_25
+    institution_id: UBS
+    strategist_id: david-lefkowitz
+    call_type: direction
+    published_on: "2024-11-19"
+    approximate_date: 0
+    target_level: 6400
+    forecast_horizon: YE_2025
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2024-11-19/ubs-targets-6-400-for-s-p-500-by-end-of-2025"
+    notes: Lefkowitz sets 6,400 target for 2025.
+
+  # Barclays (Venu Krishna)
+  - id: call_barc_20241120_dir_25
+    institution_id: BARC
+    strategist_id: venu-krishna
+    call_type: direction
+    published_on: "2024-11-20"
+    approximate_date: 0
+    target_level: 6600
+    forecast_horizon: YE_2025
+    confidence: verified
+    source_url: "https://www.reuters.com/markets/us/barclays-lifts-sp-500-target-6600-for-2025-2024-11-20"
+    notes: Krishna sets 6,600 target for 2025.
+
+  # ==========================================
+  # 2026 YEAR-END S&P 500 CALLS (CURATED 2026)
+  # ==========================================
+
+  # JPM Chain (5 calls: 7500 -> 7200 -> 7600 -> 7800 -> 8000)
+  - id: call_jpm_20251126_dir
+    institution_id: JPM
+    strategist_id: dubravko-lakos-bujas
+    call_type: direction
+    published_on: "2025-11-26"
+    approximate_date: 0
+    target_level: 7500
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://www.reuters.com/business/finance/jp-morgan-sees-sp-500-7500-by-end-2026-double-digit-gain-here-2025-11-26"
+    notes: Initial 2026 outlook; sees S&P 500 at 7,500 by end of 2026 driven by resilient corporate earnings.
+
+  - id: call_jpm_20260320_dir
+    institution_id: JPM
+    strategist_id: dubravko-lakos-bujas
+    call_type: direction
+    published_on: "2026-03-20"
+    approximate_date: 0
+    target_level: 7200
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2026-03-20/jpmorgan-strategists-cut-s-p-500-target-on-iran-war-uncertainty"
+    notes: Cut target to 7,200 from 7,500 amid geopolitical tensions and oil shock concerns.
+
+  - id: call_jpm_20260421_dir
+    institution_id: JPM
+    strategist_id: dubravko-lakos-bujas
+    call_type: direction
+    published_on: "2026-04-21"
+    approximate_date: 0
+    target_level: 7600
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2026-04-21/jpmorgan-lifts-s-p-500-target-as-ai-rally-regains-momentum"
+    notes: Lifted target to 7,600 from 7,200 as AI capital spending and tech earnings rebound.
+
+  - id: call_jpm_20260624_dir
+    institution_id: JPM
+    strategist_id: dubravko-lakos-bujas
+    call_type: direction
+    published_on: "2026-06-24"
+    approximate_date: 0
+    target_level: 7800
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2026-06-24/jpmorgan-jpm-lifts-s-p-500-target-to-7-800-as-blue-sky-scenario-approaches"
+    notes: Raised target to 7,800 citing broadening market participation.
+
+  - id: call_jpm_20260810_dir
+    institution_id: JPM
+    strategist_id: dubravko-lakos-bujas
+    call_type: direction
+    published_on: "2026-08-10"
+    approximate_date: 0
+    target_level: 8000
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://www.cnbc.com/2026/08/10/jpmorgan-is-the-latest-to-raise-its-sp-500-target-this-time-to-8000-heres-why.html"
+    notes: Raised target to 8,000; spot ~7730 -> implied ~+3.5% (bullish under 2% band).
+
+  # Goldman Sachs (GS)
+  - id: call_gs_20251210_dir
+    institution_id: GS
+    strategist_id: ben-snider
+    call_type: direction
+    published_on: "2025-12-10"
+    approximate_date: 1
+    target_level: 7600
+    forecast_horizon: YE_2026
+    confidence: approximate_date
+    source_url: "https://x.com/DeItaone/status/1999487674688631195"
+    notes: Initial 2026 year-end forecast of 7,600.
+
+  - id: call_gs_20260526_dir
+    institution_id: GS
+    strategist_id: ben-snider
+    call_type: direction
+    published_on: "2026-05-26"
+    approximate_date: 0
+    target_level: 8000
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://www.morningstar.com/news/marketwatch/2026052789/goldman-sachs-hikes-sp-500-target-and-rejects-bubble-era-comparisons"
+    notes: Hiked target to 8,000 from 7,600 citing AI earnings momentum.
+
+  # Morgan Stanley (MS)
+  - id: call_ms_20251201_dir
+    institution_id: MS
+    strategist_id: mike-wilson
+    call_type: direction
+    published_on: "2025-12-01"
+    approximate_date: 1
+    target_level: 7800
+    forecast_horizon: YE_2026
+    confidence: approximate_date
+    source_url: "https://www.morganstanley.com/ideas/global-investment-strategy-outlook-2026"
+    notes: Mike Wilson 2026 baseline target 7,800.
+
+  - id: call_ms_20260513_dir
+    institution_id: MS
+    strategist_id: mike-wilson
+    call_type: direction
+    published_on: "2026-05-13"
+    approximate_date: 0
+    target_level: 8000
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://www.wsj.com/livecoverage/stock-market-today-dow-sp-500-nasdaq-05-13-2026/card/morgan-stanley-lifts-s-p-500-target-UOs94lXqQe7vZ8IieinP"
+    notes: Lifts year-end target to 8,000 (and 12-month rolling target to 8,300).
+
+  # Bank of America (BAC)
+  - id: call_bac_20251203_dir
+    institution_id: BAC
+    strategist_id: savita-subramanian
+    call_type: direction
+    published_on: "2025-12-03"
+    approximate_date: 0
+    target_level: 7100
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2025-12-03/bank-of-america-sees-s-p-500-s-torrid-rally-fizzling-out-in-2026"
+    notes: Savita Subramanian sets 7,100 target for 2026; spot ~6819 -> +4.1% (bullish).
+
+  - id: call_bac_20260609_dir
+    institution_id: BAC
+    strategist_id: savita-subramanian
+    call_type: direction
+    published_on: "2026-06-09"
+    approximate_date: 0
+    target_level: 7100
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://finance.yahoo.com/markets/stocks/articles/where-p-500-end-2026-042351442.html"
+    notes: Reaffirms 7,100 target; spot ~7254 -> implied -2.1% (bearish flip).
+
+  # Citigroup (C)
+  - id: call_c_20251215_dir
+    institution_id: C
+    strategist_id: scott-chronert
+    call_type: direction
+    published_on: "2025-12-15"
+    approximate_date: 1
+    target_level: 7700
+    forecast_horizon: YE_2026
+    confidence: approximate_date
+    source_url: "https://finance.yahoo.com/markets/stocks/articles/citi-lifts-p-500-target-152823135.html"
+    notes: Scott Chronert baseline 7,700 for 2026.
+
+  - id: call_c_20260615_dir
+    institution_id: C
+    strategist_id: scott-chronert
+    call_type: direction
+    published_on: "2026-06-15"
+    approximate_date: 1
+    target_level: 8100
+    forecast_horizon: YE_2026
+    confidence: approximate_date
+    source_url: "https://finance.yahoo.com/markets/stocks/articles/citi-lifts-p-500-target-152823135.html"
+    notes: Lifts target to 8,100 from 7,700.
+
+  # Deutsche Bank (DB)
+  - id: call_db_20251124_dir
+    institution_id: DB
+    strategist_id: binky-chadha
+    call_type: direction
+    published_on: "2025-11-24"
+    approximate_date: 0
+    target_level: 8000
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://www.reuters.com/business/deutsche-bank-sees-sp-500-rising-8000-by-end-2026-2025-11-24"
+    notes: Forecasts S&P 500 rising to 8,000 by end of 2026.
+
+  - id: call_db_20260811_dir
+    institution_id: DB
+    strategist_id: binky-chadha
+    call_type: direction
+    published_on: "2026-08-11"
+    approximate_date: 0
+    target_level: 8000
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://www.reuters.com/business/finance/trend-mainstay-ai-cement-its-place-core-2026-investment-strategies-2026-08-11"
+    notes: Reaffirms 8,000 target; spot ~7730 -> +3.5% (bullish).
+
+  # HSBC
+  - id: call_hsbc_20251201_dir
+    institution_id: HSBC
+    call_type: direction
+    published_on: "2025-12-01"
+    approximate_date: 1
+    target_level: 7500
+    forecast_horizon: YE_2026
+    confidence: approximate_date
+    source_url: "https://www.globalbankingandfinance.com/stocks-usa-deutsche-bank-five"
+    notes: HSBC 2026 target of 7,500.
+
+  # UBS
+  - id: call_ubs_20251215_dir
+    institution_id: UBS
+    strategist_id: david-lefkowitz
+    call_type: direction
+    published_on: "2025-12-15"
+    approximate_date: 1
+    target_level: 7700
+    forecast_horizon: YE_2026
+    confidence: approximate_date
+    source_url: "https://finance.yahoo.com/markets/stocks/articles/ubs-remains-confident-u-stocks-114320931.html"
+    notes: David Lefkowitz target 7,700 for 2026.
+
+  - id: call_ubs_20260811_dir
+    institution_id: UBS
+    strategist_id: david-lefkowitz
+    call_type: direction
+    published_on: "2026-08-11"
+    approximate_date: 0
+    target_level: 7500
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://www.reuters.com/business/finance/trend-mainstay-ai-cement-its-place-core-2026-investment-strategies-2026-08-11"
+    notes: Target cut to 7,500 from 7,700; spot ~7725 -> implied -2.9% (bearish flip).
+
+  # Barclays (BARC)
+  - id: call_barc_20251208_dir
+    institution_id: BARC
+    strategist_id: venu-krishna
+    call_type: direction
+    published_on: "2025-12-08"
+    approximate_date: 1
+    target_level: 7400
+    forecast_horizon: YE_2026
+    confidence: approximate_date
+    source_url: "https://finance.yahoo.com/news/p-500-could-climb-11-112246891.html"
+    notes: Initial year-end target 7,400.
+
+  - id: call_barc_20260415_dir
+    institution_id: BARC
+    strategist_id: venu-krishna
+    call_type: direction
+    published_on: "2026-04-15"
+    approximate_date: 1
+    target_level: 7650
+    forecast_horizon: YE_2026
+    confidence: approximate_date
+    source_url: "https://www.bloomberg.com/news/articles/2026-04-15/barclays-raises-sp-500-target"
+    notes: Raised target to 7,650.
+
+  - id: call_barc_20260615_dir
+    institution_id: BARC
+    strategist_id: venu-krishna
+    call_type: direction
+    published_on: "2026-06-15"
+    approximate_date: 1
+    target_level: 7800
+    forecast_horizon: YE_2026
+    confidence: approximate_date
+    source_url: "https://finance.yahoo.com/news/barclays-lifts-sp-target-135000412.html"
+    notes: Raised target to 7,800.
+
+  # Société Générale (GLE)
+  - id: call_gle_20260415_dir
+    institution_id: GLE
+    strategist_id: manish-kabra
+    call_type: direction
+    published_on: "2026-04-15"
+    approximate_date: 1
+    target_level: 7300
+    forecast_horizon: YE_2026
+    confidence: approximate_date
+    source_url: "https://finance.yahoo.com/news/socgen-raises-sp-500-target-142000312.html"
+    notes: Target 7,300 (+1.93% upside vs spot ~7160 -> neutral/bullish boundary).
+
+  - id: call_gle_20260715_dir
+    institution_id: GLE
+    strategist_id: manish-kabra
+    call_type: direction
+    published_on: "2026-07-15"
+    approximate_date: 1
+    target_level: 8000
+    forecast_horizon: YE_2026
+    confidence: approximate_date
+    source_url: "https://finance.yahoo.com/markets/stocks/articles/socgen-raises-p-500-target-172538237.html"
+    notes: Raised target to 8,000.
+
+  # ==========================================
+  # ALLOCATION CALLS (SPX vs ACWI)
+  # ==========================================
+
+  - id: call_bac_20251203_alloc
+    institution_id: BAC
+    strategist_id: savita-subramanian
+    call_type: allocation
+    published_on: "2025-12-03"
+    approximate_date: 0
+    allocation_stance: underweight
+    allocation_asset: SPX
+    allocation_benchmark: ACWI
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2025-12-03/bank-of-america-sees-s-p-500-s-torrid-rally-fizzling-out-in-2026"
+    notes: Underweight US equities (SPX) relative to global equities (ACWI) on elevated valuations and margin pressure.
+
+  - id: call_gs_20251210_alloc
+    institution_id: GS
+    strategist_id: ben-snider
+    call_type: allocation
+    published_on: "2025-12-10"
+    approximate_date: 1
+    allocation_stance: overweight
+    allocation_asset: SPX
+    allocation_benchmark: ACWI
+    forecast_horizon: YE_2026
+    confidence: approximate_date
+    source_url: "https://x.com/DeItaone/status/1999487674688631195"
+    notes: Overweight US vs Global on structural AI and mega-cap tech earnings dominance.
+
+  - id: call_jpm_20251126_alloc
+    institution_id: JPM
+    strategist_id: dubravko-lakos-bujas
+    call_type: allocation
+    published_on: "2025-11-26"
+    approximate_date: 0
+    allocation_stance: overweight
+    allocation_asset: SPX
+    allocation_benchmark: ACWI
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://www.reuters.com/business/finance/jp-morgan-sees-sp-500-7500-by-end-2026-double-digit-gain-here-2025-11-26"
+    notes: Overweight US equities vs ACWI benchmark in 2026 asset allocation strategy.
+
+  - id: call_ubs_20260105_alloc
+    institution_id: UBS
+    strategist_id: david-lefkowitz
+    call_type: allocation
+    published_on: "2026-01-05"
+    approximate_date: 1
+    allocation_stance: overweight
+    allocation_asset: SPX
+    allocation_benchmark: ACWI
+    forecast_horizon: YE_2026
+    confidence: approximate_date
+    source_url: "https://finance.yahoo.com/markets/stocks/articles/ubs-remains-confident-u-stocks-114320931.html"
+    notes: Attractive / Overweight US equities relative to global equities.
+
+  - id: call_bac_20260609_alloc
+    institution_id: BAC
+    strategist_id: savita-subramanian
+    call_type: allocation
+    published_on: "2026-06-09"
+    approximate_date: 0
+    allocation_stance: underweight
+    allocation_asset: SPX
+    allocation_benchmark: ACWI
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://finance.yahoo.com/markets/stocks/articles/where-p-500-end-2026-042351442.html"
+    notes: Reaffirmed Underweight US Equities vs ACWI benchmark.
+
+  # ==========================================
+  # PROBABILITY CALLS
+  # ==========================================
+
+  - id: call_jpm_20260624_prob
+    institution_id: JPM
+    strategist_id: dubravko-lakos-bujas
+    call_type: probability
+    published_on: "2026-06-24"
+    approximate_date: 0
+    probability_event: us_recession_2026
+    probability_value: 0.35
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://finance.yahoo.com/markets/stocks/articles/jpm-35-percent-recession-odds-2026-0624.html"
+    notes: JPM economists assess a 35% probability of US recession occurring by end-2026.
+
+  # =========================================================================
+  # Added by the 2026-08 Tavily discovery sweep (src/scorecard/discover.py).
+  # Every entry below carries a dated publisher URL; `approximate_date: 1`
+  # marks calls whose day is inferred from article content rather than a dated
+  # URL. Spot prices are resolved by ingest, never hand-entered.
+  # =========================================================================
+
+  # --- Wells Fargo (Investment Institute) ---------------------------------
+  - id: call_wfc_20240408_dir_24
+    institution_id: WFC
+    strategist_id: darrell-cronk
+    call_type: direction
+    published_on: "2024-04-08"
+    approximate_date: 0
+    target_level: 5535
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2024-04-08/wells-fargo-is-wall-street-s-biggest-believer-in-s-p-500-rally"
+    notes: Raises year-end 2024 target to 5,535 from 4,625, citing artificial intelligence; Street-high at the time.
+
+  - id: call_wfc_20241205_dir_25
+    institution_id: WFC
+    strategist_id: darrell-cronk
+    call_type: direction
+    published_on: "2024-12-05"
+    approximate_date: 0
+    target_level: 7007
+    forecast_horizon: YE_2025
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2024-12-05/wells-fargo-sees-james-bond-stock-market-in-2025-s-p-at-7-007"
+    notes: Sets 7,007 for year-end 2025 - Wall Street's highest target for that year.
+
+  - id: call_wfc_20251112_dir_25
+    institution_id: WFC
+    strategist_id: ohsung-kwon
+    call_type: direction
+    published_on: "2025-11-12"
+    approximate_date: 1
+    target_level: 7100
+    forecast_horizon: YE_2025
+    confidence: approximate_date
+    source_url: "https://finance.yahoo.com/news/top-analyst-revamps-p-500-170300139.html"
+    notes: Lifts year-end target to 7,100, described as ~5% above the 6,846.61 close on November 11.
+
+  - id: call_wfc_20260331_dir
+    institution_id: WFC
+    strategist_id: darrell-cronk
+    call_type: direction
+    published_on: "2026-03-31"
+    approximate_date: 0
+    target_level: 7300
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2026-03-31/wells-fargo-trims-s-p-500-target-says-iran-war-to-limit-gains"
+    notes: Trims year-end 2026 target to 7,300 from 7,800 on the Iran war; a cut, not a raise.
+
+  # --- RBC Capital Markets -------------------------------------------------
+  - id: call_rbc_20260508_dir
+    institution_id: RBC
+    strategist_id: lori-calvasina
+    call_type: direction
+    published_on: "2026-05-08"
+    approximate_date: 0
+    target_level: 7900
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://finance.yahoo.com/markets/stocks/articles/rbc-lifts-p-500-end-054619712.html"
+    notes: Raises year-end 2026 target to 7,900 from 7,750 on resilient earnings and AI-linked strength.
+
+  # --- Evercore ISI --------------------------------------------------------
+  - id: call_evr_20240616_dir_24
+    institution_id: EVR
+    strategist_id: julian-emanuel
+    call_type: direction
+    published_on: "2024-06-16"
+    approximate_date: 0
+    target_level: 6000
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2024-06-16/evercore-isi-sees-s-p-500-gain-raging-on-upping-target-to-6-000"
+    notes: Raises year-end 2024 forecast to 6,000, the highest among major strategists at the time.
+
+  - id: call_evr_20251117_dir
+    institution_id: EVR
+    strategist_id: julian-emanuel
+    call_type: direction
+    published_on: "2025-11-17"
+    approximate_date: 1
+    target_level: 7750
+    forecast_horizon: YE_2026
+    confidence: approximate_date
+    source_url: "https://finance.yahoo.com/news/ai-revolution-could-lift-sp-500-to-7750-next-year-strategist-says-163244700.html"
+    notes: Base case 7,750 for year-end 2026 alongside a raise of the 2025 target to 6,250 from 5,600.
+
+  # --- Oppenheimer ---------------------------------------------------------
+  - id: call_opco_20250728_dir_25
+    institution_id: OPCO
+    strategist_id: john-stoltzfus
+    call_type: direction
+    published_on: "2025-07-28"
+    approximate_date: 0
+    target_level: 7100
+    forecast_horizon: YE_2025
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2025-07-28/oppenheimer-lifts-s-p-500-target-to-call-third-year-of-20-gains"
+    notes: Lifts year-end 2025 target to 7,100 from 5,950, calling a third consecutive year of 20% gains.
+
+  - id: call_opco_20251230_dir
+    institution_id: OPCO
+    strategist_id: john-stoltzfus
+    call_type: direction
+    published_on: "2025-12-30"
+    approximate_date: 1
+    target_level: 8100
+    forecast_horizon: YE_2026
+    confidence: approximate_date
+    source_url: "https://finance.yahoo.com/markets/stocks/articles/oppenheimer-doubles-down-stock-market-170700425.html"
+    notes: Sets 8,100 for year-end 2026 in December with the index near 6,870; the Street's highest at the time.
+
+  # --- BMO Capital Markets -------------------------------------------------
+  - id: call_bmo_20240919_dir_24
+    institution_id: BMO
+    strategist_id: brian-belski
+    call_type: direction
+    published_on: "2024-09-19"
+    approximate_date: 0
+    target_level: 6100
+    forecast_horizon: YE_2024
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2024-09-19/strategist-who-called-rally-last-year-sees-s-p-soaring-to-6-100"
+    notes: Raises 2024 year-end forecast to 6,100 from 5,600, the highest target on the Street at the time.
+
+  # --- Yardeni Research ----------------------------------------------------
+  - id: call_yard_20260812_dir
+    institution_id: YARD
+    strategist_id: ed-yardeni
+    call_type: direction
+    published_on: "2026-08-12"
+    approximate_date: 0
+    target_level: 8400
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2026-08-12/yardeni-raises-s-p-500-view-to-8-400-on-fabulous-earnings"
+    notes: Raises year-end view to 8,400 on "fabulous earnings" momentum, up from 8,250.
+
+  # --- Probability: the 2023 recession that never came ---------------------
+  - id: call_gs_20220318_prob_23
+    institution_id: GS
+    strategist_id: jan-hatzius
+    call_type: probability
+    published_on: "2022-03-18"
+    approximate_date: 1
+    probability_event: us_recession_2023
+    probability_value: 0.25
+    forecast_horizon: YE_2023
+    confidence: approximate_date
+    source_url: "https://www.investopedia.com/war-boosting-recession-odds-for-2023-goldman-sachs-says-5221954"
+    notes: Puts the probability of a 2023 recession at 20-30% on the oil-price shock from Russia's invasion; midpoint recorded.
+
+  - id: call_be_20221017_prob_23
+    institution_id: BE
+    call_type: probability
+    published_on: "2022-10-17"
+    approximate_date: 0
+    probability_event: us_recession_2023
+    probability_value: 1.0
+    forecast_horizon: YE_2023
+    confidence: verified
+    source_url: "https://www.bloomberg.com/news/articles/2022-10-17/forecast-for-us-recession-within-year-hits-100-in-blow-to"
+    notes: Bloomberg Economics model puts a 12-month recession probability at 100%, up from 65% in the prior update.
+
+  - id: call_ndr_20221215_prob_23
+    institution_id: NDR
+    call_type: probability
+    published_on: "2022-12-15"
+    approximate_date: 1
+    probability_event: us_recession_2023
+    probability_value: 0.65
+    forecast_horizon: YE_2023
+    confidence: approximate_date
+    source_url: "https://www.bloomberg.com/graphics/2023-investment-outlooks"
+    notes: Puts the odds of a severe global downturn at 65% in its 2023 outlook, expecting a mild recession on both sides of the Atlantic.
+
+  # --- Probability: 2026 recession, Goldman's revision chain ---------------
+  - id: call_gs_20260323_prob
+    institution_id: GS
+    strategist_id: jan-hatzius
+    call_type: probability
+    published_on: "2026-03-23"
+    approximate_date: 0
+    probability_event: us_recession_2026
+    probability_value: 0.30
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://www.wsj.com/livecoverage/stock-market-today-dow-sp-500-nasdaq-03-23-2026/card/goldman-sachs-lifts-u-s-recession-probability-to-30"
+    notes: Lifts the 12-month US recession probability to 30%, up 5 percentage points, on the surge in oil and gas prices.
+
+  - id: call_gs_20260622_prob
+    institution_id: GS
+    strategist_id: jan-hatzius
+    call_type: probability
+    published_on: "2026-06-22"
+    approximate_date: 0
+    probability_event: us_recession_2026
+    probability_value: 0.15
+    forecast_horizon: YE_2026
+    confidence: verified
+    source_url: "https://www.wsj.com/livecoverage/stock-market-today-dow-sp-500-nasdaq-06-22-2026/card/goldman-cuts-u-s-recession-forecast"
+    notes: Cuts 12-month recession odds to 15% from 25% after the Iran peace agreement and falling energy prices.
