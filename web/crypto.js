@@ -669,15 +669,15 @@
     if (curves.length === 0) return;
 
     const W = 1000;
-    const H = 280;
+    const H = 290;
     const padL = 50;
     const padR = 40;
-    const padT = 30;
-    const padB = 40;
+    const padT = 32;
+    const padB = 42;
     const plotW = W - padL - padR;
     const plotH = H - padT - padB;
 
-    const maxDay = 1200;
+    const maxDay = 1460; // Complete 4-year cycle from Halving to Halving
 
     const getX = (d) => padL + (d / maxDay) * plotW;
     const getY = (m) => {
@@ -689,13 +689,13 @@
       return padT + plotH - (ratio * plotH);
     };
 
-    // Phase bands
+    // Phase bands spanning the entire 1,460-day cycle
     const x0 = getX(0);
-    const x150 = getX(150);
-    const x480 = getX(480);
+    const x165 = getX(165);
     const x550 = getX(550);
-    const x1000 = getX(1000);
-    const x1200 = getX(1200);
+    const x950 = getX(950);
+    const x1090 = getX(1090);
+    const x1460 = getX(1460);
 
     // Build curve paths
     const buildPath = (key) => {
@@ -730,7 +730,9 @@
     const yNow = getY(currentMult);
 
     const xRise = getX(1090);
-    const yRise = getY(12.1);
+    const yRise = getY(10.67);
+    const xH5 = getX(1460);
+    const yH5 = getY(10.33);
 
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     svg.innerHTML = `
@@ -747,48 +749,54 @@
         </radialGradient>
       </defs>
 
-      <!-- Phase Background Bands -->
-      <rect x="${x0}" y="${padT}" width="${x150 - x0}" height="${plotH}" fill="rgba(239, 68, 68, 0.05)"/>
-      <rect x="${x150}" y="${padT}" width="${x480 - x150}" height="${plotH}" fill="rgba(16, 185, 129, 0.08)"/>
-      <rect x="${x480}" y="${padT}" width="${x550 - x480}" height="${plotH}" fill="rgba(251, 191, 36, 0.08)"/>
-      <rect x="${x550}" y="${padT}" width="${x1000 - x550}" height="${plotH}" fill="rgba(59, 130, 246, 0.05)"/>
-      <rect x="${x1000}" y="${padT}" width="${x1200 - x1000}" height="${plotH}" fill="rgba(192, 132, 252, 0.08)"/>
+      <!-- Phase Background Bands (Full 4-Year Cycle) -->
+      <rect x="${x0}" y="${padT}" width="${x165 - x0}" height="${plotH}" fill="rgba(239, 68, 68, 0.05)"/>
+      <rect x="${x165}" y="${padT}" width="${x550 - x165}" height="${plotH}" fill="rgba(16, 185, 129, 0.08)"/>
+      <rect x="${x550}" y="${padT}" width="${x950 - x550}" height="${plotH}" fill="rgba(59, 130, 246, 0.05)"/>
+      <rect x="${x950}" y="${padT}" width="${x1090 - x950}" height="${plotH}" fill="rgba(148, 163, 184, 0.06)"/>
+      <rect x="${x1090}" y="${padT}" width="${x1460 - x1090}" height="${plotH}" fill="rgba(192, 132, 252, 0.08)"/>
 
       <!-- Phase Labels Top -->
-      <text x="${(x0 + x150) / 2}" y="${padT - 12}" fill="#94a3b8" font-family="var(--font-mono)" font-size="8.5" text-anchor="middle">1. MINER CHOP (0-150d)</text>
-      <text x="${(x150 + x480) / 2}" y="${padT - 12}" fill="#34d399" font-family="var(--font-mono)" font-size="8.5" font-weight="700" text-anchor="middle">2. EXPANSION (150-480d)</text>
-      <text x="${(x480 + x550) / 2}" y="${padT - 12}" fill="#fbbf24" font-family="var(--font-mono)" font-size="8.5" text-anchor="middle">3. PEAK</text>
-      <text x="${(x550 + x1000) / 2}" y="${padT - 12}" fill="#60a5fa" font-family="var(--font-mono)" font-size="8.5" text-anchor="middle">4. BEAR TROUGH & WINTER BASE (550-1000d)</text>
-      <text x="${(x1000 + x1200) / 2}" y="${padT - 12}" fill="#c084fc" font-family="var(--font-mono)" font-size="8.5" font-weight="700" text-anchor="middle">5. PRE-HALVING RAMP</text>
+      <text x="${(x0 + x165) / 2}" y="${padT - 12}" fill="#94a3b8" font-family="var(--font-mono)" font-size="8" text-anchor="middle">1. CHOP (0-165d)</text>
+      <text x="${(x165 + x550) / 2}" y="${padT - 12}" fill="#34d399" font-family="var(--font-mono)" font-size="8" font-weight="700" text-anchor="middle">2. BULL RUN &amp; PEAK (165-550d)</text>
+      <text x="${(x550 + x950) / 2}" y="${padT - 12}" fill="#60a5fa" font-family="var(--font-mono)" font-size="8" text-anchor="middle">3. BEAR CRASH &amp; BOTTOM (550-950d)</text>
+      <text x="${(x950 + x1090) / 2}" y="${padT - 12}" fill="#cbd5e1" font-family="var(--font-mono)" font-size="8" text-anchor="middle">4. WINTER BASE</text>
+      <text x="${(x1090 + x1460) / 2}" y="${padT - 12}" fill="#c084fc" font-family="var(--font-mono)" font-size="8" font-weight="700" text-anchor="middle">5. PRE-HALVING RAMP (1090-1460d)</text>
 
       <!-- Y Axis Grid & Labels -->
       ${[1, 2, 5, 10, 25, 50, 100].map(val => `
         <line x1="${padL}" y1="${getY(val)}" x2="${W - padR}" y2="${getY(val)}" stroke="#1e293b" stroke-width="1" stroke-dasharray="2,3"/>
-        <text x="${padL - 6}" y="${getY(val) + 3}" fill="#64748b" font-family="var(--font-mono)" font-size="9.5" text-anchor="end">${val}x</text>
+        <text x="${padL - 6}" y="${getY(val) + 3}" fill="#64748b" font-family="var(--font-mono)" font-size="9" text-anchor="end">${val}x</text>
       `).join('')}
 
-      <!-- X Axis Days -->
-      ${[0, 150, 300, 480, 550, 700, 850, 1000, 1090, 1200].map(d => `
+      <!-- X Axis Days Across Full 4-Year Cycle -->
+      ${[0, 165, 371, 526, 750, 853, 950, 1090, 1250, 1460].map(d => `
         <line x1="${getX(d)}" y1="${padT + plotH}" x2="${getX(d)}" y2="${padT + plotH + 4}" stroke="#334155" stroke-width="1"/>
-        <text x="${getX(d)}" y="${padT + plotH + 16}" fill="#94a3b8" font-family="var(--font-mono)" font-size="9" text-anchor="middle">Day ${d}</text>
+        <text x="${getX(d)}" y="${padT + plotH + 16}" fill="#94a3b8" font-family="var(--font-mono)" font-size="8.5" text-anchor="middle">Day ${d}</text>
       `).join('')}
 
-      <!-- Curves -->
+      <!-- Curves (Full Cycles 1, 2, 3, and Active 4) -->
       <path d="${path1}" fill="none" stroke="#ef4444" stroke-width="1.6" stroke-dasharray="4,2" opacity="0.75"/>
       <path d="${path2}" fill="none" stroke="#f59e0b" stroke-width="1.8" opacity="0.85"/>
       <path d="${path3}" fill="none" stroke="#3b82f6" stroke-width="2.0" opacity="0.9"/>
-      <path d="${path4}" fill="none" stroke="#10b981" stroke-width="3.6" stroke-linecap="round"/>
+      <path d="${path4}" fill="none" stroke="#10b981" stroke-width="3.8" stroke-linecap="round"/>
 
       <!-- Golden Breakout Marker at Day 165 -->
       <line x1="${getX(165)}" y1="${padT}" x2="${getX(165)}" y2="${padT + plotH}" stroke="#34d399" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.7"/>
-      <circle cx="${getX(165)}" cy="${getY(1.35)}" r="4" fill="#34d399" stroke="#0f172a" stroke-width="1.5"/>
-      <text x="${getX(165) + 6}" y="${getY(1.35) - 6}" fill="#34d399" font-family="var(--font-mono)" font-size="8.5">Breakout (Day 165)</text>
+      <circle cx="${getX(165)}" cy="${getY(1.44)}" r="4" fill="#34d399" stroke="#0f172a" stroke-width="1.5"/>
+      <text x="${getX(165) + 6}" y="${getY(1.44) - 6}" fill="#34d399" font-family="var(--font-mono)" font-size="8.5">Breakout (Day 165)</text>
 
       <!-- WHEN IT RISES AGAIN Marker at Day 1090 (Spring 2027) -->
       <line x1="${xRise}" y1="${padT}" x2="${xRise}" y2="${padT + plotH}" stroke="#38bdf8" stroke-width="1.6" stroke-dasharray="3,3"/>
       <circle cx="${xRise}" cy="${yRise}" r="5" fill="#38bdf8" stroke="#0f172a" stroke-width="2"/>
       <rect x="${xRise - 85}" y="${padT + 18}" width="170" height="18" fill="rgba(56, 189, 248, 0.2)" stroke="#38bdf8" rx="3"/>
       <text x="${xRise}" y="${padT + 30}" fill="#38bdf8" font-family="var(--font-mono)" font-size="8.5" font-weight="700" text-anchor="middle">&#9650; WHEN IT RISES AGAIN (SPRING 2027)</text>
+
+      <!-- NEXT HALVING #5 Marker at Day 1460 (April 17, 2028) -->
+      <line x1="${xH5}" y1="${padT}" x2="${xH5}" y2="${padT + plotH}" stroke="#c084fc" stroke-width="1.8" stroke-dasharray="4,2"/>
+      <circle cx="${xH5}" cy="${yH5}" r="5" fill="#c084fc" stroke="#0f172a" stroke-width="2"/>
+      <rect x="${xH5 - 80}" y="${padT + 42}" width="120" height="18" fill="rgba(192, 132, 252, 0.2)" stroke="#c084fc" rx="3"/>
+      <text x="${xH5 - 20}" y="${padT + 54}" fill="#c084fc" font-family="var(--font-mono)" font-size="8.5" font-weight="700" text-anchor="middle">&#9889; HALVING #5 (APR 2028)</text>
 
       <!-- YOU ARE HERE (Day 853) Current Position Marker -->
       <line x1="${xNow}" y1="${padT}" x2="${xNow}" y2="${padT + plotH}" stroke="#fbbf24" stroke-width="2.2" stroke-dasharray="4,2"/>
