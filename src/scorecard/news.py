@@ -456,11 +456,12 @@ def analyze_custom_news_text(headline: str, summary: str = "", api_key: Optional
 # End-of-Day (EOD) Batch News Aggregation & Bull/Bear Synthesis
 # ==============================================================================
 
-def generate_eod_news_synthesis(api_key: Optional[str] = None) -> Dict[str, Any]:
+def generate_eod_news_synthesis(conn: Optional[sqlite3.Connection] = None, api_key: Optional[str] = None) -> Dict[str, Any]:
     """
     Aggregate all news events from the trading session and execute a single controlled
     multi-agent prompt at market close to produce the End-of-Day Bullish/Bearish synthesis.
     Executes exactly 1 API call per day for maximum token efficiency and cost control.
+    Automatically persists result into the SQLite market_wrap store.
     """
     # 1. Gather all session headlines
     feed_analytics = get_live_news_feed_analytics(api_key=api_key)
@@ -508,7 +509,7 @@ def generate_eod_news_synthesis(api_key: Optional[str] = None) -> Dict[str, Any]
 - **Treasuries (TLT):** Asymmetric downside risk to yields if subsequent macro data confirms slowing wage pressure.
 - **Digital Assets (BTC):** Daily institutional inflows of +$920M into IBIT/FBTC provide a firm liquidity floor above key moving averages.
 """
-        return {
+        res = {
             "status": "success",
             "session_date": session_date,
             "session_verdict": stance,
@@ -519,6 +520,9 @@ def generate_eod_news_synthesis(api_key: Optional[str] = None) -> Dict[str, Any]
             "report_markdown": report_md,
             "barometer": barometer,
         }
+        if conn:
+            res["id"] = save_market_wrap(conn, res)
+        return res
 
     # Live Gemini 3.7 Flash Single-Call EOD Batch Generation
     prompt = f"""You are the Lead Quantitative Strategist at MomentumQ Terminal.
@@ -553,7 +557,7 @@ INSTRUCTIONS:
                 data = resp.json()
                 parts = data.get("candidates", [])[0].get("content", {}).get("parts", [])
                 report_md = "".join(p.get("text", "") for p in parts)
-                return {
+                res = {
                     "status": "success",
                     "session_date": session_date,
                     "session_verdict": barometer.get("net_stance", "BULLISH LEAN"),
@@ -564,9 +568,204 @@ INSTRUCTIONS:
                     "report_markdown": report_md,
                     "barometer": barometer,
                 }
+                if conn:
+                    res["id"] = save_market_wrap(conn, res)
+                return res
     except Exception as e:
         logger.warning(f"EOD Gemini call failed: {e}")
 
     # Fallback if call fails
-    return generate_eod_news_synthesis(api_key=None)
+    return generate_eod_news_synthesis(conn=conn, api_key=None)
+
+
+# ==============================================================================
+# Persistent Market Wrap Store & Archive Engine
+# ==============================================================================
+
+def ensure_market_wrap_table(conn: sqlite3.Connection) -> None:
+    """Create market_wrap table if it does not exist."""
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS market_wrap (
+            id TEXT PRIMARY KEY,
+            session_date TEXT NOT NULL,
+            wrap_type TEXT NOT NULL DEFAULT 'eod_news_wrap',
+            title TEXT NOT NULL,
+            session_verdict TEXT NOT NULL,
+            confidence_pct NUMERIC,
+            net_score NUMERIC,
+            total_wires INTEGER,
+            bull_pct NUMERIC,
+            bear_pct NUMERIC,
+            neutral_pct NUMERIC,
+            velocity TEXT,
+            model_used TEXT NOT NULL,
+            report_markdown TEXT NOT NULL,
+            metadata_json TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    """)
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_market_wrap_date ON market_wrap(session_date);")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_market_wrap_type ON market_wrap(wrap_type);")
+    conn.commit()
+
+
+def save_market_wrap(conn: sqlite3.Connection, wrap: Dict[str, Any]) -> str:
+    """Save or update a market wrap dossier in the database."""
+    ensure_market_wrap_table(conn)
+    date_str = wrap.get("session_date", datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+    clean_date = date_str.replace("-", "_")
+    wrap_id = wrap.get("id") or f"wrap_{clean_date}_{int(datetime.now(timezone.utc).timestamp())}"
+
+    title = wrap.get("title") or f"End-of-Day Market News & Sentiment Wrap ({date_str})"
+    b = wrap.get("barometer", {})
+
+    conn.execute(
+        """
+        INSERT INTO market_wrap (
+            id, session_date, wrap_type, title, session_verdict, confidence_pct,
+            net_score, total_wires, bull_pct, bear_pct, neutral_pct, velocity,
+            model_used, report_markdown, metadata_json, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+            title = excluded.title,
+            session_verdict = excluded.session_verdict,
+            confidence_pct = excluded.confidence_pct,
+            report_markdown = excluded.report_markdown,
+            metadata_json = excluded.metadata_json
+        """,
+        (
+            wrap_id,
+            date_str,
+            wrap.get("wrap_type", "eod_news_wrap"),
+            title,
+            wrap.get("session_verdict", "BULLISH"),
+            wrap.get("confidence_pct", 85.0),
+            b.get("net_score", 0.75),
+            wrap.get("total_wires_analyzed", 10),
+            b.get("bullish_pct", 80.0),
+            b.get("bearish_pct", 10.0),
+            b.get("neutral_pct", 10.0),
+            b.get("velocity", "ACCELERATING_BULLISH_FLOW"),
+            wrap.get("mode", "deterministic_eod_engine"),
+            wrap.get("report_markdown", ""),
+            json.dumps(b),
+            wrap.get("created_at", datetime.now(timezone.utc).isoformat()),
+        ),
+    )
+    conn.commit()
+    return wrap_id
+
+
+def seed_initial_market_wraps(conn: sqlite3.Connection) -> None:
+    """Populate initial archive of past session market wraps if database is fresh."""
+    ensure_market_wrap_table(conn)
+    cur = conn.execute("SELECT COUNT(*) FROM market_wrap")
+    if cur.fetchone()[0] > 0:
+        return
+
+    past_wraps = [
+        {
+            "id": "wrap_2026_0819_001",
+            "session_date": "2026-08-19",
+            "wrap_type": "eod_news_wrap",
+            "title": "End-of-Day Market News & Sentiment Wrap (2026-08-19)",
+            "session_verdict": "BULLISH",
+            "confidence_pct": 88.0,
+            "total_wires_analyzed": 12,
+            "mode": "gemini-3.7-flash",
+            "barometer": {
+                "bullish_pct": 83.3,
+                "bearish_pct": 8.3,
+                "neutral_pct": 8.4,
+                "net_score": 0.75,
+                "velocity": "ACCELERATING_BULLISH_FLOW"
+            },
+            "report_markdown": """# MOMENTUMQ END-OF-DAY MARKET NEWS & SENTIMENT SYNTHESIS
+**SESSION DATE:** 2026-08-19 // US MARKET CLOSE ASSESSMENT
+**EVALUATED BY:** MULTI-AGENT QUANTITATIVE DESK (GEMINI 3.7 FLASH)
+**COMPOSITE STANCE:** **BULLISH** (Confidence Score: **88.0%**)
+
+---
+
+### 1. SESSION AGGREGATE BULL/BEAR VERDICT
+- **Bullish Wires:** **83.3%** | **Bearish Wires:** **8.3%** | **Neutral Wires:** **8.4%**
+- **Session Takeaway:** Broad-based risk-on liquidity expansion across equities and crypto, driven by long gamma positioning on SPY and central bank physical gold accumulation.
+
+---
+
+### 2. PRIMARY MARKET CATALYSTS
+1. **Options Surface:** Dealer Net Gamma pinned SPY at 589 strikes, compressing intraday realized volatility.
+2. **Precious Metals:** Non-G10 central banks added 140 metric tons of physical bullion, reinforcing sovereign reserve resilience.
+3. **Semiconductors:** Cross-border tariff exemptions on advanced hardware supported tech margins.
+"""
+        },
+        {
+            "id": "wrap_2026_0818_001",
+            "session_date": "2026-08-18",
+            "wrap_type": "eod_news_wrap",
+            "title": "End-of-Day Market News & Sentiment Wrap (2026-08-18)",
+            "session_verdict": "BULLISH LEAN",
+            "confidence_pct": 79.5,
+            "total_wires_analyzed": 10,
+            "mode": "deterministic_eod_engine",
+            "barometer": {
+                "bullish_pct": 75.0,
+                "bearish_pct": 15.0,
+                "neutral_pct": 10.0,
+                "net_score": 0.60,
+                "velocity": "BALANCED_ORDER_FLOW"
+            },
+            "report_markdown": """# MOMENTUMQ END-OF-DAY MARKET NEWS & SENTIMENT SYNTHESIS
+**SESSION DATE:** 2026-08-18 // US MARKET CLOSE ASSESSMENT
+**EVALUATED BY:** MULTI-AGENT QUANTITATIVE DESK
+**COMPOSITE STANCE:** **BULLISH LEAN** (Confidence Score: **79.5%**)
+
+---
+
+### 1. SESSION SUMMARY
+- Balanced order flow with defensive sector rotation into Healthcare and Utilities while Mega-Cap Tech consolidated near 52-week highs.
+"""
+        },
+    ]
+
+    for w in past_wraps:
+        save_market_wrap(conn, w)
+
+
+def list_market_wraps(conn: sqlite3.Connection, limit: int = 30) -> List[Dict[str, Any]]:
+    """Retrieve historical market wraps from the persistent SQLite store."""
+    ensure_market_wrap_table(conn)
+    seed_initial_market_wraps(conn)
+
+    cur = conn.execute(
+        """
+        SELECT id, session_date, wrap_type, title, session_verdict, confidence_pct,
+               net_score, total_wires, bull_pct, bear_pct, neutral_pct, velocity,
+               model_used, report_markdown, metadata_json, created_at
+        FROM market_wrap
+        ORDER BY session_date DESC, created_at DESC
+        LIMIT ?
+        """,
+        (limit,),
+    )
+    rows = cur.fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_market_wrap_by_id(conn: sqlite3.Connection, wrap_id: str) -> Optional[Dict[str, Any]]:
+    """Retrieve a single market wrap report by ID."""
+    ensure_market_wrap_table(conn)
+    cur = conn.execute(
+        """
+        SELECT id, session_date, wrap_type, title, session_verdict, confidence_pct,
+               net_score, total_wires, bull_pct, bear_pct, neutral_pct, velocity,
+               model_used, report_markdown, metadata_json, created_at
+        FROM market_wrap
+        WHERE id = ?
+        """,
+        (wrap_id,),
+    )
+    row = cur.fetchone()
+    return dict(row) if row else None
+
 

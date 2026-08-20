@@ -304,13 +304,13 @@
       </div>
     </section>
 
-    <!-- Section 05: Historical Dossiers Archive Blotter -->
+    <!-- Section 05: Historical Dossiers & Market Wraps Store (SQLite Vault) -->
     <section class="section-reports-archive" id="secReportsArchive" style="margin-bottom: var(--sp-6);">
       <div class="section-title-row">
         <div class="section-heading">
-          <span class="section-kicker">05 // DOSSIER ARCHIVE</span>
-          <h2>Historical Quantitative Intelligence Blotter</h2>
-          <span class="section-meta">Audit trail of synthesized multi-agent research briefs generated across current and past market sessions.</span>
+          <span class="section-kicker">05 // DOSSIER &amp; MARKET WRAP STORE (SQLITE VAULT)</span>
+          <h2>Historical Executive Research &amp; Market Wraps Archive</h2>
+          <span class="section-meta">Persistent SQLite database archive of daily End-of-Day market wraps, weekly executive dossiers, and on-demand agent syntheses.</span>
         </div>
       </div>
 
@@ -318,11 +318,13 @@
         <table class="blotter-table" id="agentReportsTable">
           <thead>
             <tr>
-              <th style="min-width:140px;">TIMESTAMP (UTC)</th>
-              <th style="min-width:180px;">REPORT TYPE</th>
-              <th style="min-width:240px;">TITLE &amp; SUBJECT</th>
-              <th class="text-center" style="min-width:110px;">ENGINE MODE</th>
-              <th class="text-center" style="min-width:100px;">ACTIONS</th>
+              <th style="min-width:130px;">DATE / TIMESTAMP</th>
+              <th style="min-width:150px;">WRAP / DOSSIER TYPE</th>
+              <th style="min-width:280px;">TITLE &amp; SUBJECT</th>
+              <th class="text-center" style="min-width:120px;">SESSION VERDICT</th>
+              <th class="text-center" style="min-width:95px;">CONFIDENCE</th>
+              <th class="text-center" style="min-width:120px;">ENGINE MODE</th>
+              <th class="text-center" style="min-width:110px;">ACTIONS</th>
             </tr>
           </thead>
           <tbody id="agentReportsTbody">

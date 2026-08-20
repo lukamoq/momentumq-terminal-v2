@@ -710,7 +710,7 @@ def post_news_analyze(req: NewsAnalyzeRequest) -> Response:
 def get_news_eod_wrap(api_key: Optional[str] = None) -> Response:
     """Return aggregated End-of-Day (EOD) Market News & Sentiment Synthesis."""
     from scorecard.news import generate_eod_news_synthesis
-    return _cached_json_response("news_eod_wrap", lambda: generate_eod_news_synthesis(api_key=api_key))
+    return _cached_json_response("news_eod_wrap", lambda: generate_eod_news_synthesis(get_connection(), api_key=api_key))
 
 
 @app.post("/api/news/eod-wrap")
@@ -718,8 +718,27 @@ def post_news_eod_wrap(req: Optional[NewsAnalyzeRequest] = None) -> Response:
     """Trigger fresh End-of-Day (EOD) Market News & Sentiment Synthesis."""
     from scorecard.news import generate_eod_news_synthesis
     api_key = req.api_key if req else None
-    data = generate_eod_news_synthesis(api_key=api_key)
+    data = generate_eod_news_synthesis(get_connection(), api_key=api_key)
     return Response(content=json.dumps(data), media_type="application/json")
+
+
+@app.get("/api/news/market-wraps")
+def get_news_market_wraps(limit: int = 30) -> Response:
+    """Return list of historical End-of-Day market wraps stored in SQLite database."""
+    from scorecard.news import list_market_wraps
+    data = list_market_wraps(get_connection(), limit=limit)
+    return Response(content=json.dumps(data), media_type="application/json")
+
+
+@app.get("/api/news/market-wraps/{wrap_id}")
+def get_news_market_wrap_single(wrap_id: str) -> Response:
+    """Return a single historical market wrap report by ID from SQLite store."""
+    from scorecard.news import get_market_wrap_by_id
+    data = get_market_wrap_by_id(get_connection(), wrap_id)
+    if not data:
+        return Response(content=json.dumps({"error": "Wrap not found"}), status_code=404, media_type="application/json")
+    return Response(content=json.dumps(data), media_type="application/json")
+
 
 
 

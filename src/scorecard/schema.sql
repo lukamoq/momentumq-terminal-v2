@@ -350,3 +350,27 @@ CREATE TABLE IF NOT EXISTS vol_index_observation (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (date, underlying)
 );
+
+-- 11. End-of-Day Market Wraps & AI Research Dossiers Store
+CREATE TABLE IF NOT EXISTS market_wrap (
+    id TEXT PRIMARY KEY,
+    session_date TEXT NOT NULL,
+    wrap_type TEXT NOT NULL DEFAULT 'eod_news_wrap',
+    title TEXT NOT NULL,
+    session_verdict TEXT NOT NULL,
+    confidence_pct NUMERIC,
+    net_score NUMERIC,
+    total_wires INTEGER,
+    bull_pct NUMERIC,
+    bear_pct NUMERIC,
+    neutral_pct NUMERIC,
+    velocity TEXT,
+    model_used TEXT NOT NULL,
+    report_markdown TEXT NOT NULL,
+    metadata_json TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_market_wrap_date ON market_wrap(session_date);
+CREATE INDEX IF NOT EXISTS idx_market_wrap_type ON market_wrap(wrap_type);
+
