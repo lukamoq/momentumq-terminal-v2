@@ -3,155 +3,191 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Autonomous Quantitative AI Agents &amp; Research Dossiers — MomentumQ Terminal</title>
+  <title>Autonomous AI Agents &amp; Quantitative Research Dossiers — MomentumQ Terminal</title>
   <meta name="description" content="Gemini 3.7 Flash autonomous multi-agent quantitative intelligence engine. End-of-week dossiers, dealer gamma analysis, macro regime synthesis, and commodity hedging.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="terminal-body theme-obsidian">
-  <div class="site-wrapper">
-    <!-- Main Top Navigation -->
-    <header class="header">
-      <div class="header-inner">
-        <div class="brand">
-          <div class="brand-text">
-            <span class="brand-title">MomentumQ</span>
-            <span class="brand-subtitle">Autonomous Quantitative Agents // Gemini 3.7 Flash</span>
+<body>
+  <div class="blotter-container">
+    <!-- Top Global App Navigation -->
+    <div class="app-global-nav">
+      <div class="nav-brand-wrap">
+        <a href="index.html" class="nav-brand-link" style="display:flex; align-items:center; text-decoration:none;">
+          <img src="images/logo.png" alt="MomentumQ" class="nav-brand-logo" height="24">
+        </a>
+        <span class="nav-brand-divider">/</span>
+        <span class="nav-brand-suite">AI AGENTS &amp; DOSSIERS</span>
+      </div>
+      <div class="nav-tabs-wrapper">
+        <a href="index.html" class="nav-page-btn"><span class="nav-page-num">01</span> Forecasts</a>
+        <a href="mag7.html" class="nav-page-btn"><span class="nav-page-num">02</span> Mag 7 Tech</a>
+        <a href="seasonality.html" class="nav-page-btn"><span class="nav-page-num">03</span> Seasonality</a>
+        <a href="options.html" class="nav-page-btn"><span class="nav-page-num">04</span> Options &amp; GEX</a>
+        <a href="macro.html" class="nav-page-btn"><span class="nav-page-num">05</span> Macro Regime</a>
+        <a href="agents.html" class="nav-page-btn active" aria-current="page"><span class="nav-page-num">06</span> AI Agents</a>
+      </div>
+      <div class="nav-status-badge">
+        <span class="live-pulse"></span>
+        <span>GEMINI 3.7 FLASH // MULTI-AGENT</span>
+      </div>
+    </div>
+
+    <!-- Section Navigation Rail -->
+    <nav class="section-rail" id="sectionRail" aria-label="Section navigation">
+      <span class="rail-label">JUMP TO</span>
+      <div class="rail-links">
+        <a class="rail-link" href="#secAgentRoster"><span class="rail-num">01</span> Agent Roster</a>
+        <a class="rail-link" href="#secQuickReports"><span class="rail-num">02</span> Dossier Studio</a>
+        <a class="rail-link" href="#secAgentConsole"><span class="rail-num">03</span> Research Console</a>
+        <a class="rail-link" href="#secReportViewer"><span class="rail-num">04</span> Dossier Viewer</a>
+        <a class="rail-link" href="#secReportsArchive"><span class="rail-num">05</span> Archive Blotter</a>
+      </div>
+    </nav>
+
+    <!-- Header -->
+    <header class="blotter-header">
+      <div class="brand-row">
+        <div class="brand-title">
+          <div class="brand-top-meta">
+            <span class="brand-tag">MoQ-AGENTS // GEMINI 3.7 FLASH RESEARCH DESK</span>
+            <div class="sync-status-indicator" id="syncStatusIndicator">
+              <span class="sync-dot pulsing"></span>
+              <span class="sync-text" id="syncStatusText">API: LOCAL SYNTHESIS</span>
+              <span class="sync-time" id="syncTimeText">Continuous Observed Tape</span>
+              <button class="sync-now-btn" id="bindApiKeyBtn" title="Configure Google Gemini API Key">&#9881; BIND KEY</button>
+            </div>
           </div>
+          <h1>AUTONOMOUS AI AGENTS &amp; RESEARCH DOSSIERS</h1>
+          <span class="subhead">GEMINI 3.7 FLASH // 5-AGENT SPECIALIZED DESK // END-OF-WEEK DOSSIERS // DEALER GAMMA &amp; REAL YIELDS</span>
         </div>
-
-        <nav class="main-nav" aria-label="Terminal Navigation">
-          <a href="index.html" class="nav-tab">
-            <span class="tab-num">01</span>
-            <span class="tab-label">Forecasts</span>
-          </a>
-          <a href="mag7.html" class="nav-tab">
-            <span class="tab-num">02</span>
-            <span class="tab-label">Mag 7 Tech</span>
-          </a>
-          <a href="seasonality.html" class="nav-tab">
-            <span class="tab-num">03</span>
-            <span class="tab-label">Seasonality</span>
-          </a>
-          <a href="options.html" class="nav-tab">
-            <span class="tab-num">04</span>
-            <span class="tab-label">Options &amp; GEX</span>
-          </a>
-          <a href="macro.html" class="nav-tab">
-            <span class="tab-num">05</span>
-            <span class="tab-label">Macro Regime</span>
-          </a>
-          <a href="agents.html" class="nav-tab active">
-            <span class="tab-num">06</span>
-            <span class="tab-label">AI Agents</span>
-          </a>
-        </nav>
-
-        <div class="header-actions">
-          <button class="btn btn-secondary" id="bindApiKeyBtn">
-            <span class="font-mono" id="bindKeyStatusText">KEY: LOCAL ENGINE</span>
-          </button>
-          <button class="btn btn-primary" id="generateEowTopBtn">
-            <span>GENERATE EOW DOSSIER</span>
-          </button>
+        <div class="stats-ticker" id="agentStatsTicker">
+          <div class="ticker-box">
+            <span class="ticker-label">LLM ENGINE</span>
+            <span class="ticker-val highlight-gold" id="tickerAgentModel">GEMINI 3.7 FLASH</span>
+          </div>
+          <div class="ticker-box">
+            <span class="ticker-label">ACTIVE NODES</span>
+            <span class="ticker-val color-bull" id="tickerActiveNodes">5 / 5 ONLINE</span>
+          </div>
+          <div class="ticker-box">
+            <span class="ticker-label">CONTEXT MEMORY</span>
+            <span class="ticker-val highlight-gold">1,000,000 TOKENS</span>
+          </div>
+          <div class="ticker-box">
+            <span class="ticker-label">SYNTHESIS ENGINE</span>
+            <span class="ticker-val color-bull" id="tickerEngineMode">HYBRID LIVE/OFFLINE</span>
+          </div>
         </div>
       </div>
     </header>
 
-    <!-- Page Title & Scope Row -->
-    <div class="page-title-strip">
-      <div class="page-title-left">
-        <span class="page-kicker">PAGE 06 // AUTONOMOUS QUANTITATIVE AGENTS</span>
-        <h1 class="page-heading">Gemini 3.7 Flash Autonomous Research &amp; Weekly Dossier Desk</h1>
-        <span class="page-meta">5-agent specialized panel analyzing live SQLite market observations, 5-state macro regimes, dealer gamma exposure (GEX), and cross-commodity inflation betas.</span>
-      </div>
-      <div class="page-title-right">
-        <div class="meta-item">
-          <span class="meta-label">LLM ENGINE:</span>
-          <span class="meta-val font-mono highlight-gold" id="agentEngineModel">gemini-3.7-flash</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">CONTEXT WINDOW:</span>
-          <span class="meta-val font-mono">1,000,000 Tokens</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">ACTIVE SUB-AGENTS:</span>
-          <span class="meta-val font-mono color-bull">5 Specialized Nodes</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 01: Multi-Agent Roster HUD -->
+    <!-- Section 01: Specialized Agent Nodes -->
     <section class="section-agent-roster" id="secAgentRoster" style="margin-bottom: var(--sp-5);">
       <div class="section-title-row">
         <div class="section-heading">
-          <span class="section-kicker">01 // SPECIALIZED AGENT ROSTER</span>
-          <h2>Autonomous Quantitative Strategy Nodes</h2>
-          <span class="section-meta">Each agent specializes in a distinct mathematical domain and feeds quantitative signals into the Executive CIO synthesis layer.</span>
+          <span class="section-kicker">01 // SPECIALIZED AGENT NODES</span>
+          <h2>Autonomous Quantitative Strategy Committee</h2>
+          <span class="section-meta">Each specialized node ingests discrete database series (BSM option chains, yield curve proxies, commodity ratios, bank targets) to feed the executive synthesis layer.</span>
         </div>
       </div>
 
-      <div class="agent-cards-grid" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:12px;">
-        <div class="stat-card" style="padding:12px 14px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <span class="ticker-pill font-mono">NODE 01</span>
-            <span class="verdict-pill hit font-mono">ONLINE</span>
+      <div class="agent-nodes-grid">
+        <!-- Node 01 -->
+        <div class="agent-node-card">
+          <div>
+            <div class="agent-node-top">
+              <span class="agent-node-id font-mono">NODE 01</span>
+              <span class="agent-node-status font-mono"><span class="live-dot-green"></span> ONLINE</span>
+            </div>
+            <h3 class="agent-node-title">Macro &amp; Rates Strategist</h3>
+            <p class="agent-node-desc">5-State Regime Classifier, Treasury Yield Curve Slope (+30 bps), and High-Yield Credit OAS Spreads.</p>
           </div>
-          <strong style="font-size:13px; color:var(--text-primary);">Macro &amp; Rates Strategist</strong>
-          <p style="font-size:11px; color:var(--text-secondary); margin-top:4px; line-height:1.35;">5-State Regime Classifier, Yield Slope (+30 bps), and High-Yield Credit OAS Spreads.</p>
+          <div class="agent-node-bottom">
+            <span>Specialization:</span>
+            <span class="agent-node-metric color-bull">Regime / Rates</span>
+          </div>
         </div>
 
-        <div class="stat-card" style="padding:12px 14px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <span class="ticker-pill font-mono">NODE 02</span>
-            <span class="verdict-pill hit font-mono">ONLINE</span>
+        <!-- Node 02 -->
+        <div class="agent-node-card">
+          <div>
+            <div class="agent-node-top">
+              <span class="agent-node-id font-mono">NODE 02</span>
+              <span class="agent-node-status font-mono"><span class="live-dot-green"></span> ONLINE</span>
+            </div>
+            <h3 class="agent-node-title">Options &amp; GEX Specialist</h3>
+            <p class="agent-node-desc">Closed-Form BSM Greeks, Dealer Gamma Exposure (+$420.5M), 25Δ Put/Call Skew, and Max Pain Pinning.</p>
           </div>
-          <strong style="font-size:13px; color:var(--text-primary);">Options &amp; GEX Specialist</strong>
-          <p style="font-size:11px; color:var(--text-secondary); margin-top:4px; line-height:1.35;">Dealer Gamma Exposure (+$420M), 25Δ Put/Call Skew, Max Pain, and VIX Contango.</p>
+          <div class="agent-node-bottom">
+            <span>Specialization:</span>
+            <span class="agent-node-metric color-bull">Volatility / GEX</span>
+          </div>
         </div>
 
-        <div class="stat-card" style="padding:12px 14px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <span class="ticker-pill font-mono">NODE 03</span>
-            <span class="verdict-pill hit font-mono">ONLINE</span>
+        <!-- Node 03 -->
+        <div class="agent-node-card">
+          <div>
+            <div class="agent-node-top">
+              <span class="agent-node-id font-mono">NODE 03</span>
+              <span class="agent-node-status font-mono"><span class="live-dot-green"></span> ONLINE</span>
+            </div>
+            <h3 class="agent-node-title">Commodities &amp; FX Desk</h3>
+            <p class="agent-node-desc">Gold/Silver Ratio (6.90x), Gold/Oil Multiples (3.16x), Real Yield (TIPS) Beta, and US Dollar Headwind.</p>
           </div>
-          <strong style="font-size:13px; color:var(--text-primary);">Commodities &amp; FX Desk</strong>
-          <p style="font-size:11px; color:var(--text-secondary); margin-top:4px; line-height:1.35;">Gold/Silver Ratios (6.90x), Gold/Oil Multiples (3.16x), Real Yield Beta, and DXY.</p>
+          <div class="agent-node-bottom">
+            <span>Specialization:</span>
+            <span class="agent-node-metric color-bull">Gold / Energy</span>
+          </div>
         </div>
 
-        <div class="stat-card" style="padding:12px 14px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <span class="ticker-pill font-mono">NODE 04</span>
-            <span class="verdict-pill hit font-mono">ONLINE</span>
+        <!-- Node 04 -->
+        <div class="agent-node-card">
+          <div>
+            <div class="agent-node-top">
+              <span class="agent-node-id font-mono">NODE 04</span>
+              <span class="agent-node-status font-mono"><span class="live-dot-green"></span> ONLINE</span>
+            </div>
+            <h3 class="agent-node-title">Sell-Side Consensus Auditor</h3>
+            <p class="agent-node-desc">Strategist Reliability Ratings, Consensus Blind Spot Alerts, and Mag 7 Target Price Realization.</p>
           </div>
-          <strong style="font-size:13px; color:var(--text-primary);">Sell-Side Forecaster Auditor</strong>
-          <p style="font-size:11px; color:var(--text-secondary); margin-top:4px; line-height:1.35;">Strategist Reliability Rankings, Consensus Blind Spots, and Mag 7 Realization Hit Rates.</p>
+          <div class="agent-node-bottom">
+            <span>Specialization:</span>
+            <span class="agent-node-metric color-bull">Sell-Side Audit</span>
+          </div>
         </div>
 
-        <div class="stat-card" style="padding:12px 14px; border:1px solid var(--accent-gold);">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <span class="ticker-pill font-mono highlight-gold">CIO SYNTHESIS</span>
-            <span class="verdict-pill hit font-mono">ACTIVE</span>
+        <!-- Node 05 (CIO Synthesis) -->
+        <div class="agent-node-card is-cio">
+          <div>
+            <div class="agent-node-top">
+              <span class="agent-node-id font-mono highlight-gold">CHAIR NODE</span>
+              <span class="agent-node-status is-cio font-mono"><span class="live-dot-green"></span> EXECUTIVE</span>
+            </div>
+            <h3 class="agent-node-title">Executive CIO &amp; Allocation</h3>
+            <p class="agent-node-desc">Synthesizes multi-node inputs into unified End-of-Week Executive Dossiers, Daily Memos, and Asset Allocations.</p>
           </div>
-          <strong style="font-size:13px; color:var(--accent-gold);">Executive CIO &amp; Allocation</strong>
-          <p style="font-size:11px; color:var(--text-secondary); margin-top:4px; line-height:1.35;">Synthesizes cross-asset signals into unified End-of-Week Dossiers and Tactical Memos.</p>
+          <div class="agent-node-bottom">
+            <span>Synthesis Role:</span>
+            <span class="agent-node-metric highlight-gold">CIO Consensus</span>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Section 02: Quick Intelligence Report Generators -->
+    <!-- Section 02: On-Demand Strategic Dossier Studio -->
     <section class="section-quick-reports" id="secQuickReports" style="margin-bottom: var(--sp-5);">
       <div class="section-title-row">
         <div class="section-heading">
-          <span class="section-kicker">02 // ON-DEMAND QUANTITATIVE DOSSIERS</span>
-          <h2>Autonomous Report Generation Suite</h2>
-          <span class="section-meta">Select a specialized report template to trigger real-time data ingestion and multi-agent synthesis.</span>
+          <span class="section-kicker">02 // ON-DEMAND DOSSIER STUDIO</span>
+          <h2>Autonomous Quantitative Report Generation</h2>
+          <span class="section-meta">Select an institutional template to trigger multi-agent consensus generation with Gemini 3.7 Flash.</span>
         </div>
       </div>
 
-      <div class="curve-span-pills" id="reportTemplatePills" style="margin-bottom:var(--sp-3);">
+      <div class="curve-span-pills" id="reportTemplatePills" style="margin-bottom:var(--sp-4);">
         <button class="curve-span-pill active" data-type="eow_dossier">END-OF-WEEK EXECUTIVE DOSSIER</button>
         <button class="curve-span-pill" data-type="daily_brief">DAILY MACRO STRATEGIC BRIEF</button>
         <button class="curve-span-pill" data-type="options_gex">DEALER GEX &amp; VOLATILITY MEMO</button>
@@ -161,52 +197,73 @@
     </section>
 
     <!-- Section 03: Interactive Multi-Agent Research Console -->
-    <section class="section-agent-console" id="secAgentConsole" style="margin-bottom: var(--sp-5);">
-      <div class="card" style="padding:16px 20px; background:var(--bg-surface);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+    <section class="section-agent-console" id="secAgentConsole">
+      <div class="agent-console-card">
+        <div class="agent-console-header">
           <div>
-            <span class="card-kicker font-mono">INTERACTIVE RESEARCH TERMINAL</span>
-            <h3 style="margin:2px 0 0 0; font-size:15px;">Ask the Gemini 3.7 Flash Agent Desk</h3>
+            <span class="card-kicker font-mono">03 // INTERACTIVE RESEARCH CONSOLE</span>
+            <h3 style="margin:2px 0 0 0; font-size:15px; font-weight:700;">Query the Gemini 3.7 Flash Strategy Committee</h3>
           </div>
-          <span class="font-mono" style="font-size:11px; color:var(--text-muted);" id="agentStatusBadge">Engine: Deterministic &amp; Live API Ready</span>
+          <span class="font-mono" style="font-size:11px; color:var(--text-muted);" id="agentStatusBadge">Engine: Hybrid Quantitative Synthesis</span>
         </div>
 
-        <div style="display:flex; gap:10px;">
-          <input type="text" class="search-input font-mono" id="agentPromptInput" placeholder="e.g., Analyze how current VIX contango and HYG/IEF credit spreads affect SPY probability distribution over the next 30 days..." style="flex:1;">
-          <button class="btn btn-primary" id="agentSubmitBtn">
+        <div class="agent-chips-row">
+          <span style="font-size:11px; color:var(--text-muted); align-self:center;">QUICK QUERIES:</span>
+          <button class="agent-chip-btn" data-query="Analyze how current VIX contango (1.09x) and HYG/IEF credit spreads affect SPY over next 30 days">VIX Contango &amp; Credit Spread Impact</button>
+          <button class="agent-chip-btn" data-query="Evaluate Gold real-rate beta if 10Y TIPS yields rise +25 bps given current Gold/Oil ratio of 3.16x">Gold Real Rate Sensitivity</button>
+          <button class="agent-chip-btn" data-query="Audit dealer gamma wall concentration and expected move for SPY into next week">Dealer Gamma Walls &amp; Pinning</button>
+          <button class="agent-chip-btn" data-query="Compare Mag 7 price realization rate vs sell-side consensus year-end targets">Mag 7 Consensus Divergence</button>
+        </div>
+
+        <div class="agent-input-wrap">
+          <input type="text" class="agent-prompt-input" id="agentPromptInput" placeholder="Ask the agent committee anything regarding macro regimes, dealer gamma, options skew, gold ratios, or bank forecasts...">
+          <button class="btn btn-primary" id="agentSubmitBtn" style="padding:0 24px;">
             <span id="agentSubmitBtnText">RUN AGENT SYNTHESIS</span>
           </button>
         </div>
       </div>
     </section>
 
-    <!-- Section 04: Active Report Terminal Viewer -->
-    <section class="section-report-viewer" id="secReportViewer" style="margin-bottom: var(--sp-5);">
-      <div class="card" style="background:var(--bg-surface); padding:20px 24px; border:1px solid var(--border-subtle);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border-subtle); padding-bottom:12px;">
-          <div>
-            <span class="card-kicker font-mono" id="viewerReportMeta">GENERATED REPORT // GEMINI 3.7 FLASH</span>
-            <h2 style="margin:2px 0 0 0; font-size:18px;" id="viewerReportTitle">End-of-Week Macro &amp; Volatility Intelligence Dossier</h2>
+    <!-- Section 04: Live Intelligence Dossier Viewer -->
+    <section class="section-report-viewer" id="secReportViewer">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">04 // INTELLIGENCE DOSSIER VIEWER</span>
+          <h2>Active Synthesized Executive Report</h2>
+          <span class="section-meta">Live formatted output rendered directly from the Gemini 3.7 Flash multi-agent quantitative pipeline.</span>
+        </div>
+      </div>
+
+      <div class="agent-viewer-window">
+        <div class="agent-viewer-titlebar">
+          <div class="agent-viewer-title-box">
+            <div class="agent-viewer-dots">
+              <div class="agent-viewer-dot red"></div>
+              <div class="agent-viewer-dot yellow"></div>
+              <div class="agent-viewer-dot green"></div>
+            </div>
+            <span class="agent-viewer-filename" id="viewerReportTitle">End-of-Week Macro &amp; Volatility Intelligence Dossier</span>
+            <span class="agent-viewer-badge font-mono" id="viewerReportMeta">GEMINI 3.7 FLASH // OBSERVED TAPE</span>
           </div>
           <div style="display:flex; gap:8px;">
-            <button class="btn btn-secondary" id="copyReportBtn">COPY RAW MARKDOWN</button>
-            <button class="btn btn-secondary" id="exportReportBtn">EXPORT REPORT (.MD)</button>
+            <button class="btn btn-secondary" id="copyReportBtn" style="padding:6px 12px; font-size:11px;">COPY RAW MARKDOWN</button>
+            <button class="btn btn-secondary" id="exportReportBtn" style="padding:6px 12px; font-size:11px;">EXPORT REPORT (.MD)</button>
           </div>
         </div>
 
-        <div class="agent-report-content font-mono" id="agentReportContent" style="white-space:pre-wrap; line-height:1.6; font-size:12.5px; color:var(--text-primary); max-height:600px; overflow-y:auto; padding-right:12px;">
-          <!-- Generated Report Content Rendered by agents.js -->
+        <div class="agent-viewer-body" id="agentReportContent">
+          <!-- Rendered by agents.js -->
         </div>
       </div>
     </section>
 
-    <!-- Section 05: Historical Generated Reports Archive -->
-    <section class="section-reports-archive" id="secReportsArchive">
+    <!-- Section 05: Historical Dossiers Archive Blotter -->
+    <section class="section-reports-archive" id="secReportsArchive" style="margin-bottom: var(--sp-6);">
       <div class="section-title-row">
         <div class="section-heading">
-          <span class="section-kicker">05 // INTELLIGENCE ARCHIVE</span>
-          <h2>Generated Reports &amp; Strategic Dossiers Blotter</h2>
-          <span class="section-meta">Complete historical audit trail of synthesized multi-agent research dossiers.</span>
+          <span class="section-kicker">05 // DOSSIER ARCHIVE</span>
+          <h2>Historical Quantitative Intelligence Blotter</h2>
+          <span class="section-meta">Audit trail of synthesized multi-agent research briefs generated across current and past market sessions.</span>
         </div>
       </div>
 
@@ -240,7 +297,7 @@
         </div>
         <div class="terminal-help-body" style="padding:20px;">
           <p style="font-size:12px; color:var(--text-secondary); margin-bottom:14px; line-height:1.5;">
-            Enter your Google Gemini API key to enable live agentic reasoning, custom multi-turn research inquiries, and autonomous weekly dossiers. The key is stored locally in your browser session.
+            Enter your Google Gemini API key to enable live agentic reasoning, custom multi-turn research inquiries, and autonomous weekly dossiers. The key is stored securely in your local browser session.
           </p>
           <div style="margin-bottom:16px;">
             <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:6px;">GEMINI API KEY:</label>

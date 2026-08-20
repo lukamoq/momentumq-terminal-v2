@@ -6212,3 +6212,280 @@ body.theme-green .macro-factor-box {
     flex-wrap: wrap;
   }
 }
+
+/* ==========================================================================
+   8. AI Agents & Autonomous Dossier Desk Styles
+   ========================================================================== */
+
+.agent-nodes-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+
+.agent-node-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.agent-node-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.agent-node-card.is-cio {
+  border-color: rgba(251, 191, 36, 0.4);
+  background: linear-gradient(180deg, rgba(251, 191, 36, 0.04) 0%, var(--bg-surface) 100%);
+}
+
+.agent-node-card.is-cio:hover {
+  border-color: var(--accent-gold);
+  box-shadow: 0 4px 16px rgba(251, 191, 36, 0.15);
+}
+
+.agent-node-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.agent-node-id {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.agent-node-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: var(--radius-pill);
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.agent-node-status.is-cio {
+  background: rgba(251, 191, 36, 0.12);
+  color: var(--accent-gold);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.agent-node-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 6px 0;
+  line-height: 1.25;
+}
+
+.agent-node-card.is-cio .agent-node-title {
+  color: var(--accent-gold);
+}
+
+.agent-node-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0 0 12px 0;
+  flex: 1;
+}
+
+.agent-node-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 8px;
+  margin-top: auto;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.agent-node-metric {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Agent Interactive Console */
+.agent-console-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 18px 20px;
+  margin-bottom: var(--sp-5);
+}
+
+.agent-console-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.agent-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.agent-chip-btn {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.agent-chip-btn:hover {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+  background: rgba(251, 191, 36, 0.08);
+}
+
+.agent-input-wrap {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.agent-prompt-input {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.agent-prompt-input:focus {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+}
+
+/* Agent Dossier Viewer Window */
+.agent-viewer-window {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--sp-5);
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.agent-viewer-titlebar {
+  background: var(--bg-surface-elevated);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 12px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.agent-viewer-title-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.agent-viewer-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.agent-viewer-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--border-strong);
+}
+
+.agent-viewer-dot.red { background: #ef4444; }
+.agent-viewer-dot.yellow { background: #eab308; }
+.agent-viewer-dot.green { background: #22c55e; }
+
+.agent-viewer-filename {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.agent-viewer-badge {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(251, 191, 36, 0.12);
+  color: var(--accent-gold);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.agent-viewer-body {
+  padding: 24px;
+  max-height: 650px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  background: #0d1117;
+}
+
+.agent-viewer-body h1, .agent-viewer-body h2, .agent-viewer-body h3, .agent-viewer-body h4 {
+  font-family: var(--font-mono);
+  color: var(--accent-gold);
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.agent-viewer-body hr {
+  border: 0;
+  border-top: 1px solid var(--border-subtle);
+  margin: 16px 0;
+}
+
+@media (max-width: 1200px) {
+  .agent-nodes-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .agent-nodes-grid {
+    grid-template-columns: 1fr;
+  }
+  .agent-input-wrap {
+    flex-direction: column;
+  }
+}
+

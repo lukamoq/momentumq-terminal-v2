@@ -43,13 +43,29 @@
   async function refreshAgentStatus() {
     const statusData = await safeFetchJson('/api/agents/status');
     const bindStatusText = document.getElementById('bindKeyStatusText');
+    const syncStatusText = document.getElementById('syncStatusText');
     const statusBadge = document.getElementById('agentStatusBadge');
+    const tickerEngineMode = document.getElementById('tickerEngineMode');
+    const tickerAgentModel = document.getElementById('tickerAgentModel');
 
     const isBound = Boolean(agentState.apiKey || (statusData && statusData.api_bound));
 
     if (bindStatusText) {
       bindStatusText.textContent = isBound ? 'KEY: GEMINI BOUND' : 'KEY: LOCAL ENGINE';
       bindStatusText.className = isBound ? 'font-mono color-bull' : 'font-mono text-muted';
+    }
+
+    if (syncStatusText) {
+      syncStatusText.textContent = isBound ? 'API: GEMINI LIVE' : 'API: LOCAL SYNTHESIS';
+    }
+
+    if (tickerEngineMode) {
+      tickerEngineMode.textContent = isBound ? 'GEMINI 3.7 FLASH LIVE' : 'QUANT SYNTHESIS';
+      tickerEngineMode.className = `ticker-val ${isBound ? 'color-bull font-bold' : 'highlight-gold'}`;
+    }
+
+    if (tickerAgentModel) {
+      tickerAgentModel.textContent = isBound ? 'GEMINI 3.7 FLASH' : 'GEMINI 3.7 (SYNTH)';
     }
 
     if (statusBadge) {
@@ -247,6 +263,17 @@
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    });
+
+    // Suggestion chips
+    document.querySelectorAll('.agent-chip-btn').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const q = chip.dataset.query;
+        if (promptInput && q) {
+          promptInput.value = q;
+          generateReport('custom_inquiry', q);
+        }
+      });
     });
 
     // API Key Modal
