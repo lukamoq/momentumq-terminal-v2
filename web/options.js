@@ -253,57 +253,117 @@
     const struct = spy.structure || spy.gex_summary || {};
 
     const gexHero = document.getElementById('gexTotalHero');
+    const heroSub = document.getElementById('gexHeroSub');
     const callOiEl = document.getElementById('gexCallOi');
     const putOiEl = document.getElementById('gexPutOi');
     const flipEl = document.getElementById('gexFlipLevel');
     const callWallEl = document.getElementById('gexCallWall');
     const putWallEl = document.getElementById('gexPutWall');
+    const spotPosEl = document.getElementById('gexSpotPositioning');
 
-    const netGex = struct.net_gex_dollars ?? struct.net_gex_total ?? 420500000;
+    const netGex = struct.net_gex_dollars ?? struct.net_gex_total ?? -3214132596;
     const netM = netGex / 1e6;
-    const callGex = struct.call_gex_dollars ?? struct.call_gex_total ?? 680000000;
-    const putGex = struct.put_gex_dollars ?? struct.put_gex_total ?? -259500000;
+    const callGex = struct.call_gex_dollars ?? struct.call_gex_total ?? 20030040719;
+    const putGex = struct.put_gex_dollars ?? struct.put_gex_total ?? -23244173315;
+    const spot = spy.spot ?? spy.spot_price ?? 769.06;
 
     if (gexHero) {
       gexHero.textContent = `${netM >= 0 ? '+' : ''}$${netM.toFixed(1)}M GEX`;
       gexHero.className = `gex-metric-hero font-mono ${netM >= 0 ? 'color-bull' : 'color-bear'}`;
     }
+
+    if (heroSub) {
+      const effect = netM >= 0 ? 'VOLATILITY DAMPENING' : 'VOLATILITY AMPLIFYING';
+      heroSub.textContent = `PER 1% S&P 500 MOVE (${effect})`;
+      heroSub.className = `gex-hero-sub font-mono ${netM >= 0 ? 'color-bull' : 'color-bear'}`;
+    }
+
     if (callOiEl) callOiEl.textContent = `+$${(Math.abs(callGex) / 1e6).toFixed(1)}M`;
     if (putOiEl) putOiEl.textContent = `-$${(Math.abs(putGex) / 1e6).toFixed(1)}M`;
 
     const flipVal = struct.gamma_flip ?? struct.gamma_flip_level;
-    if (flipEl) flipEl.textContent = flipVal ? `$${Number(flipVal).toFixed(2)}` : '$771.15';
+    const flipDist = struct.flip_distance_pct;
+    if (flipEl) {
+      if (flipVal) {
+        const distStr = flipDist !== null && flipDist !== undefined ? ` (${flipDist >= 0 ? '+' : ''}${Number(flipDist).toFixed(1)}%)` : '';
+        flipEl.textContent = `$${Number(flipVal).toFixed(2)}${distStr}`;
+      } else {
+        flipEl.textContent = 'None inside band';
+      }
+    }
 
     const callWallVal = struct.call_wall ?? struct.call_wall_strike;
-    if (callWallEl) callWallEl.textContent = callWallVal ? `$${Number(callWallVal).toFixed(0)} Strike` : '$775.00 Strike';
+    if (callWallEl) callWallEl.textContent = callWallVal ? `$${Number(callWallVal).toFixed(0)} Strike` : '$770 Strike';
 
     const putWallVal = struct.put_wall ?? struct.put_wall_strike;
-    if (putWallEl) putWallEl.textContent = putWallVal ? `$${Number(putWallVal).toFixed(0)} Strike` : '$760.00 Strike';
+    if (putWallEl) putWallEl.textContent = putWallVal ? `$${Number(putWallVal).toFixed(0)} Strike` : '$765 Strike';
+
+    if (spotPosEl) {
+      if (flipVal) {
+        const isAbove = spot >= flipVal;
+        spotPosEl.textContent = isAbove ? 'ABOVE FLIP (LONG GAMMA ZONE)' : 'BELOW FLIP (SHORT GAMMA ZONE)';
+        spotPosEl.className = `font-mono ${isAbove ? 'color-bull' : 'color-bear'}`;
+      } else {
+        spotPosEl.textContent = netM >= 0 ? 'LONG GAMMA REGIME' : 'SHORT GAMMA REGIME';
+        spotPosEl.className = `font-mono ${netM >= 0 ? 'color-bull' : 'color-bear'}`;
+      }
+    }
 
     // Strike bars container
     const container = document.getElementById('gexStrikeBarsContainer');
     if (container) {
-      const spot = spy.spot ?? spy.spot_price ?? 769.06;
-      const baseStrike = Math.round(spot / 5) * 5;
+      const rawProfile = struct.gex_profile || [];
+      let strikes = [];
 
-      const strikes = [
-        { strike: baseStrike - 25, callGex: 8, putGex: -40 },
-        { strike: baseStrike - 20, callGex: 18, putGex: -75 },
-        { strike: baseStrike - 15, callGex: 42, putGex: -125 },
-        { strike: baseStrike - 10, callGex: 95, putGex: -185 },
-        { strike: baseStrike - 5, callGex: 180, putGex: -220 },
-        { strike: baseStrike, callGex: 360, putGex: -140 },
-        { strike: baseStrike + 5, callGex: 480, putGex: -75 },
-        { strike: baseStrike + 10, callGex: 410, putGex: -35 },
-        { strike: baseStrike + 15, callGex: 260, putGex: -15 },
-        { strike: baseStrike + 20, callGex: 175, putGex: -8 },
-        { strike: baseStrike + 25, callGex: 90, putGex: -4 },
-      ];
+      if (rawProfile.length > 0) {
+        // Filter or sample major strikes near spot (+/- $25)
+        const baseStrike = Math.round(spot / 5) * 5;
+        const targetStrikes = [];
+        for (let s = baseStrike - 25; s <= baseStrike + 25; s += 5) {
+          targetStrikes.push(s);
+        }
 
-      const maxGex = 500;
+        strikes = targetStrikes.map(k => {
+          const match = rawProfile.find(p => Math.abs(p.strike - k) < 0.1);
+          if (match) {
+            return {
+              strike: k,
+              callGex: match.call_gex / 1e6,
+              putGex: match.put_gex / 1e6, // negative number
+              netGex: match.net_gex / 1e6,
+            };
+          }
+          return { strike: k, callGex: 0, putGex: 0, netGex: 0 };
+        });
+      } else {
+        const baseStrike = Math.round(spot / 5) * 5;
+        strikes = [
+          { strike: baseStrike - 25, callGex: 171.9, putGex: -296.4, netGex: -124.5 },
+          { strike: baseStrike - 20, callGex: 481.4, putGex: -840.4, netGex: -359.0 },
+          { strike: baseStrike - 15, callGex: 252.1, putGex: -653.0, netGex: -400.9 },
+          { strike: baseStrike - 10, callGex: 574.0, putGex: -1871.8, netGex: -1297.8 },
+          { strike: baseStrike - 5, callGex: 700.9, putGex: -3294.1, netGex: -2593.2 },
+          { strike: baseStrike, callGex: 2278.5, putGex: -1818.0, netGex: 460.5 },
+          { strike: baseStrike + 5, callGex: 1921.6, putGex: -793.4, netGex: 1128.2 },
+          { strike: baseStrike + 10, callGex: 962.8, putGex: -173.9, netGex: 788.9 },
+          { strike: baseStrike + 15, callGex: 752.7, putGex: -52.0, netGex: 700.7 },
+          { strike: baseStrike + 20, callGex: 659.5, putGex: -27.9, netGex: 631.5 },
+          { strike: baseStrike + 25, callGex: 228.2, putGex: -7.4, netGex: 220.8 },
+        ];
+      }
+
+      // Calculate max absolute GEX for dynamic scaling
+      let maxGex = 1000;
+      for (let s of strikes) {
+        if (s.callGex > maxGex) maxGex = s.callGex;
+        if (Math.abs(s.putGex) > maxGex) maxGex = Math.abs(s.putGex);
+        if (Math.abs(s.netGex) > maxGex) maxGex = Math.abs(s.netGex);
+      }
+      maxGex = Math.ceil(maxGex / 500) * 500;
+
       const W = 800;
       const H = 260;
-      const padL = 50;
+      const padL = 60;
       const padR = 40;
       const padT = 30;
       const padB = 40;
@@ -314,10 +374,16 @@
       const getStrikeX = (idx) => padL + (idx / (strikes.length - 1)) * plotW;
       const getGexY = (val) => yZero - (val / maxGex) * (plotH / 2);
 
-      let netPathD = `M ${getStrikeX(0)} ${getGexY(strikes[0].callGex + strikes[0].putGex)}`;
+      let netPathD = `M ${getStrikeX(0)} ${getGexY(strikes[0].netGex)}`;
       for (let i = 1; i < strikes.length; i++) {
-        netPathD += ` L ${getStrikeX(i).toFixed(1)} ${getGexY(strikes[i].callGex + strikes[i].putGex).toFixed(1)}`;
+        netPathD += ` L ${getStrikeX(i).toFixed(1)} ${getGexY(strikes[i].netGex).toFixed(1)}`;
       }
+
+      // Spot X position interpolation
+      const minStrike = strikes[0].strike;
+      const maxStrike = strikes[strikes.length - 1].strike;
+      const spotRatio = Math.max(0, Math.min(1, (spot - minStrike) / (maxStrike - minStrike)));
+      const spotX = padL + spotRatio * plotW;
 
       container.innerHTML = `
         <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%; height:auto;" id="gexSurfaceSvg">
@@ -339,9 +405,9 @@
           <line x1="${padL}" y1="${H - padB}" x2="${W - padR}" y2="${H - padB}" stroke="#1e293b" stroke-width="1" stroke-dasharray="2,3"/>
 
           <!-- Y Axis Labels -->
-          <text x="${padL - 8}" y="${padT + 4}" text-anchor="end" fill="#38bdf8" font-family="var(--font-mono)" font-size="9.5">+${maxGex}M</text>
+          <text x="${padL - 8}" y="${padT + 4}" text-anchor="end" fill="#38bdf8" font-family="var(--font-mono)" font-size="9.5">+$${maxGex >= 1000 ? `${(maxGex/1000).toFixed(1)}B` : `${maxGex}M`}</text>
           <text x="${padL - 8}" y="${yZero + 3}" text-anchor="end" fill="#94a3b8" font-family="var(--font-mono)" font-size="9.5">$0</text>
-          <text x="${padL - 8}" y="${H - padB + 3}" text-anchor="end" fill="#f87171" font-family="var(--font-mono)" font-size="9.5">-${maxGex}M</text>
+          <text x="${padL - 8}" y="${H - padB + 3}" text-anchor="end" fill="#f87171" font-family="var(--font-mono)" font-size="9.5">-$${maxGex >= 1000 ? `${(maxGex/1000).toFixed(1)}B` : `${maxGex}M`}</text>
 
           <!-- Strike Bars (Call vs Put) -->
           ${strikes.map((s, idx) => {
@@ -364,9 +430,9 @@
           <path d="${netPathD}" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
 
           <!-- Spot Price Marker -->
-          <line x1="${getStrikeX(5)}" y1="${padT}" x2="${getStrikeX(5)}" y2="${H - padB}" stroke="#fbbf24" stroke-width="1.8" stroke-dasharray="3,2"/>
-          <rect x="${getStrikeX(5) - 35}" y="${padT - 20}" width="70" height="16" fill="rgba(251, 191, 36, 0.2)" stroke="#fbbf24" rx="2"/>
-          <text x="${getStrikeX(5)}" y="${padT - 8}" text-anchor="middle" fill="#fbbf24" font-family="var(--font-mono)" font-size="8.5" font-weight="700">SPOT $${Number(spot).toFixed(0)}</text>
+          <line x1="${spotX}" y1="${padT}" x2="${spotX}" y2="${H - padB}" stroke="#fbbf24" stroke-width="1.8" stroke-dasharray="3,2"/>
+          <rect x="${spotX - 35}" y="${padT - 20}" width="70" height="16" fill="rgba(251, 191, 36, 0.2)" stroke="#fbbf24" rx="2"/>
+          <text x="${spotX}" y="${padT - 8}" text-anchor="middle" fill="#fbbf24" font-family="var(--font-mono)" font-size="8.5" font-weight="700">SPOT $${Number(spot).toFixed(0)}</text>
 
           <!-- Legend -->
           <g transform="translate(${W - padR - 220}, ${padT + 12})">
