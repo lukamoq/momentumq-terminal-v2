@@ -46,7 +46,10 @@ def compute_monthly_returns(conn: sqlite3.Connection, ticker: str) -> Dict[str, 
             "ticker": ticker,
             "years": [],
             "matrix": {},
+            "month_complete": {},
             "full_year_returns": {},
+            "year_complete": {},
+            "monthly_sample_counts": [0] * 12,
             "monthly_averages": [0.0] * 12,
             "monthly_medians": [0.0] * 12,
             "monthly_win_rates": [0.0] * 12,
@@ -56,21 +59,39 @@ def compute_monthly_returns(conn: sqlite3.Connection, ticker: str) -> Dict[str, 
             "month_names": MONTH_NAMES
         }
 
-    # Group prices by year-month
+    # Group prices by year-month, keeping the session dates so a partial month
+    # can be told apart from a complete one.
     ym_map: Dict[str, List[float]] = {}
+    ym_dates: Dict[str, List[str]] = {}
     for r in rows:
         d_str, close = str(r[0]), float(r[1])
         ym = d_str[:7]  # YYYY-MM
-        if ym not in ym_map:
-            ym_map[ym] = []
-        ym_map[ym].append(close)
+        ym_map.setdefault(ym, []).append(close)
+        ym_dates.setdefault(ym, []).append(d_str)
 
     sorted_yms = sorted(ym_map.keys())
     all_years = sorted(list(set(int(ym.split("-")[0]) for ym in sorted_yms)))
 
-    # Compute return for each YYYY-MM
+    # A month is *complete* only when the series brackets it on both sides:
+    # a prior month to price the opening gap from, and a following month
+    # proving the month ran to its end.
+    #
+    # Without this the first and last months of every series were treated as
+    # full months. The live month is the one that bites: with twelve sessions
+    # of an August on the tape, that stub landed in the August column and moved
+    # the 27-year August average by a quarter of its own size -- the seasonal
+    # statistic was partly a readout of the last two weeks.
+    complete_months = {
+        ym for i, ym in enumerate(sorted_yms)
+        if i > 0 and i < len(sorted_yms) - 1
+    }
+
+    # Month return = last close over the previous month's last close, so the
+    # gap between months belongs to the later month and the twelve returns
+    # compound to the year.
     monthly_ret: Dict[str, float] = {}
     prev_close: Optional[float] = None
+    month_end_close: Dict[str, float] = {}
 
     for ym in sorted_yms:
         closes = ym_map[ym]
@@ -85,43 +106,68 @@ def compute_monthly_returns(conn: sqlite3.Connection, ticker: str) -> Dict[str, 
             ret = (last_c / first_c) - 1.0 if first_c > 0 else 0.0
 
         monthly_ret[ym] = ret
+        month_end_close[ym] = last_c
         prev_close = last_c
 
     # Build matrix by year
     matrix: Dict[str, List[Optional[float]]] = {}
+    month_complete: Dict[str, List[bool]] = {}
     full_year_returns: Dict[str, Optional[float]] = {}
+    year_complete: Dict[str, bool] = {}
 
     for y in all_years:
         year_str = str(y)
         m_rets: List[Optional[float]] = []
-        year_start_close: Optional[float] = None
-        year_end_close: Optional[float] = None
+        flags: List[bool] = []
 
         for m in range(1, 13):
             ym = f"{y:04d}-{m:02d}"
             if ym in monthly_ret:
                 m_rets.append(round(monthly_ret[ym], 4))
-                if ym in ym_map and ym_map[ym]:
-                    if year_start_close is None:
-                        year_start_close = ym_map[ym][0]
-                    year_end_close = ym_map[ym][-1]
+                flags.append(ym in complete_months)
             else:
                 m_rets.append(None)
+                flags.append(False)
 
         matrix[year_str] = m_rets
-        if year_start_close and year_end_close and year_start_close > 0:
-            full_year_returns[year_str] = round((year_end_close / year_start_close) - 1.0, 4)
+        month_complete[year_str] = flags
+
+        # Annual return is measured from the PRIOR year's final close, the same
+        # base the January return uses, so the year equals the product of its
+        # months. Basing it on the first close inside January instead dropped
+        # the New Year gap and left the two disagreeing -- 24.00% against
+        # 23.32% compounded for SPY in 2024.
+        prior_yms = [ym for ym in sorted_yms if ym < f"{y:04d}-01"]
+        base = month_end_close.get(prior_yms[-1]) if prior_yms else None
+        year_yms = [ym for ym in sorted_yms if ym.startswith(f"{y:04d}-")]
+        end = month_end_close.get(year_yms[-1]) if year_yms else None
+
+        months_present = sum(1 for x in m_rets if x is not None)
+        is_full_year = (
+            base is not None and end is not None and months_present == 12
+            and all(month_complete[year_str])
+        )
+        year_complete[year_str] = is_full_year
+
+        if base and end and base > 0:
+            full_year_returns[year_str] = round((end / base) - 1.0, 4)
         else:
             full_year_returns[year_str] = None
 
-    # Compute aggregates per month across active observations
+    # Aggregates use complete months only. Partial stubs stay in `matrix` so
+    # the heatmap can still render the live month, flagged via `month_complete`.
     monthly_averages: List[float] = []
     monthly_medians: List[float] = []
     monthly_win_rates: List[float] = []
     monthly_volatilities: List[float] = []
+    monthly_sample_counts: List[int] = []
 
     for m_idx in range(12):
-        rets = [matrix[str(y)][m_idx] for y in all_years if matrix[str(y)][m_idx] is not None]
+        rets = [
+            matrix[str(y)][m_idx] for y in all_years
+            if matrix[str(y)][m_idx] is not None and month_complete[str(y)][m_idx]
+        ]
+        monthly_sample_counts.append(len(rets))
         if rets:
             avg = _mean(rets)
             med = _median(rets)
@@ -138,7 +184,7 @@ def compute_monthly_returns(conn: sqlite3.Connection, ticker: str) -> Dict[str, 
             monthly_volatilities.append(0.0)
 
     # Determine best & worst months
-    valid_avg_indices = [i for i in range(12) if any(matrix[str(y)][i] is not None for y in all_years)]
+    valid_avg_indices = [i for i in range(12) if monthly_sample_counts[i] > 0]
     if valid_avg_indices:
         best_idx = max(valid_avg_indices, key=lambda i: monthly_averages[i])
         worst_idx = min(valid_avg_indices, key=lambda i: monthly_averages[i])
@@ -146,13 +192,15 @@ def compute_monthly_returns(conn: sqlite3.Connection, ticker: str) -> Dict[str, 
             "month": MONTH_NAMES[best_idx],
             "month_index": best_idx + 1,
             "avg_return": monthly_averages[best_idx],
-            "win_rate": monthly_win_rates[best_idx]
+            "win_rate": monthly_win_rates[best_idx],
+            "sample_years": monthly_sample_counts[best_idx],
         }
         worst_month = {
             "month": MONTH_NAMES[worst_idx],
             "month_index": worst_idx + 1,
             "avg_return": monthly_averages[worst_idx],
-            "win_rate": monthly_win_rates[worst_idx]
+            "win_rate": monthly_win_rates[worst_idx],
+            "sample_years": monthly_sample_counts[worst_idx],
         }
     else:
         best_month = None
@@ -162,11 +210,14 @@ def compute_monthly_returns(conn: sqlite3.Connection, ticker: str) -> Dict[str, 
         "ticker": ticker,
         "years": all_years,
         "matrix": matrix,
+        "month_complete": month_complete,
         "full_year_returns": full_year_returns,
+        "year_complete": year_complete,
         "monthly_averages": monthly_averages,
         "monthly_medians": monthly_medians,
         "monthly_win_rates": monthly_win_rates,
         "monthly_volatility": monthly_volatilities,
+        "monthly_sample_counts": monthly_sample_counts,
         "best_month": best_month,
         "worst_month": worst_month,
         "month_names": MONTH_NAMES

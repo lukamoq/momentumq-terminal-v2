@@ -12,9 +12,16 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import Response
 
-from scorecard.config import AS_OF_DATE, WEB_DIR
+from scorecard.config import (
+    AS_OF_DATE,
+    SPX_TRACKING_NOTE,
+    WEB_DIR,
+    invalidate_as_of_cache,
+    resolve_as_of_date,
+)
 from scorecard.db import db_session, get_connection, init_db
 from scorecard.ingest import run_ingest
+from scorecard.mag7 import mag7_aggregate_market_cap
 from scorecard.score import run_scoring
 
 app = FastAPI(
@@ -55,26 +62,39 @@ def clear_api_cache() -> None:
 
 @app.post("/api/pipeline/sync")
 @app.get("/api/pipeline/sync")
-def sync_and_recalculate() -> Dict[str, Any]:
-    """Execute live data sync, re-ingestion, and recalculation of all scoring & analytics engines."""
+def sync_and_recalculate(refresh: bool = True) -> Dict[str, Any]:
+    """Pull fresh vendor data, re-ingest, and rebuild every scoring and analytics table.
+
+    ``refresh=true`` (the default) re-hits the vendor for daily bars, option
+    chains, the Treasury curve and corporate reference data before rescoring.
+
+    This endpoint previously described itself as a "live data sync" while only
+    replaying the on-disk cache: nothing was re-fetched, so the button could
+    never move the terminal forward a day.
+    """
     import time
     start_time = time.time()
 
-    # 1. Clear in-memory API response cache
     clear_api_cache()
-
-    # 2. Re-ingest curated data and rebuild all scoring tables
     init_db()
+
+    fetch_summary: Dict[str, Any] = {"refreshed": bool(refresh)}
+    if refresh:
+        from scorecard.pipeline import refresh_vendor_data
+        fetch_summary.update(refresh_vendor_data())
+
     with db_session() as conn:
         ingest_summary = run_ingest(conn)
-        score_summary = run_scoring(conn)
+        invalidate_as_of_cache()
+        score_summary = run_scoring(conn, as_of_date=resolve_as_of_date(refresh=True))
 
     elapsed_ms = round((time.time() - start_time) * 1000, 2)
     return {
         "status": "ok",
-        "message": "Data, scoring models, and quantitative analytics recalculated successfully.",
-        "as_of_date": AS_OF_DATE,
+        "message": "Vendor data pulled, scoring models and quantitative analytics recalculated.",
+        "as_of_date": resolve_as_of_date(),
         "elapsed_ms": elapsed_ms,
+        "fetch_summary": fetch_summary,
         "ingest_summary": ingest_summary,
         "score_summary": score_summary,
     }
@@ -423,8 +443,8 @@ def get_mag7_stats() -> Response:
                 "overall_hit_rate": round(total_hits / (total_hits + total_misses), 4) if (total_hits + total_misses) > 0 else None,
                 "total_institutions": total_institutions,
                 "spy_ytd_return": round(spy_ytd_ret, 4) if spy_ytd_ret is not None else None,
-                "mag7_aggregate_market_cap": "$16.2 Trillion",
-                "as_of_date": AS_OF_DATE,
+                "mag7_aggregate_market_cap": mag7_aggregate_market_cap(conn),
+                "as_of_date": resolve_as_of_date(),
             }
         finally:
             conn.close()
@@ -554,6 +574,25 @@ def get_stats() -> Response:
                 "direction_stance_day_evaluations": c_obs_sd,
                 "market_data_start": m_range["min_date"],
                 "market_data_end": m_range["max_date"],
+                "as_of_date": resolve_as_of_date(),
+                "spx_basis_note": SPX_TRACKING_NOTE,
+                # Which feed each bar came from. The vendor plan serves a
+                # rolling five-year window; the years before it are archive.
+                "data_sources": [dict(r) for r in conn.execute(
+                    """
+                    SELECT source, COUNT(*) AS bars, MIN(date) AS first_date, MAX(date) AS last_date
+                    FROM market_observation GROUP BY source ORDER BY first_date
+                    """
+                ).fetchall()],
+                "option_chain": dict(conn.execute(
+                    """
+                    SELECT MAX(snapshot_date) AS snapshot_date,
+                           COUNT(*) AS contracts,
+                           COUNT(DISTINCT underlying) AS underlyings
+                    FROM option_contract
+                    WHERE snapshot_date = (SELECT MAX(snapshot_date) FROM option_contract)
+                    """
+                ).fetchone() or {}),
             }
         finally:
             conn.close()

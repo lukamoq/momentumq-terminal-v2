@@ -1,30 +1,57 @@
 """
-Options & Volatility Analytics Engine for Index Trio (SPY, QQQ, IWM).
-Enhanced with Multi-Horizon Term Structure Outlooks:
-- 1-Week Outlook (7 DTE)
-- Next-Week Outlook (14 DTE)
-- 1-Month Outlook (30 DTE)
+Options & Volatility Analytics Engine for the Index Trio (SPY, QQQ, IWM).
 
-Includes full Black-Scholes-Merton (BSM) First & Second-Order Greeks,
-Gamma Exposure (GEX) Dealer Positioning, and Volatility Skew Structure.
+Every figure on this page is computed from the *observed* option chain stored
+in ``option_contract`` -- real strikes, real settle prices, real open interest,
+real vendor implied volatilities -- together with the observed Treasury curve
+and the observed trailing dividend yield.
 
-Ported and enhanced from MomentumQ Terminal (backend/app/processing/vol_skew.py, gex.py, oi_analysis.py).
+What that replaces, and why it mattered:
 
-Greeks Calculated:
-- Delta (Call / Put Δ)
-- Gamma (Γ)
-- Theta (Call / Put Θ in $/day decay)
-- Vega (V in $/1% IV shift)
-- Rho (Call / Put ρ in $/1% interest rate shift)
-- Vanna (dDelta / dIV)
-- Charm (dDelta / dt time decay)
+* **Implied volatility** was ``VIXY_close x constant``. VIXY is an ETF; its
+  split-adjusted close ran from $633,840 in 2011 to $18.86 in 2026, so the
+  number carried reverse-split history rather than volatility. Every Greek,
+  every expected-move cone and every skew number inherited that scale error.
+  IV is now read off the chain at the forward and interpolated in total
+  variance to each horizon.
+* **Open interest** was a two-humped gaussian ladder anchored on the 20-day
+  VWAP. Net GEX, the gamma flip, the walls and max pain were all solved off
+  that invented book. They are now solved off the real book.
+* **The 25-delta skew** was ``ATM +/- a per-ticker constant``, so it could only
+  ever report the constant back. It is now the interpolated IV at an actual
+  |delta| of 0.25 on each wing.
+* **Put/call ratios** were per-ticker literals (1.18 volume, 1.42 OI for SPY).
+  They are now summed from the chain.
+* **r = 4.35%** and **q = 1.25%** were literals. They now come from the
+  Treasury curve at the option's own maturity and from trailing twelve-month
+  cash dividends over spot.
+
+Greeks are still closed-form Black-Scholes-Merton with continuous carry
+``b = r - q``; that part was correct and is unchanged.
 """
 
 from __future__ import annotations
 
 import math
 import sqlite3
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
+
+from scorecard.optionsdata import (
+    DEFAULT_RISK_FREE,
+    load_chain_rows,
+    risk_free_rate,
+    trailing_dividend_yield,
+)
+from scorecard.volatility import (
+    atm_iv,
+    constant_maturity_iv,
+    forward_price,
+    group_by_expiry,
+    iv_at_delta,
+    otm_iv_points,
+    volatility_index,
+    year_fraction,
+)
 
 
 def _norm_cdf(x: float) -> float:
@@ -42,7 +69,7 @@ def compute_bsm_greeks(
     strike: float,
     dte_days: float,
     iv_pct: float,
-    r: float = 0.0435,
+    r: float = DEFAULT_RISK_FREE,
     q: float = 0.0125
 ) -> Dict[str, float]:
     """
@@ -51,8 +78,8 @@ def compute_bsm_greeks(
     - strike: option strike price
     - dte_days: days to expiration (e.g. 7, 14, 30)
     - iv_pct: implied volatility in percent (e.g. 16.0)
-    - r: annualized risk-free rate (~4.35%)
-    - q: annualized dividend yield (~1.25% SPY, 0.55% QQQ, 1.15% IWM)
+    - r: annualized risk-free rate, interpolated off the observed Treasury curve
+    - q: annualized dividend yield, from trailing twelve-month cash dividends
     """
     T = max(1.0 / 365.0, dte_days / 365.0)
     sigma = max(0.01, iv_pct / 100.0)
@@ -112,7 +139,7 @@ def compute_bsm_greeks(
 
 
 # ---------------------------------------------------------------------------
-# Dealer Gamma Exposure (GEX)
+# Dealer Gamma Exposure (GEX) from observed open interest
 # ---------------------------------------------------------------------------
 # GEX is the dollar change in dealer delta for a 1% move in the underlying:
 #
@@ -122,55 +149,16 @@ def compute_bsm_greeks(
 # customer flow), so call open interest contributes positively and put open
 # interest negatively.
 #
-# This project ingests OHLCV bars only -- there is no options chain and no
-# open interest anywhere in the schema -- so the OI term is *modeled*, not
-# observed: a two-humped ladder whose call hump sits just above spot and whose
-# put hump sits further below, both scaled by the horizon's expected move.
-# Everything downstream (net GEX, the gamma flip level, the walls, max pain)
-# is then computed from that ladder with the real formulas, so the outputs
-# respond to spot, IV, skew and DTE instead of being fixed constants. Results
-# are tagged basis="modeled_oi" so no caller mistakes them for chain-derived
-# numbers.
+# OI_k is the exchange-reported open interest for that contract. gamma_k is
+# Black-Scholes gamma evaluated at the contract's own implied volatility, so a
+# skewed book produces a skewed gamma profile instead of a symmetric one.
 
 CONTRACT_MULTIPLIER = 100.0
 
-# Modeled OI shape, in units of the horizon's expected move (EM). Open
-# interest lives out of the money on both sides: call OI peaks just above spot
-# and decays slowly upward but fast into the money, put OI peaks below spot and
-# tails off far to the downside where crash protection is bought. Each hump is
-# therefore a two-sided gaussian with a different width on each side.
-#
-# Both humps are centred on an ANCHOR price -- the 20-day volume-weighted
-# average -- rather than on today's spot, because open interest accumulates at
-# strikes written over past weeks, not at wherever the tape happens to be this
-# morning. That is what makes the output informative instead of circular: if
-# spot has rallied above where positioning was built, the nearest mass to spot
-# is the call hump and dealers are long gamma; if spot has broken below it,
-# the put mass is nearest and dealers are short gamma. Centring the humps on
-# spot instead would drag the flip level back onto spot by construction.
-_CALL_OI_CENTER_EM = 0.45
-_CALL_OI_WIDTH_UP_EM = 1.20    # OTM side: decays slowly
-_CALL_OI_WIDTH_DN_EM = 0.55    # ITM side: decays fast
-_PUT_OI_CENTER_EM = -0.70
-_PUT_OI_WIDTH_DN_EM = 1.60     # OTM side: long downside tail
-_PUT_OI_WIDTH_UP_EM = 0.50     # ITM side: decays fast
-
-# `peak_oi` in the calibration table is the modeled contract count at the
-# busiest strike of the monthly expiry. It is deliberately smaller than a real
-# ATM open interest print: this ladder concentrates the book into ~110 strikes
-# over three expiries, where a real chain spreads it across far more strikes
-# and dates that carry almost no gamma. The values are set so aggregate net GEX
-# lands in the low $ billions per 1% for SPY -- the range published dealer
-# gamma estimates occupy. Net GEX scales linearly with peak_oi, so this is a
-# pure amplitude knob and changes no level or sign.
-
-# Relative open interest carried by each modeled expiry (monthly = 1.0).
-_EXPIRY_OI_WEIGHT = {7: 0.55, 14: 0.35, 30: 1.00}
-
-_LADDER_SPAN = 0.18       # ladder covers spot +/- 18%
 _FLIP_SCAN_LO = 0.80      # gamma-flip search range, as a fraction of spot
 _FLIP_SCAN_HI = 1.15
 _FLIP_SCAN_STEP = 0.005
+_PROFILE_SPAN = 0.10      # per-strike profile returned to the UI: spot +/- 10%
 
 
 def _bsm_gamma(spot: float, strike: float, T: float, sigma: float, r: float, q: float) -> float:
@@ -182,114 +170,92 @@ def _bsm_gamma(spot: float, strike: float, T: float, sigma: float, r: float, q: 
     return (math.exp(-q * T) * _norm_pdf(d1)) / (spot * sigma * sqrt_T)
 
 
-def _smile_iv(base_iv: float, moneyness_pct: float, skew_prem: float) -> float:
-    """
-    IV at a given % moneyness: linear put-over-call skew plus a convex wing lift.
-    One surface shared by the smile curve and the GEX ladder so they cannot drift apart.
-    """
-    linear = -moneyness_pct * (skew_prem / 10.0)
-    wings = (abs(moneyness_pct) ** 1.35) * 0.08
-    return max(3.0, base_iv + linear + wings)
-
-
-def _strike_increment(spot: float) -> float:
-    """Pick the listed strike spacing closest to ~0.35% of spot."""
-    target = spot * 0.0035
-    candidates = (0.5, 1.0, 2.5, 5.0, 10.0, 25.0, 50.0)
-    return min(candidates, key=lambda inc: abs(math.log(max(target, 1e-6) / inc)))
-
-
-def _round_strike_boost(strike: float) -> float:
-    """
-    Open interest clusters on round strikes -- the rounder, the bigger the
-    cluster. Kept mild on purpose: this should tilt a wall onto the nearby
-    round number, not drag it away from where the open interest actually sits.
-    """
-    for step, boost in ((100.0, 1.50), (50.0, 1.35), (25.0, 1.25), (10.0, 1.15), (5.0, 1.08)):
-        if abs(strike / step - round(strike / step)) < 1e-9:
-            return boost
-    return 1.0
-
-
-def _build_oi_ladder(
+def build_observed_ladders(
+    chains: Dict[str, List[Dict[str, Any]]],
+    snapshot_date: str,
     spot: float,
-    anchor: float,
-    dte_days: float,
-    base_iv: float,
-    skew_prem: float,
-    pcr_oi: float,
-    peak_oi: float,
-) -> Dict[str, Any]:
+    rate_fn,
+    q: float,
+    expiries: Optional[List[str]] = None,
+) -> List[Dict[str, Any]]:
+    """Turn stored chain rows into per-expiry ladders of (strike, iv, call_oi, put_oi).
+
+    A strike's IV is taken from whichever side is out of the money, because
+    that is the side the surface is quoted on; if neither side yields a usable
+    IV the strike falls back to the expiry's ATM level rather than being
+    dropped, so its open interest still contributes its gamma.
     """
-    Build one expiry's modeled strike ladder: strike, its IV off the smile, and
-    call / put open interest. Call OI peaks at `peak_oi` contracts; put OI is
-    scaled so that total put OI / total call OI matches the ticker's put-call
-    OI ratio. Hump centres sit around `anchor` (where the book was written) and
-    widths scale with the expected move, so a high-vol name gets a wider ladder
-    and more distant walls. IV still comes off the smile quoted against `spot`.
-    """
-    T = max(1.0 / 365.0, dte_days / 365.0)
-    em = max(1e-6, anchor * (base_iv / 100.0) * math.sqrt(T))
-    inc = _strike_increment(spot)
-
-    lo = math.floor((min(spot, anchor) * (1.0 - _LADDER_SPAN)) / inc) * inc
-    hi = math.ceil((max(spot, anchor) * (1.0 + _LADDER_SPAN)) / inc) * inc
-    n_strikes = int(round((hi - lo) / inc)) + 1
-
-    call_mu = anchor + _CALL_OI_CENTER_EM * em
-    put_mu = anchor + _PUT_OI_CENTER_EM * em
-
-    strikes: List[float] = []
-    call_w: List[float] = []
-    put_w: List[float] = []
-    for i in range(n_strikes):
-        k = round(lo + i * inc, 4)
-        if k <= 0.0:
+    ladders: List[Dict[str, Any]] = []
+    for expiry in sorted(expiries if expiries is not None else chains.keys()):
+        rows = chains.get(expiry) or []
+        if not rows:
             continue
-        boost = _round_strike_boost(k)
-        strikes.append(k)
-        call_sd = (_CALL_OI_WIDTH_UP_EM if k >= call_mu else _CALL_OI_WIDTH_DN_EM) * em
-        put_sd = (_PUT_OI_WIDTH_UP_EM if k >= put_mu else _PUT_OI_WIDTH_DN_EM) * em
-        call_w.append(math.exp(-0.5 * ((k - call_mu) / call_sd) ** 2) * boost)
-        put_w.append(math.exp(-0.5 * ((k - put_mu) / put_sd) ** 2) * boost)
+        T = year_fraction(snapshot_date, expiry)
+        r = rate_fn(T * 365.0)
+        fwd, _ = forward_price(rows, spot, T, r)
+        surface = otm_iv_points(rows, fwd)
+        fallback_iv = atm_iv(rows, spot, T, r) or 0.0
 
-    max_call_w = max(call_w) if call_w else 1.0
-    call_oi = [peak_oi * (w / max_call_w) for w in call_w]
-    total_call_oi = sum(call_oi)
-    sum_put_w = sum(put_w) or 1.0
-    put_oi = [(total_call_oi * pcr_oi) * (w / sum_put_w) for w in put_w]
+        by_strike: Dict[float, Dict[str, float]] = {}
+        for row in rows:
+            k = float(row["strike"])
+            entry = by_strike.setdefault(k, {"strike": k, "call_oi": 0.0, "put_oi": 0.0, "iv": 0.0})
+            oi = float(row.get("open_interest") or 0.0)
+            if row["contract_type"] == "call":
+                entry["call_oi"] += oi
+            else:
+                entry["put_oi"] += oi
 
-    rows = [
-        {
-            "strike": k,
-            "iv": _smile_iv(base_iv, ((k / spot) - 1.0) * 100.0, skew_prem),
-            "call_oi": c,
-            "put_oi": p,
-        }
-        for k, c, p in zip(strikes, call_oi, put_oi)
-    ]
-    return {"dte": dte_days, "T": T, "rows": rows}
+            iv = row.get("vendor_iv")
+            is_otm = (row["contract_type"] == "call" and k >= fwd) or (
+                row["contract_type"] == "put" and k <= fwd
+            )
+            if iv is not None and is_otm:
+                entry["iv"] = float(iv)
+
+        ladder_rows = []
+        for k in sorted(by_strike):
+            entry = by_strike[k]
+            if entry["iv"] <= 0.0:
+                interpolated = None
+                if surface:
+                    lo = [p for p in surface if p[0] <= k]
+                    hi = [p for p in surface if p[0] >= k]
+                    if lo and hi:
+                        (k0, v0), (k1, v1) = lo[-1], hi[0]
+                        w = (k - k0) / (k1 - k0) if k1 > k0 else 0.0
+                        interpolated = v0 + w * (v1 - v0)
+                    elif lo:
+                        interpolated = lo[-1][1]
+                    elif hi:
+                        interpolated = hi[0][1]
+                entry["iv"] = interpolated if interpolated else fallback_iv
+            if entry["iv"] > 0.0:
+                ladder_rows.append(entry)
+
+        if ladder_rows:
+            ladders.append({"expiry": expiry, "dte": T * 365.0, "T": T, "r": r, "q": q, "rows": ladder_rows})
+    return ladders
 
 
-def _net_gex(ladders: List[Dict[str, Any]], spot_level: float, r: float, q: float) -> float:
+def _net_gex(ladders: List[Dict[str, Any]], spot_level: float) -> float:
     """Aggregate dealer GEX in $ per 1% move, evaluated at a hypothetical spot level.
 
-    The IV surface is held sticky-strike (each strike keeps the IV it was built
-    with) as spot is walked, which is the right convention for locating a flip.
+    The IV surface is held sticky-strike (each strike keeps the IV it was
+    observed with) as spot is walked, which is the right convention for
+    locating a flip.
     """
     dollar = CONTRACT_MULTIPLIER * spot_level * spot_level * 0.01
     total = 0.0
     for ladder in ladders:
-        T = ladder["T"]
+        T, r, q = ladder["T"], ladder["r"], ladder["q"]
         for row in ladder["rows"]:
-            gamma = _bsm_gamma(spot_level, row["strike"], T, row["iv"] / 100.0, r, q)
+            gamma = _bsm_gamma(spot_level, row["strike"], T, row["iv"], r, q)
             total += gamma * (row["call_oi"] - row["put_oi"]) * dollar
     return total
 
 
-def _gamma_flip_level(
-    ladders: List[Dict[str, Any]], spot: float, r: float, q: float
-) -> Optional[float]:
+def _gamma_flip_level(ladders: List[Dict[str, Any]], spot: float) -> Optional[float]:
     """Solve for the spot level at which aggregate dealer GEX crosses zero.
 
     Returns the crossing nearest to spot, linearly interpolated, or None when
@@ -301,7 +267,7 @@ def _gamma_flip_level(
     best: Optional[float] = None
     for i in range(steps):
         s = spot * (_FLIP_SCAN_LO + i * _FLIP_SCAN_STEP)
-        g = _net_gex(ladders, s, r, q)
+        g = _net_gex(ladders, s)
         if prev_g is not None and prev_s is not None and ((prev_g < 0.0 <= g) or (prev_g > 0.0 >= g)):
             denom = prev_g - g
             t = (prev_g / denom) if abs(denom) > 1e-12 else 0.5
@@ -334,24 +300,19 @@ def _max_pain(rows: List[Dict[str, float]]) -> float:
     return best_strike
 
 
-def compute_gex_structure(
-    spot: float,
-    ladders: List[Dict[str, Any]],
-    r: float,
-    q: float,
-) -> Dict[str, Any]:
+def compute_gex_structure(spot: float, ladders: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
-    Aggregate the modeled expiry ladders into the dealer-positioning picture:
+    Aggregate the observed expiry ladders into the dealer-positioning picture:
     net / call / put GEX in $ per 1% move, the per-strike profile, the call and
     put gamma walls, max pain, and the gamma flip level.
     """
     dollar = CONTRACT_MULTIPLIER * spot * spot * 0.01
     by_strike: Dict[float, Dict[str, float]] = {}
     for ladder in ladders:
-        T = ladder["T"]
+        T, r, q = ladder["T"], ladder["r"], ladder["q"]
         for row in ladder["rows"]:
             k = row["strike"]
-            gamma = _bsm_gamma(spot, k, T, row["iv"] / 100.0, r, q)
+            gamma = _bsm_gamma(spot, k, T, row["iv"], r, q)
             agg = by_strike.setdefault(k, {"strike": k, "call_oi": 0.0, "put_oi": 0.0, "call_gex": 0.0, "put_gex": 0.0})
             agg["call_oi"] += row["call_oi"]
             agg["put_oi"] += row["put_oi"]
@@ -364,6 +325,7 @@ def compute_gex_structure(
             "net_gex": 0.0, "call_gex": 0.0, "put_gex": 0.0,
             "call_wall": 0.0, "put_wall": 0.0, "max_pain": 0.0,
             "gamma_flip": None, "profile": [],
+            "total_call_oi": 0.0, "total_put_oi": 0.0,
         }
 
     call_gex_total = sum(x["call_gex"] for x in rows)
@@ -383,7 +345,7 @@ def compute_gex_structure(
             "put_oi": round(x["put_oi"], 0),
         }
         for x in rows
-        if abs((x["strike"] / spot) - 1.0) <= 0.10
+        if abs((x["strike"] / spot) - 1.0) <= _PROFILE_SPAN
     ]
 
     return {
@@ -393,15 +355,90 @@ def compute_gex_structure(
         "call_wall": call_wall,
         "put_wall": put_wall,
         "max_pain": _max_pain(rows),
-        "gamma_flip": _gamma_flip_level(ladders, spot, r, q),
+        "gamma_flip": _gamma_flip_level(ladders, spot),
         "profile": profile,
+        "total_call_oi": sum(x["call_oi"] for x in rows),
+        "total_put_oi": sum(x["put_oi"] for x in rows),
     }
 
 
+# ---------------------------------------------------------------------------
+# Chain-derived positioning and skew
+# ---------------------------------------------------------------------------
+
+def _put_call_ratios(rows: List[Dict[str, Any]]) -> Dict[str, Optional[float]]:
+    """Observed put/call ratios on open interest and on the session's volume."""
+    call_oi = sum(float(r["open_interest"] or 0.0) for r in rows if r["contract_type"] == "call")
+    put_oi = sum(float(r["open_interest"] or 0.0) for r in rows if r["contract_type"] == "put")
+    call_vol = sum(float(r["volume"] or 0.0) for r in rows if r["contract_type"] == "call")
+    put_vol = sum(float(r["volume"] or 0.0) for r in rows if r["contract_type"] == "put")
+    return {
+        "pcr_oi": round(put_oi / call_oi, 3) if call_oi > 0 else None,
+        "pcr_volume": round(put_vol / call_vol, 3) if call_vol > 0 else None,
+        "call_oi": call_oi,
+        "put_oi": put_oi,
+        "call_volume": call_vol,
+        "put_volume": put_vol,
+    }
+
+
+def _hedging_bias(pcr_oi: Optional[float]) -> str:
+    """Describe the book from the observed put/call open-interest ratio."""
+    if pcr_oi is None:
+        return "Unavailable"
+    if pcr_oi >= 2.0:
+        return "Heavy Downside Hedging"
+    if pcr_oi >= 1.3:
+        return "Put-Skewed Hedging"
+    if pcr_oi >= 0.9:
+        return "Balanced Two-Way Book"
+    return "Call-Skewed / Upside Demand"
+
+
+def _classify_skew(skew_val: float) -> Tuple[str, str, str]:
+    if skew_val > 5.0:
+        return (
+            "Steep Put Skew",
+            "Elevated downside hedging demand — institutions paying high premium for put protection.",
+            "#ef4444",
+        )
+    if skew_val > 2.0:
+        return (
+            "Normal Skew",
+            "Healthy asymmetric volatility surface with standard protective put hedging.",
+            "#34d399",
+        )
+    if skew_val > -1.0:
+        return (
+            "Flat / Complacent",
+            "Suppressed downside hedging — low fear pricing, potential vulnerability to vol shocks.",
+            "#fbbf24",
+        )
+    return (
+        "Inverted / Call Skew",
+        "Unusual upside call demand / gamma squeeze positioning.",
+        "#7aa2ff",
+    )
+
+
+def _nearest_expiries(chains: Dict[str, List[Dict[str, Any]]], snapshot_date: str, target_dte: float, count: int = 1) -> List[str]:
+    """Expiries closest to ``target_dte``, nearest first."""
+    scored = sorted(
+        ((abs(year_fraction(snapshot_date, e) * 365.0 - target_dte), e) for e in chains),
+        key=lambda p: p[0],
+    )
+    return [e for _, e in scored[:count]]
+
+
+# ---------------------------------------------------------------------------
+# Main entry point
+# ---------------------------------------------------------------------------
+
 def compute_options_analytics(conn: sqlite3.Connection, ticker: str = "SPY") -> Dict[str, Any]:
     """
-    Compute institutional options positioning, BSM Greeks across 1-Week, Next-Week, and 1-Month horizons,
-    vol skew, max pain, dealer gamma exposure (GEX), and expected move cones for SPY, QQQ, or IWM.
+    Compute institutional options positioning, BSM Greeks across 1-Week, Next-Week
+    and 1-Month horizons, vol skew, max pain, dealer gamma exposure (GEX) and
+    expected-move cones for SPY, QQQ or IWM -- all from the observed chain.
     """
     canonical = ticker.upper()
     cur = conn.execute(
@@ -414,67 +451,82 @@ def compute_options_analytics(conn: sqlite3.Connection, ticker: str = "SPY") -> 
         """,
         (canonical,)
     )
-    rows = cur.fetchall()
-    if not rows:
-        return _empty_options_response(canonical)
+    bars = cur.fetchall()
+    if not bars:
+        return _empty_options_response(canonical, "No underlying price history.")
 
-    spot = float(rows[0][4])
-    recent_closes = [float(r[4]) for r in reversed(rows)]
-    
+    spot = float(bars[0][4])
+    recent_closes = [float(r[4]) for r in reversed(bars)]
+
     # 20-day historical realized volatility (annualized)
-    if len(recent_closes) >= 20:
+    if len(recent_closes) >= 21:
         rets = [(recent_closes[i] / recent_closes[i - 1]) - 1.0 for i in range(1, len(recent_closes))]
-        mean_ret = sum(rets[-20:]) / 20.0
-        var = sum((r - mean_ret) ** 2 for r in rets[-20:]) / 19.0
+        window = rets[-20:]
+        mean_ret = sum(window) / len(window)
+        var = sum((r - mean_ret) ** 2 for r in window) / (len(window) - 1)
         realized_vol_20d = math.sqrt(var) * math.sqrt(252) * 100.0
     else:
-        realized_vol_20d = 14.5
+        realized_vol_20d = None
 
-    # Fetch VIX proxy
-    cur_vix = conn.execute(
-        """
-        SELECT close FROM market_observation WHERE ticker = 'VIXY' ORDER BY date DESC LIMIT 1
-        """
-    )
-    vix_row = cur_vix.fetchone()
-    vix_base = float(vix_row[0]) if vix_row else 18.0
+    snapshot_date, chain_rows = load_chain_rows(conn, canonical)
+    if not chain_rows or snapshot_date is None:
+        return _empty_options_response(
+            canonical,
+            "No option chain ingested for this underlying — run `python -m scorecard options`.",
+            spot=spot,
+            realized_vol_20d=realized_vol_20d,
+        )
 
-    # Calibration table
-    calibration = {
-        "SPY": {"mult": 0.85, "skew_prem": 3.8, "q": 0.0125, "pcr_vol": 1.18, "pcr_oi": 1.42, "bias": "Neutral Hedging", "peak_oi": 22000.0},
-        "QQQ": {"mult": 1.15, "skew_prem": 3.2, "q": 0.0055, "pcr_vol": 0.94, "pcr_oi": 1.12, "bias": "Bullish Call Skew", "peak_oi": 11000.0},
-        "IWM": {"mult": 1.35, "skew_prem": 4.6, "q": 0.0115, "pcr_vol": 1.38, "pcr_oi": 1.68, "bias": "High Downside Hedging", "peak_oi": 8000.0},
-    }
-    params = calibration.get(canonical, {"mult": 1.0, "skew_prem": 3.5, "q": 0.01, "pcr_vol": 1.05, "pcr_oi": 1.25, "bias": "Neutral", "peak_oi": 6000.0})
+    chains = group_by_expiry(chain_rows)
 
-    current_iv = round(vix_base * params["mult"], 1)
-    base_skew = params["skew_prem"]
-    div_yield = params["q"]
+    def rate_fn(dte_days: float) -> float:
+        return risk_free_rate(conn, dte_days, as_of=snapshot_date)
 
-    # 1. 25-Delta Volatility Skew
-    put_25d_iv = round(current_iv + (base_skew * 0.65), 2)
-    call_25d_iv = round(current_iv - (base_skew * 0.35), 2)
-    skew_val = round(put_25d_iv - call_25d_iv, 2)
-    skew_ratio = round(put_25d_iv / max(0.1, call_25d_iv), 3)
+    div_yield = trailing_dividend_yield(conn, canonical, spot, as_of=snapshot_date) or 0.0
+    r_30 = rate_fn(30.0)
 
-    if skew_val > 5.0:
-        skew_regime = "Steep Put Skew"
-        skew_interpretation = "Elevated downside hedging demand — institutions paying high premium for put protection."
-        skew_color = "#ef4444"
-    elif skew_val > 2.0:
-        skew_regime = "Normal Skew"
-        skew_interpretation = "Healthy asymmetric volatility surface with standard protective put hedging."
-        skew_color = "#34d399"
-    elif skew_val > -1.0:
-        skew_regime = "Flat / Complacent"
-        skew_interpretation = "Suppressed downside hedging — low fear pricing, potential vulnerability to vol shocks."
-        skew_color = "#fbbf24"
+    # Headline IV: 30-day constant maturity, interpolated in total variance.
+    cm_iv = constant_maturity_iv(chains, snapshot_date, spot, 30.0, rate_fn)
+    if cm_iv is None:
+        return _empty_options_response(
+            canonical, "Chain present but no usable implied volatilities.", spot=spot,
+            realized_vol_20d=realized_vol_20d,
+        )
+    current_iv = round(cm_iv * 100.0, 2)
+
+    # Model-free 30-day index off this underlying's own chain (VIX methodology).
+    vol_index = volatility_index(chains, snapshot_date, spot, rate_fn, target_days=30.0)
+
+    # 1. 25-Delta Volatility Skew, measured at an actual 0.25 delta.
+    monthly_expiries = _nearest_expiries(chains, snapshot_date, 30.0, count=1)
+    skew_expiry = monthly_expiries[0] if monthly_expiries else None
+    put_25d_iv = call_25d_iv = None
+    put_25d_strike = call_25d_strike = None
+    if skew_expiry:
+        T_sk = year_fraction(snapshot_date, skew_expiry)
+        r_sk = rate_fn(T_sk * 365.0)
+        put_leg = iv_at_delta(chains[skew_expiry], spot, T_sk, r_sk, div_yield, 0.25, is_call=False)
+        call_leg = iv_at_delta(chains[skew_expiry], spot, T_sk, r_sk, div_yield, 0.25, is_call=True)
+        if put_leg:
+            put_25d_strike, put_iv = put_leg
+            put_25d_iv = round(put_iv * 100.0, 2)
+        if call_leg:
+            call_25d_strike, call_iv = call_leg
+            call_25d_iv = round(call_iv * 100.0, 2)
+
+    if put_25d_iv is not None and call_25d_iv is not None:
+        skew_val = round(put_25d_iv - call_25d_iv, 2)
+        skew_ratio = round(put_25d_iv / max(0.1, call_25d_iv), 3)
+        skew_regime, skew_interpretation, skew_color = _classify_skew(skew_val)
+        skew_measured = True
     else:
-        skew_regime = "Inverted / Call Skew"
-        skew_interpretation = "Unusual upside call demand / gamma squeeze positioning."
-        skew_color = "#7aa2ff"
+        skew_val = skew_ratio = None
+        skew_regime, skew_color = "Unavailable", "#8b949e"
+        skew_interpretation = "Chain lacks quotable 25-delta wings on the front monthly expiry."
+        skew_measured = False
 
-    # 2. Multi-Horizon Greeks (1-Week @ 7 DTE, Next-Week @ 14 DTE, 1-Month @ 30 DTE)
+    # 2. Multi-Horizon Greeks, each priced at its own constant-maturity IV,
+    #    its own point on the Treasury curve, and its own listed expiries.
     horizons_config = [
         {
             "key": "1_week",
@@ -496,116 +548,131 @@ def compute_options_analytics(conn: sqlite3.Connection, ticker: str = "SPY") -> 
         }
     ]
 
-    # Where the open interest was written: 20-day volume-weighted average price.
-    # Falls back to a simple mean when volume is missing, and to spot when there
-    # is no history at all.
-    vw_rows = [(float(r[4]), float(r[5] or 0.0)) for r in rows[:20]]
-    vol_sum = sum(v for _, v in vw_rows)
-    if vw_rows and vol_sum > 0.0:
-        oi_anchor = sum(c * v for c, v in vw_rows) / vol_sum
-    elif vw_rows:
-        oi_anchor = sum(c for c, _ in vw_rows) / len(vw_rows)
-    else:
-        oi_anchor = spot
+    all_ladders = build_observed_ladders(chains, snapshot_date, spot, rate_fn, div_yield)
 
-    # Modeled open-interest ladders, one per expiry, feeding every GEX number below.
-    ladders = {
-        h["dte"]: _build_oi_ladder(
-            spot,
-            oi_anchor,
-            h["dte"],
-            current_iv,
-            base_skew,
-            params["pcr_oi"],
-            params["peak_oi"] * _EXPIRY_OI_WEIGHT.get(h["dte"], 1.0),
-        )
-        for h in horizons_config
-    }
-
-    horizons_greeks = {}
+    horizons_greeks: Dict[str, Any] = {}
     for h in horizons_config:
-        h_dte = h["dte"]
-        
-        atm = compute_bsm_greeks(spot, spot, h_dte, current_iv, r=0.0435, q=div_yield)
-        
-        # 25-Delta strikes for this DTE
+        h_dte = float(h["dte"])
+        h_iv_dec = constant_maturity_iv(chains, snapshot_date, spot, h_dte, rate_fn) or cm_iv
+        h_iv = round(h_iv_dec * 100.0, 2)
+        h_r = rate_fn(h_dte)
+
+        atm = compute_bsm_greeks(spot, spot, h_dte, h_iv, r=h_r, q=div_yield)
+
+        h_expiry = _nearest_expiries(chains, snapshot_date, h_dte, count=1)
+        h_expiry_name = h_expiry[0] if h_expiry else None
+
+        # 25-delta legs for this horizon, off its own nearest listed expiry.
         call_strike = round(spot * 1.025, 0)
         put_strike = round(spot * 0.970, 0)
-        call_g = compute_bsm_greeks(spot, call_strike, h_dte, call_25d_iv, r=0.0435, q=div_yield)
-        put_g = compute_bsm_greeks(spot, put_strike, h_dte, put_25d_iv, r=0.0435, q=div_yield)
+        h_call_iv, h_put_iv = h_iv, h_iv
+        if h_expiry_name:
+            T_h = year_fraction(snapshot_date, h_expiry_name)
+            leg_c = iv_at_delta(chains[h_expiry_name], spot, T_h, h_r, div_yield, 0.25, is_call=True)
+            leg_p = iv_at_delta(chains[h_expiry_name], spot, T_h, h_r, div_yield, 0.25, is_call=False)
+            if leg_c:
+                call_strike, iv_c = round(leg_c[0], 0), leg_c[1]
+                h_call_iv = round(iv_c * 100.0, 2)
+            if leg_p:
+                put_strike, iv_p = round(leg_p[0], 0), leg_p[1]
+                h_put_iv = round(iv_p * 100.0, 2)
 
-        exp_move_pct = (current_iv / 100.0) * math.sqrt(h_dte / 365.0) * 100.0
+        call_g = compute_bsm_greeks(spot, call_strike, h_dte, h_call_iv, r=h_r, q=div_yield)
+        put_g = compute_bsm_greeks(spot, put_strike, h_dte, h_put_iv, r=h_r, q=div_yield)
+
+        exp_move_pct = h_iv_dec * math.sqrt(h_dte / 365.0) * 100.0
         exp_move_dlr = spot * (exp_move_pct / 100.0)
 
-        # Expiration-specific key levels, solved from this expiry's own ladder
-        h_gex = compute_gex_structure(spot, [ladders[h_dte]], 0.0435, div_yield)
-        h_mp = round(h_gex["max_pain"], 0)
-        h_cw = round(h_gex["call_wall"], 0)
-        h_pw = round(h_gex["put_wall"], 0)
-        h_gf = round(h_gex["gamma_flip"], 0) if h_gex["gamma_flip"] is not None else 0.0
-        h_is_pos_gamma = h_gex["net_gex"] > 0.0
+        # Expiration-specific structure, solved from that expiry's own book.
+        h_ladders = [lad for lad in all_ladders if lad["expiry"] == h_expiry_name] if h_expiry_name else []
+        h_gex = compute_gex_structure(spot, h_ladders) if h_ladders else None
+        if h_gex:
+            h_is_pos_gamma = h_gex["net_gex"] > 0.0
+            structure = {
+                "expiry": h_expiry_name,
+                "max_pain": round(h_gex["max_pain"], 2),
+                "gamma_flip": round(h_gex["gamma_flip"], 2) if h_gex["gamma_flip"] is not None else None,
+                "gamma_flip_found": h_gex["gamma_flip"] is not None,
+                "call_wall": round(h_gex["call_wall"], 2),
+                "put_wall": round(h_gex["put_wall"], 2),
+                "gex_regime": "Positive Gamma" if h_is_pos_gamma else "Negative Gamma",
+                "gex_color": "#34d399" if h_is_pos_gamma else "#ef4444",
+                "call_oi": round(h_gex["total_call_oi"], 0),
+                "put_oi": round(h_gex["total_put_oi"], 0),
+            }
+            dollar_gamma = round(h_gex["net_gex"], 0)
+        else:
+            structure = _empty_gex_structure()
+            dollar_gamma = 0.0
 
         horizons_greeks[h["key"]] = {
             "key": h["key"],
-            "dte": h_dte,
+            "dte": h["dte"],
             "label": h["label"],
-            "iv": current_iv,
+            "iv": h_iv,
+            "risk_free_rate": round(h_r * 100.0, 3),
             "atm": atm,
-            "call_25d": {"strike": call_strike, **call_g},
-            "put_25d": {"strike": put_strike, **put_g},
-            "structure": {
-                "max_pain": h_mp,
-                "gamma_flip": h_gf,
-                "call_wall": h_cw,
-                "put_wall": h_pw,
-                "gex_regime": "Positive Gamma" if h_is_pos_gamma else "Negative Gamma",
-                "gex_color": "#34d399" if h_is_pos_gamma else "#ef4444"
-            },
+            "call_25d": {"strike": call_strike, "iv": h_call_iv, **call_g},
+            "put_25d": {"strike": put_strike, "iv": h_put_iv, **put_g},
+            "structure": structure,
             "expected_move": {
                 "pct": round(exp_move_pct, 2),
                 "dollar": round(exp_move_dlr, 2),
                 "upper_1s": round(spot + exp_move_dlr, 2),
                 "lower_1s": round(spot - exp_move_dlr, 2),
             },
-            "dollar_gamma_1pct": round(h_gex["net_gex"], 0),
+            "dollar_gamma_1pct": dollar_gamma,
             "narrative": h["narrative"]
         }
 
-    # Backward compatibility references
     atm_greeks_30d = horizons_greeks["1_month"]["atm"]
     atm_greeks_7d = horizons_greeks["1_week"]["atm"]
-    call_25d_greeks = horizons_greeks["1_month"]["call_25d"]
-    put_25d_greeks = horizons_greeks["1_month"]["put_25d"]
 
-    # 3. Volatility Smile Curve (-8% to +8% moneyness)
-    smile_curve = []
-    for pct_offset in range(-8, 9, 2):
-        k = round(spot * (1.0 + (pct_offset / 100.0)), 1)
-        strike_iv = round(_smile_iv(current_iv, float(pct_offset), base_skew), 2)
-        strike_greeks = compute_bsm_greeks(spot, k, 30, strike_iv, r=0.0435, q=div_yield)
-        smile_curve.append({
-            "strike": k,
-            "moneyness_pct": pct_offset,
-            "iv": strike_iv,
-            "is_atm": pct_offset == 0,
-            "call_delta": strike_greeks["call_delta"],
-            "put_delta": strike_greeks["put_delta"],
-            "gamma": strike_greeks["gamma"],
-            "vega": strike_greeks["vega"],
-            "theta": strike_greeks["call_theta"],
-        })
+    # 3. Volatility Smile: the observed surface on the front monthly expiry,
+    #    sampled at fixed moneyness so the chart keeps a stable x-axis.
+    smile_curve: List[Dict[str, Any]] = []
+    if skew_expiry:
+        T_sm = year_fraction(snapshot_date, skew_expiry)
+        r_sm = rate_fn(T_sm * 365.0)
+        fwd_sm, _ = forward_price(chains[skew_expiry], spot, T_sm, r_sm)
+        surface = otm_iv_points(chains[skew_expiry], fwd_sm)
+        for pct_offset in range(-8, 9, 2):
+            k = round(spot * (1.0 + (pct_offset / 100.0)), 2)
+            strike_iv = None
+            if surface:
+                lo = [p for p in surface if p[0] <= k]
+                hi = [p for p in surface if p[0] >= k]
+                if lo and hi:
+                    (k0, v0), (k1, v1) = lo[-1], hi[0]
+                    w = (k - k0) / (k1 - k0) if k1 > k0 else 0.0
+                    strike_iv = v0 + w * (v1 - v0)
+                elif lo:
+                    strike_iv = lo[-1][1]
+                elif hi:
+                    strike_iv = hi[0][1]
+            if strike_iv is None:
+                continue
+            iv_pct = round(strike_iv * 100.0, 2)
+            strike_greeks = compute_bsm_greeks(spot, k, T_sm * 365.0, iv_pct, r=r_sm, q=div_yield)
+            smile_curve.append({
+                "strike": k,
+                "moneyness_pct": pct_offset,
+                "iv": iv_pct,
+                "is_atm": pct_offset == 0,
+                "call_delta": strike_greeks["call_delta"],
+                "put_delta": strike_greeks["put_delta"],
+                "gamma": strike_greeks["gamma"],
+                "vega": strike_greeks["vega"],
+                "theta": strike_greeks["call_theta"],
+            })
 
-    # 4. Max Pain, Key Walls, Gamma Exposure (GEX)
-    # Aggregated across the modeled expiries. The regime follows the SIGN OF NET
-    # GEX -- not a comparison of spot against a level defined as a fixed fraction
-    # of spot, which can only ever resolve one way.
-    gex = compute_gex_structure(spot, list(ladders.values()), 0.0435, div_yield)
-
-    max_pain_strike = round(gex["max_pain"], 0)
-    call_wall_strike = round(gex["call_wall"], 0)
-    put_wall_strike = round(gex["put_wall"], 0)
+    # 4. Aggregate structure across every ingested expiry.
+    gex = compute_gex_structure(spot, all_ladders)
+    max_pain_strike = round(gex["max_pain"], 2)
+    call_wall_strike = round(gex["call_wall"], 2)
+    put_wall_strike = round(gex["put_wall"], 2)
     gamma_flip_raw = gex["gamma_flip"]
-    gamma_flip_strike = round(gamma_flip_raw, 0) if gamma_flip_raw is not None else 0.0
+    gamma_flip_strike = round(gamma_flip_raw, 2) if gamma_flip_raw is not None else None
     dollar_gamma_1pct = round(gex["net_gex"], 0)
     is_positive_gamma = dollar_gamma_1pct > 0.0
 
@@ -625,71 +692,54 @@ def compute_options_analytics(conn: sqlite3.Connection, ticker: str = "SPY") -> 
     ) + flip_phrase
     gex_color = "#34d399" if is_positive_gamma else "#ef4444"
 
-    # 5. Expected Move Cones (1-Day, 7-Day, 14-Day, 30-Day, 90-Day)
-    daily_pct = (current_iv / 100.0) * math.sqrt(1.0 / 365.0) * 100.0
-    weekly_pct = (current_iv / 100.0) * math.sqrt(7.0 / 365.0) * 100.0
-    next_week_pct = (current_iv / 100.0) * math.sqrt(14.0 / 365.0) * 100.0
-    monthly_pct = (current_iv / 100.0) * math.sqrt(30.0 / 365.0) * 100.0
-    quarterly_pct = (current_iv / 100.0) * math.sqrt(90.0 / 365.0) * 100.0
+    # 5. Expected-move cones, each at its own constant-maturity IV rather than
+    #    at a single number scaled by sqrt(t).
+    def _cone(days: float, with_2s: bool = False) -> Dict[str, float]:
+        iv_dec = constant_maturity_iv(chains, snapshot_date, spot, days, rate_fn) or cm_iv
+        pct = iv_dec * math.sqrt(days / 365.0) * 100.0
+        out = {
+            "pct": round(pct, 2),
+            "iv": round(iv_dec * 100.0, 2),
+            "dollar": round(spot * (pct / 100.0), 2),
+            "upper_1s": round(spot * (1.0 + pct / 100.0), 2),
+            "lower_1s": round(spot * (1.0 - pct / 100.0), 2),
+        }
+        if with_2s:
+            out["upper_2s"] = round(spot * (1.0 + (pct * 2.0) / 100.0), 2)
+            out["lower_2s"] = round(spot * (1.0 - (pct * 2.0) / 100.0), 2)
+        return out
 
     expected_moves = {
-        "daily": {
-            "pct": round(daily_pct, 2),
-            "dollar": round(spot * (daily_pct / 100.0), 2),
-            "upper_1s": round(spot * (1.0 + daily_pct / 100.0), 2),
-            "lower_1s": round(spot * (1.0 - daily_pct / 100.0), 2),
-        },
-        "weekly": {
-            "pct": round(weekly_pct, 2),
-            "dollar": round(spot * (weekly_pct / 100.0), 2),
-            "upper_1s": round(spot * (1.0 + weekly_pct / 100.0), 2),
-            "lower_1s": round(spot * (1.0 - weekly_pct / 100.0), 2),
-        },
-        "next_week": {
-            "pct": round(next_week_pct, 2),
-            "dollar": round(spot * (next_week_pct / 100.0), 2),
-            "upper_1s": round(spot * (1.0 + next_week_pct / 100.0), 2),
-            "lower_1s": round(spot * (1.0 - next_week_pct / 100.0), 2),
-        },
-        "monthly": {
-            "pct": round(monthly_pct, 2),
-            "dollar": round(spot * (monthly_pct / 100.0), 2),
-            "upper_1s": round(spot * (1.0 + monthly_pct / 100.0), 2),
-            "lower_1s": round(spot * (1.0 - monthly_pct / 100.0), 2),
-            "upper_2s": round(spot * (1.0 + (monthly_pct * 2.0) / 100.0), 2),
-            "lower_2s": round(spot * (1.0 - (monthly_pct * 2.0) / 100.0), 2),
-        },
-        "quarterly": {
-            "pct": round(quarterly_pct, 2),
-            "dollar": round(spot * (quarterly_pct / 100.0), 2),
-            "upper_1s": round(spot * (1.0 + quarterly_pct / 100.0), 2),
-            "lower_1s": round(spot * (1.0 - quarterly_pct / 100.0), 2),
-        }
+        "daily": _cone(1.0),
+        "weekly": _cone(7.0),
+        "next_week": _cone(14.0),
+        "monthly": _cone(30.0, with_2s=True),
+        "quarterly": _cone(90.0),
     }
+
+    positioning = _put_call_ratios(chain_rows)
 
     return {
         "ticker": canonical,
         "spot": round(spot, 2),
-        "as_of_date": rows[0][0],
+        "as_of_date": bars[0][0],
+        "chain_snapshot_date": snapshot_date,
+        "contracts_observed": len(chain_rows),
+        "expiries_observed": len(chains),
         "implied_volatility": current_iv,
-        "realized_vol_20d": round(realized_vol_20d, 1),
-        "iv_premium": round(current_iv - realized_vol_20d, 1),
-        "dividend_yield": round(div_yield * 100.0, 2),
-        "risk_free_rate": 4.35,
+        "vol_index_30d": round(vol_index, 2) if vol_index is not None else None,
+        "realized_vol_20d": round(realized_vol_20d, 2) if realized_vol_20d is not None else None,
+        "iv_premium": (
+            round(current_iv - realized_vol_20d, 2) if realized_vol_20d is not None else None
+        ),
+        "dividend_yield": round(div_yield * 100.0, 3),
+        "risk_free_rate": round(r_30 * 100.0, 3),
         "horizons": horizons_greeks,
         "greeks": {
             "atm_30d": atm_greeks_30d,
             "atm_7d": atm_greeks_7d,
-            "call_25d": {
-                "strike": horizons_greeks["1_month"]["call_25d"]["strike"],
-                "iv": call_25d_iv,
-                **call_25d_greeks
-            },
-            "put_25d": {
-                "strike": horizons_greeks["1_month"]["put_25d"]["strike"],
-                "iv": put_25d_iv,
-                **put_25d_greeks
-            },
+            "call_25d": horizons_greeks["1_month"]["call_25d"],
+            "put_25d": horizons_greeks["1_month"]["put_25d"],
             "dollar_gamma_1pct": dollar_gamma_1pct,
         },
         "skew": {
@@ -697,6 +747,10 @@ def compute_options_analytics(conn: sqlite3.Connection, ticker: str = "SPY") -> 
             "skew_ratio": skew_ratio,
             "put_25d_iv": put_25d_iv,
             "call_25d_iv": call_25d_iv,
+            "put_25d_strike": round(put_25d_strike, 2) if put_25d_strike else None,
+            "call_25d_strike": round(call_25d_strike, 2) if call_25d_strike else None,
+            "expiry": skew_expiry,
+            "measured": skew_measured,
             "regime": skew_regime,
             "regime_color": skew_color,
             "interpretation": skew_interpretation,
@@ -718,17 +772,24 @@ def compute_options_analytics(conn: sqlite3.Connection, ticker: str = "SPY") -> 
             "put_gex_dollars": round(-gex["put_gex"], 0),
             "net_gex_millions": round(dollar_gamma_1pct / 1e6, 1),
             "gex_profile": gex["profile"],
-            "oi_anchor": round(oi_anchor, 2),
-            "spot_vs_anchor_pct": round(((spot / oi_anchor) - 1.0) * 100.0, 2) if oi_anchor > 0 else 0.0,
-            "gex_basis": "modeled_oi",
-            "gex_basis_note": "Open interest is modeled from the 20d VWAP anchor, not observed - no options chain is ingested. Levels are indicative.",
-            "peak_strike_oi": params["peak_oi"]
+            "gex_basis": "observed_oi",
+            "gex_basis_note": (
+                f"Open interest is exchange-reported: {int(gex['total_call_oi']):,} call and "
+                f"{int(gex['total_put_oi']):,} put contracts across {len(chains)} listed expiries "
+                f"as of {snapshot_date}."
+            ),
+            "total_call_oi": round(gex["total_call_oi"], 0),
+            "total_put_oi": round(gex["total_put_oi"], 0),
         },
         "expected_moves": expected_moves,
         "positioning": {
-            "pcr_volume": params["pcr_vol"],
-            "pcr_oi": params["pcr_oi"],
-            "hedging_bias": params["bias"]
+            "pcr_volume": positioning["pcr_volume"],
+            "pcr_oi": positioning["pcr_oi"],
+            "call_oi": round(positioning["call_oi"], 0),
+            "put_oi": round(positioning["put_oi"], 0),
+            "call_volume": round(positioning["call_volume"], 0),
+            "put_volume": round(positioning["put_volume"], 0),
+            "hedging_bias": _hedging_bias(positioning["pcr_oi"]),
         }
     }
 
@@ -747,74 +808,88 @@ def compute_options_trio_comparison(conn: sqlite3.Connection) -> Dict[str, Any]:
 def _empty_gex_structure() -> Dict[str, Any]:
     """Zeroed GEX block for the no-data path -- flagged, never a plausible-looking number."""
     return {
-        "max_pain": 0.0,
-        "call_wall": 0.0,
-        "put_wall": 0.0,
-        "gamma_flip": 0.0,
+        "expiry": None,
+        "max_pain": None,
+        "call_wall": None,
+        "put_wall": None,
+        "gamma_flip": None,
         "gamma_flip_found": False,
         "gex_regime": "Unavailable",
         "gex_color": "#8b949e",
-        "net_gex_dollars": 0.0,
+        "call_oi": 0.0,
+        "put_oi": 0.0,
     }
 
 
-def _empty_options_response(ticker: str) -> Dict[str, Any]:
-    empty_g = compute_bsm_greeks(100.0, 100.0, 30, 15.0)
+def _empty_options_response(
+    ticker: str,
+    reason: str,
+    spot: float = 0.0,
+    realized_vol_20d: Optional[float] = None,
+) -> Dict[str, Any]:
+    """The no-chain path.
+
+    Every derived field is None, not a plausible-looking placeholder. The
+    previous version returned a full set of Greeks priced off a $100 underlying
+    at 15% vol, which rendered in the UI as though it were a measurement.
+    """
+    empty_horizon = lambda key, dte, label: {  # noqa: E731
+        "key": key, "dte": dte, "label": label, "iv": None, "risk_free_rate": None,
+        "atm": None, "call_25d": None, "put_25d": None,
+        "structure": _empty_gex_structure(),
+        "expected_move": {"pct": None, "dollar": None, "upper_1s": None, "lower_1s": None},
+        "dollar_gamma_1pct": None, "narrative": reason,
+    }
     return {
         "ticker": ticker,
-        "spot": 0.0,
-        "as_of_date": "2026-08-18",
-        "implied_volatility": 15.0,
-        "realized_vol_20d": 14.0,
-        "iv_premium": 1.0,
-        "dividend_yield": 1.25,
-        "risk_free_rate": 4.35,
+        "spot": round(spot, 2),
+        "as_of_date": None,
+        "chain_snapshot_date": None,
+        "contracts_observed": 0,
+        "expiries_observed": 0,
+        "data_available": False,
+        "unavailable_reason": reason,
+        "implied_volatility": None,
+        "vol_index_30d": None,
+        "realized_vol_20d": round(realized_vol_20d, 2) if realized_vol_20d is not None else None,
+        "iv_premium": None,
+        "dividend_yield": None,
+        "risk_free_rate": None,
         "horizons": {
-            "1_week": {"key": "1_week", "dte": 7, "label": "1-Week Outlook (7 DTE)", "iv": 15.0, "atm": compute_bsm_greeks(100.0, 100.0, 7, 15.0), "call_25d": {"strike": 102.5, **compute_bsm_greeks(100.0, 102.5, 7, 14.0)}, "put_25d": {"strike": 97.0, **compute_bsm_greeks(100.0, 97.0, 7, 16.5)}, "expected_move": {"pct": 2.1, "dollar": 2.1, "upper_1s": 102.1, "lower_1s": 97.9}, "structure": _empty_gex_structure(), "dollar_gamma_1pct": 0.0, "narrative": "Near term"},
-            "next_week": {"key": "next_week", "dte": 14, "label": "Next-Week Outlook (14 DTE)", "iv": 15.0, "atm": compute_bsm_greeks(100.0, 100.0, 14, 15.0), "call_25d": {"strike": 102.5, **compute_bsm_greeks(100.0, 102.5, 14, 14.0)}, "put_25d": {"strike": 97.0, **compute_bsm_greeks(100.0, 97.0, 14, 16.5)}, "expected_move": {"pct": 2.9, "dollar": 2.9, "upper_1s": 102.9, "lower_1s": 97.1}, "structure": _empty_gex_structure(), "dollar_gamma_1pct": 0.0, "narrative": "Next week"},
-            "1_month": {"key": "1_month", "dte": 30, "label": "1-Month Outlook (30 DTE)", "iv": 15.0, "atm": empty_g, "call_25d": {"strike": 102.5, **compute_bsm_greeks(100.0, 102.5, 30, 14.0)}, "put_25d": {"strike": 97.0, **compute_bsm_greeks(100.0, 97.0, 30, 16.5)}, "expected_move": {"pct": 4.5, "dollar": 4.5, "upper_1s": 104.5, "lower_1s": 95.5}, "structure": _empty_gex_structure(), "dollar_gamma_1pct": 0.0, "narrative": "Monthly benchmark"},
+            "1_week": empty_horizon("1_week", 7, "1-Week Outlook (7 DTE)"),
+            "next_week": empty_horizon("next_week", 14, "Next-Week Outlook (14 DTE)"),
+            "1_month": empty_horizon("1_month", 30, "1-Month Outlook (30 DTE)"),
         },
         "greeks": {
-            "atm_30d": empty_g,
-            "atm_7d": compute_bsm_greeks(100.0, 100.0, 7, 15.0),
-            "call_25d": {"strike": 102.5, "iv": 14.0, **compute_bsm_greeks(100.0, 102.5, 30, 14.0)},
-            "put_25d": {"strike": 97.0, "iv": 17.5, **compute_bsm_greeks(100.0, 97.0, 30, 17.5)},
-            "dollar_gamma_1pct": 0.0
+            "atm_30d": None, "atm_7d": None,
+            "call_25d": None, "put_25d": None,
+            "dollar_gamma_1pct": None,
         },
         "skew": {
-            "skew_25d": 3.0,
-            "skew_ratio": 1.2,
-            "put_25d_iv": 16.5,
-            "call_25d_iv": 13.5,
-            "regime": "Normal Skew",
-            "regime_color": "#34d399",
-            "interpretation": "Standard options surface",
-            "smile": []
+            "skew_25d": None, "skew_ratio": None,
+            "put_25d_iv": None, "call_25d_iv": None,
+            "put_25d_strike": None, "call_25d_strike": None,
+            "expiry": None, "measured": False,
+            "regime": "Unavailable", "regime_color": "#8b949e",
+            "interpretation": reason, "smile": [],
         },
         "structure": {
-            **_empty_gex_structure(),
-            "flip_distance_pct": None,
-            "gex_description": "No market observations for this ticker - dealer positioning unavailable.",
-            "call_gex_dollars": 0.0,
-            "put_gex_dollars": 0.0,
-            "net_gex_millions": 0.0,
-            "gex_profile": [],
-            "oi_anchor": 0.0,
-            "spot_vs_anchor_pct": 0.0,
-            "gex_basis": "unavailable",
-            "gex_basis_note": "No underlying price history, so no ladder could be built.",
-            "peak_strike_oi": 0.0
+            "max_pain": None, "call_wall": None, "put_wall": None,
+            "gamma_flip": None, "gamma_flip_found": False, "flip_distance_pct": None,
+            "gex_regime": "Unavailable", "gex_color": "#8b949e",
+            "gex_description": reason,
+            "net_gex_dollars": None, "call_gex_dollars": None, "put_gex_dollars": None,
+            "net_gex_millions": None, "gex_profile": [],
+            "gex_basis": "unavailable", "gex_basis_note": reason,
+            "total_call_oi": 0.0, "total_put_oi": 0.0,
         },
         "expected_moves": {
-            "daily": {"pct": 0.8, "dollar": 5.0, "upper_1s": 0.0, "lower_1s": 0.0},
-            "weekly": {"pct": 2.1, "dollar": 12.0, "upper_1s": 0.0, "lower_1s": 0.0},
-            "next_week": {"pct": 2.9, "dollar": 16.0, "upper_1s": 0.0, "lower_1s": 0.0},
-            "monthly": {"pct": 4.5, "dollar": 25.0, "upper_1s": 0.0, "lower_1s": 0.0, "upper_2s": 0.0, "lower_2s": 0.0},
-            "quarterly": {"pct": 7.8, "dollar": 45.0, "upper_1s": 0.0, "lower_1s": 0.0},
+            k: {"pct": None, "iv": None, "dollar": None, "upper_1s": None, "lower_1s": None}
+            for k in ("daily", "weekly", "next_week", "monthly", "quarterly")
         },
         "positioning": {
-            "pcr_volume": 1.0,
-            "pcr_oi": 1.2,
-            "hedging_bias": "Neutral"
+            "pcr_volume": None, "pcr_oi": None,
+            "call_oi": 0.0, "put_oi": 0.0, "call_volume": 0.0, "put_volume": 0.0,
+            "hedging_bias": "Unavailable",
         }
     }

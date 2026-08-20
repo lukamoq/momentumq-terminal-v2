@@ -85,7 +85,7 @@
     <div class="alert-banner alert-banner-mag7">
       <div class="alert-badge">EMPIRICAL MACRO CALENDAR</div>
       <div class="alert-text">
-        <strong>Calendar Regularities vs Sell-Side Psychology:</strong> Wall Street research releases spike in late Q4 as annual outlooks are published with high bullish skew (77.4% overweight), yielding higher realization hit rates during the year-end Santa Rally. In contrast, Q3 summer doldrums historically feature the highest forecast revisions and lowest hit rates. Below is the multi-asset empirical heatmap and trading day path.
+        <strong>Calendar Regularities vs Sell-Side Psychology:</strong> Wall Street research releases spike in late Q4 as annual outlooks are published with high bullish skew (<span id="q4BullishSkew">—</span> bullish), yielding higher realization hit rates during the year-end Santa Rally. In contrast, Q3 summer doldrums historically feature the highest forecast revisions and lowest hit rates. Below is the multi-asset empirical heatmap and trading day path.
       </div>
     </div>
 
@@ -341,31 +341,31 @@
           </div>
         </div>
 
-        <!-- VIX Term Structure & Contango Monitor -->
+        <!-- Implied Volatility Term Structure, measured off the SPY option chain -->
         <div class="macro-card macro-card-full" id="vixStructureCard">
           <div class="macro-card-header">
-            <span class="macro-kicker">VIX TERM STRUCTURE &amp; CONTANGO DECAY</span>
+            <span class="macro-kicker">IMPLIED VOLATILITY TERM STRUCTURE &amp; CURVE SLOPE</span>
             <div class="vix-badge-group">
-              <span class="regime-status-badge" id="vixStateBadge">CONTANGO</span>
-              <span class="macro-meta-tag" id="vixPercentileTag">1Y PCT: 1%</span>
+              <span class="regime-status-badge" id="vixStateBadge">—</span>
+              <span class="macro-meta-tag" id="vixPercentileTag">—</span>
             </div>
           </div>
           <div class="vix-summary-row">
-            <div class="vix-metric-box">
-              <span class="vm-label">VIX PROXY (VIXY)</span>
-              <span class="vm-val font-mono highlight-gold" id="vixProxyVal">$18.86</span>
+            <div class="vix-metric-box" title="30-day constant-maturity model-free implied volatility, computed from the observed SPY option chain using the CBOE variance formula">
+              <span class="vm-label">30D IMPLIED VOL</span>
+              <span class="vm-val font-mono highlight-gold" id="vixIv30Val">—</span>
             </div>
-            <div class="vix-metric-box">
-              <span class="vm-label">CONTANGO RATIO (20D)</span>
-              <span class="vm-val font-mono color-bull" id="vixContangoVal">-2.4% / 5d</span>
+            <div class="vix-metric-box" title="9-day / 30-day / 90-day constant-maturity implied volatility">
+              <span class="vm-label">CURVE 9D / 30D / 90D</span>
+              <span class="vm-val font-mono" id="vixCurveVal">—</span>
             </div>
-            <div class="vix-metric-box">
-              <span class="vm-label">VIXY vs SPY CORRELATION</span>
-              <span class="vm-val font-mono color-bull" id="vixSpyCorrVal">-0.70</span>
+            <div class="vix-metric-box" title="3-month implied volatility divided by 1-month. Above 1.00 is contango, below is backwardation.">
+              <span class="vm-label">3M / 1M SLOPE</span>
+              <span class="vm-val font-mono" id="vixContangoVal">—</span>
             </div>
-            <div class="vix-metric-box">
-              <span class="vm-label">VOLATILITY REGIME</span>
-              <span class="vm-val font-mono" id="vixRegimeVal" style="color:#34d399;">COMPLACENT</span>
+            <div class="vix-metric-box" title="30-day implied volatility minus 21-day realized volatility — what the options market charges over what the tape has delivered">
+              <span class="vm-label">VARIANCE PREMIUM</span>
+              <span class="vm-val font-mono" id="vixPremiumVal">—</span>
             </div>
           </div>
           <div class="vix-narrative-box" id="vixNarrativeText">
@@ -510,6 +510,7 @@
     </footer>
   </div>
 
+  <script src="terminal.js"></script>
   <script src="seasonality.js"></script>
 </body>
 </html>

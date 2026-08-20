@@ -77,6 +77,15 @@ async function triggerLiveRecalculate() {
   }
 }
 
+/* Any measured field can now be null: the options engine reports "not
+   measured" instead of substituting a plausible-looking placeholder, and a
+   gamma flip genuinely may not exist inside the scanned band. Format through
+   fx() so a missing measurement renders as a dash rather than throwing on
+   .toFixed(). */
+function fx(v, digits = 2) {
+  return (v === null || v === undefined || Number.isNaN(v)) ? '--' : Number(v).toFixed(digits);
+}
+
 async function safeFetchJson(url, fallback) {
   try {
     const res = await fetch(url);
@@ -103,7 +112,7 @@ async function initSeasonalityApp(silent = false) {
       safeFetchJson('/api/macro/regime', { regime: 'UNKNOWN', factors: [] }),
       safeFetchJson('/api/analytics/sectors', { sectors: [] }),
       safeFetchJson('/api/analytics/correlation', { matrix: {}, tickers: [] }),
-      safeFetchJson('/api/macro/vix-structure', { state: 'CONTANGO', contango_ratio: 0 }),
+      safeFetchJson('/api/macro/vix-structure', null),
       safeFetchJson('/api/macro/fear-greed', { score: 50, label: 'NEUTRAL', categories: [] }),
       safeFetchJson('/api/analytics/options', { assets: {} }),
     ]);
@@ -137,13 +146,14 @@ async function initSeasonalityApp(silent = false) {
     // because the default ticker state is INDEX_TRIO.
     renderSeasonalityCurves();
     renderCallSeasonalitySection();
+    renderQ4SkewClaim();
     renderMacroRegimeSection();
     renderSectorRotationTable();
     renderCorrelationMatrixTable();
     renderVixStructureCard();
     renderFearGreedPanel();
     renderOptionsAnalysisSection();
-    if (!silent) updateSyncTimeUI();
+    if (!silent) updateSyncTime();
     prefetchOtherTickers();
   } catch (err) {
     console.error('Failed to load seasonality data:', err);
@@ -293,6 +303,43 @@ function setupSeasonalityEventListeners() {
   }, { passive: true });
 }
 
+/* Narrow the asset pill bar to the assets matching `query`.
+
+   Hiding the pills alone left every group heading behind, so a search for one
+   ticker printed four empty rubrics ("Comparisons", "Sectors", ...) above the
+   single hit, and a search that matched nothing printed five headings and no
+   explanation at all. Each group hides with its own pills, and a no-match
+   message takes the bar's place. */
+function applyAssetPillFilter(query) {
+  const q = (query || '').trim().toUpperCase();
+  const bar = document.getElementById('seasonAssetPills');
+  if (!bar) return;
+
+  let visibleCount = 0;
+  bar.querySelectorAll('.pill-group').forEach(group => {
+    let groupVisible = 0;
+    group.querySelectorAll('.season-pill-btn').forEach(btn => {
+      const text = btn.textContent.toUpperCase();
+      const ticker = (btn.dataset.ticker || '').toUpperCase();
+      const match = !q || text.includes(q) || ticker.includes(q);
+      btn.style.display = match ? '' : 'none';
+      if (match) groupVisible++;
+    });
+    group.style.display = groupVisible ? '' : 'none';
+    visibleCount += groupVisible;
+  });
+
+  let emptyEl = document.getElementById('assetPillsEmpty');
+  if (!emptyEl) {
+    emptyEl = document.createElement('div');
+    emptyEl.id = 'assetPillsEmpty';
+    emptyEl.className = 'asset-pills-empty font-mono';
+    bar.appendChild(emptyEl);
+  }
+  emptyEl.textContent = `No asset matches "${query}" \u2014 clear the filter to see all ${bar.querySelectorAll('.season-pill-btn').length}.`;
+  emptyEl.style.display = visibleCount ? 'none' : '';
+}
+
 function setupQuantToolingListeners() {
   const searchInput = document.getElementById('quantSearchInput');
 
@@ -309,8 +356,7 @@ function setupQuantToolingListeners() {
     if (document.activeElement === searchInput && e.key === 'Escape') {
       if (searchInput.value) {
         searchInput.value = '';
-        const pillBtns = document.querySelectorAll('.season-pill-btn');
-        pillBtns.forEach(btn => btn.style.display = '');
+        applyAssetPillFilter('');
       }
       searchInput.blur();
     }
@@ -318,19 +364,7 @@ function setupQuantToolingListeners() {
 
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
-      const q = e.target.value.trim().toUpperCase();
-      const pillBtns = document.querySelectorAll('.season-pill-btn');
-      let visibleCount = 0;
-      pillBtns.forEach(btn => {
-        const text = btn.textContent.toUpperCase();
-        const ticker = (btn.dataset.ticker || '').toUpperCase();
-        if (!q || text.includes(q) || ticker.includes(q)) {
-          btn.style.display = '';
-          visibleCount++;
-        } else {
-          btn.style.display = 'none';
-        }
-      });
+      applyAssetPillFilter(e.target.value);
     });
   }
 
@@ -1118,6 +1152,19 @@ function renderSeasonalityCurves() {
    03 // Research Call Seasonality & Desk Bias Audit
    ========================================================================== */
 
+function renderQ4SkewClaim() {
+  /* The narrative used to state a bullish-skew figure as static prose; it had
+     drifted from the data (77.4% against a computed 78.9%). Read it off the
+     same aggregation the table uses so the claim cannot go stale again. */
+  const el = document.getElementById('q4BullishSkew');
+  if (!el) return;
+  const quarters = seasonState.callPatterns && seasonState.callPatterns.quarters;
+  const q4 = quarters ? quarters.find(q => q.quarter === 'Q4') : null;
+  el.textContent = (q4 && q4.bullish_ratio !== null && q4.bullish_ratio !== undefined)
+    ? `${(q4.bullish_ratio * 100).toFixed(1)}%`
+    : '—';
+}
+
 function renderCallSeasonalitySection() {
   const qContainer = document.getElementById('quarterCardsContainer');
   const tbody = document.getElementById('callMonthTbody');
@@ -1341,51 +1388,74 @@ function renderVixStructureCard() {
   const vix = seasonState.vixStructure;
   if (!vix) return;
 
+  /* Every figure here is measured off the observed SPY option chain. The panel
+     used to print the VIXY share price as "VIX PROXY" and the mean 5-day change
+     in that price as a contango ratio; neither measured what it was labelled. */
+  const fmtPct = (v, digits = 1) => (v === null || v === undefined ? '—' : `${v.toFixed(digits)}%`);
+
   const badgeEl = document.getElementById('vixStateBadge');
   const pctTagEl = document.getElementById('vixPercentileTag');
-  const proxyEl = document.getElementById('vixProxyVal');
+  const iv30El = document.getElementById('vixIv30Val');
+  const curveEl = document.getElementById('vixCurveVal');
   const contangoEl = document.getElementById('vixContangoVal');
-  const corrEl = document.getElementById('vixSpyCorrVal');
-  const regimeEl = document.getElementById('vixRegimeVal');
+  const premiumEl = document.getElementById('vixPremiumVal');
   const narrativeEl = document.getElementById('vixNarrativeText');
 
   if (badgeEl) {
-    badgeEl.textContent = `${vix.current_state.toUpperCase()} (${vix.severity})`;
+    badgeEl.textContent = `${(vix.current_state || 'UNKNOWN').toUpperCase()} (${vix.severity || '—'})`;
     badgeEl.style.background = `${vix.state_color}22`;
     badgeEl.style.color = vix.state_color;
     badgeEl.style.border = `1px solid ${vix.state_color}66`;
   }
 
   if (pctTagEl) {
-    pctTagEl.textContent = `1Y RANGE: ${vix.vix_percentile.toFixed(0)}th PCT`;
+    /* The percentile is withheld until enough implied history has accumulated
+       to rank against — the realized-vol rank stands in until then. */
+    if (vix.iv_percentile !== null && vix.iv_percentile !== undefined) {
+      pctTagEl.textContent = `IV PCTILE: ${vix.iv_percentile.toFixed(0)}th`;
+      pctTagEl.title = vix.percentile_basis || '';
+    } else if (vix.realized_percentile !== null && vix.realized_percentile !== undefined) {
+      pctTagEl.textContent = `RV PCTILE: ${vix.realized_percentile.toFixed(0)}th (1Y)`;
+      pctTagEl.title = vix.percentile_basis || '';
+    } else {
+      pctTagEl.textContent = 'PCTILE: ACCUMULATING';
+      pctTagEl.title = vix.percentile_basis || '';
+    }
   }
 
-  if (proxyEl) {
-    proxyEl.textContent = `$${vix.vix_proxy.toFixed(2)}`;
+  if (iv30El) iv30El.textContent = fmtPct(vix.iv_30d, 2);
+
+  if (curveEl) {
+    const c = vix.curve || {};
+    curveEl.textContent = [c.iv_9d, c.iv_30d, c.iv_90d]
+      .map(v => (v === null || v === undefined ? '—' : v.toFixed(1)))
+      .join(' / ');
   }
 
   if (contangoEl) {
-    const isContango = vix.contango_ratio <= 0;
-    contangoEl.textContent = `${isContango ? '' : '+'}${vix.contango_ratio.toFixed(1)}% / 5d`;
-    contangoEl.className = `vm-val font-mono ${isContango ? 'color-bull' : 'color-bear'}`;
-  }
-
-  if (corrEl) {
-    const cVal = vix.vixy_spy_corr !== null ? vix.vixy_spy_corr.toFixed(2) : '—';
-    corrEl.textContent = cVal;
-    corrEl.className = `vm-val font-mono ${(vix.vixy_spy_corr || 0) < -0.5 ? 'color-bull' : 'highlight-gold'}`;
-  }
-
-  if (regimeEl) {
-    if (vix.vix_percentile < 25) {
-      regimeEl.textContent = 'COMPLACENT (LOW VOL)';
-      regimeEl.style.color = '#34d399';
-    } else if (vix.vix_percentile > 75) {
-      regimeEl.textContent = 'ELEVATED HEDGING';
-      regimeEl.style.color = '#ef4444';
+    const ratio = vix.contango_ratio;
+    if (ratio === null || ratio === undefined) {
+      contangoEl.textContent = '—';
+      contangoEl.className = 'vm-val font-mono';
     } else {
-      regimeEl.textContent = 'NORMAL REGIME';
-      regimeEl.style.color = '#7aa2ff';
+      /* Contango (3M over 1M above 1.00) is the calm regime. */
+      const contango = ratio > 1.0;
+      contangoEl.textContent = `${ratio.toFixed(3)}x`;
+      contangoEl.className = `vm-val font-mono ${contango ? 'color-bull' : 'color-bear'}`;
+    }
+  }
+
+  if (premiumEl) {
+    const p = vix.iv_premium;
+    if (p === null || p === undefined) {
+      premiumEl.textContent = '—';
+      premiumEl.className = 'vm-val font-mono';
+    } else {
+      premiumEl.textContent = `${p >= 0 ? '+' : ''}${p.toFixed(2)} pts`;
+      premiumEl.className = `vm-val font-mono ${p >= 0 ? 'color-bull' : 'color-bear'}`;
+      premiumEl.title = vix.realized_vol_21d !== null && vix.realized_vol_21d !== undefined
+        ? `30d implied ${fmtPct(vix.iv_30d, 2)} vs 21d realized ${fmtPct(vix.realized_vol_21d, 2)}`
+        : '';
     }
   }
 
@@ -1408,7 +1478,7 @@ function renderFearGreedPanel() {
   const gridEl = document.getElementById('fgCategoriesGrid');
 
   if (scoreEl) {
-    scoreEl.textContent = fg.composite_score.toFixed(1);
+    scoreEl.textContent = fx(fg.composite_score, 1);
     scoreEl.style.color = fg.bar_color;
   }
 
@@ -1437,19 +1507,23 @@ function renderFearGreedPanel() {
     gridEl.innerHTML = order.map(k => {
       const cat = fg.categories[k];
       if (!cat) return '';
+      /* A category that could not be measured scores a neutral 50 and says why.
+         Marking it keeps a missing input from reading as a real signal. */
+      const unmeasured = cat.measured === false;
+      const note = (cat.details && cat.details.note) ? cat.details.note : '';
       return `
-        <div class="fg-cat-box">
+        <div class="fg-cat-box"${unmeasured ? ' style="opacity: 0.62;"' : ''}${note ? ` title="${note.replace(/"/g, '&quot;')}"` : ''}>
           <div class="fg-cat-header">
             <div class="fg-cat-title-wrap">
               <span class="fg-cat-name">${cat.label}</span>
-              <span class="fg-cat-weight">${cat.weight}% wgt</span>
+              <span class="fg-cat-weight">${cat.weight}% wgt${unmeasured ? ' &middot; NOT MEASURED' : ''}</span>
             </div>
-            <span class="fg-cat-score font-mono" style="color: ${cat.bar_color};">
-              ${cat.score.toFixed(0)} <span style="font-size: 10px; color: var(--text-dim); font-weight: normal;">(+${cat.contribution})</span>
+            <span class="fg-cat-score font-mono" style="color: ${unmeasured ? 'var(--text-dim)' : cat.bar_color};">
+              ${unmeasured ? 'n/a' : fx(cat.score, 0)} <span style="font-size: 10px; color: var(--text-dim); font-weight: normal;">(+${cat.contribution})</span>
             </span>
           </div>
           <div class="fg-cat-progress">
-            <div class="fg-cat-fill" style="width: ${cat.score}%; background: ${cat.bar_color};"></div>
+            <div class="fg-cat-fill" style="width: ${cat.score}%; background: ${unmeasured ? 'var(--text-dim)' : cat.bar_color};"></div>
           </div>
           <span class="fg-cat-desc">${cat.description}</span>
         </div>
@@ -1528,8 +1602,8 @@ function renderOptionsAnalysisSection() {
                   ${hl.badge}
                 </span>
               </td>
-              <td class="text-center font-mono font-bold highlight-gold">${hData.iv.toFixed(1)}%</td>
-              <td class="text-center font-mono text-muted">${opt.realized_vol_20d.toFixed(1)}%</td>
+              <td class="text-center font-mono font-bold highlight-gold">${fx(hData.iv, 1)}%</td>
+              <td class="text-center font-mono text-muted">${fx(opt.realized_vol_20d, 1)}%</td>
               <td class="text-center font-mono font-bold" style="color: #38bdf8;">
                 ${g.call_delta !== undefined ? `+${g.call_delta.toFixed(2)}` : '--'}
               </td>
@@ -1551,9 +1625,9 @@ function renderOptionsAnalysisSection() {
               <td class="text-center font-mono" style="color: #fbbf24; font-size: 11px;">
                 ${g.charm_call !== undefined ? g.charm_call.toFixed(4) : '--'}
               </td>
-              <td class="text-right font-mono font-bold highlight-gold">$${struct.max_pain.toFixed(0)}</td>
+              <td class="text-right font-mono font-bold highlight-gold">$${fx(struct.max_pain, 0)}</td>
               <td class="text-center font-mono font-bold" style="color: ${struct.gex_color}; font-size: 11px;">
-                ${struct.gex_regime.split(' ')[0]} ($${struct.gamma_flip.toFixed(0)})
+                ${struct.gex_regime.split(' ')[0]} ($${fx(struct.gamma_flip, 0)})
               </td>
               <td class="text-right font-mono font-bold highlight-gold">
                 &plusmn;$${em.dollar ? em.dollar.toFixed(1) : '--'} (&plusmn;${em.pct ? em.pct.toFixed(1) : '--'}%)
@@ -1569,13 +1643,13 @@ function renderOptionsAnalysisSection() {
         if (!opt) return '';
 
         const hData = (opt.horizons && opt.horizons[activeHorizon]) ? opt.horizons[activeHorizon] : (opt.horizons ? opt.horizons['1_week'] : null);
-        const g = hData ? hData.atm : (opt.greeks ? opt.greeks.atm_30d : {});
+        const g = (hData ? hData.atm : (opt.greeks ? opt.greeks.atm_30d : null)) || {};
         const ivVal = hData ? hData.iv : opt.implied_volatility;
         const em = hData ? hData.expected_move : opt.expected_moves.weekly;
         const struct = (hData && hData.structure) ? hData.structure : opt.structure;
 
-        const ivPremSign = opt.iv_premium >= 0 ? '+' : '';
-        const ivPremClass = opt.iv_premium >= 0 ? 'color-bull' : 'color-bear';
+        const ivPremSign = (opt.iv_premium || 0) >= 0 ? '+' : '';
+        const ivPremClass = (opt.iv_premium || 0) >= 0 ? 'color-bull' : 'color-bear';
 
         return `
           <tr>
@@ -1583,10 +1657,10 @@ function renderOptionsAnalysisSection() {
               <span class="highlight-gold" style="margin-right: 6px;">${opt.ticker}</span>
               <span style="font-size: 12px; color: var(--text-muted);">$${opt.spot.toFixed(2)}</span>
             </td>
-            <td class="text-center font-mono font-bold highlight-gold">${ivVal.toFixed(1)}%</td>
+            <td class="text-center font-mono font-bold highlight-gold">${fx(ivVal, 1)}%</td>
             <td class="text-center font-mono">
-              <span>${opt.realized_vol_20d.toFixed(1)}%</span>
-              <span class="${ivPremClass}" style="font-size: 10px; margin-left: 2px;">(${ivPremSign}${opt.iv_premium.toFixed(1)})</span>
+              <span>${fx(opt.realized_vol_20d, 1)}%</span>
+              <span class="${ivPremClass}" style="font-size: 10px; margin-left: 2px;">(${ivPremSign}${fx(opt.iv_premium, 1)})</span>
             </td>
             <td class="text-center font-mono font-bold" style="color: #38bdf8;">
               ${g.call_delta !== undefined ? `${g.call_delta > 0 ? '+' : ''}${g.call_delta.toFixed(2)}` : '--'}
@@ -1609,9 +1683,9 @@ function renderOptionsAnalysisSection() {
             <td class="text-center font-mono" style="color: #fbbf24; font-size: 11px;">
               ${g.charm_call !== undefined ? g.charm_call.toFixed(4) : '--'}
             </td>
-            <td class="text-right font-mono font-bold highlight-gold">$${struct.max_pain.toFixed(0)}</td>
+            <td class="text-right font-mono font-bold highlight-gold">$${fx(struct.max_pain, 0)}</td>
             <td class="text-center font-mono font-bold" style="color: ${struct.gex_color}; font-size: 11.5px;">
-              ${struct.gex_regime.split(' ')[0]} GEX ($${struct.gamma_flip.toFixed(0)})
+              ${struct.gex_regime.split(' ')[0]} GEX ($${fx(struct.gamma_flip, 0)})
             </td>
             <td class="text-right font-mono font-bold highlight-gold">
               &plusmn;$${em.dollar ? em.dollar.toFixed(1) : '--'} (&plusmn;${em.pct ? em.pct.toFixed(1) : '--'}%)
@@ -1629,7 +1703,7 @@ function renderOptionsAnalysisSection() {
 
       const hKey = (activeHorizon === 'all_horizons') ? '1_week' : activeHorizon;
       const hData = (opt.horizons && opt.horizons[hKey]) ? opt.horizons[hKey] : null;
-      const g = hData ? hData.atm : (opt.greeks ? opt.greeks.atm_30d : {});
+      const g = (hData ? hData.atm : (opt.greeks ? opt.greeks.atm_30d : null)) || {};
       const em = hData ? hData.expected_move : opt.expected_moves.weekly;
       const struct = (hData && hData.structure) ? hData.structure : opt.structure;
 
@@ -1702,24 +1776,24 @@ function renderOptionsAnalysisSection() {
             <div style="display: flex; flex-direction: column; gap: 4px; font-family: var(--font-mono); font-size: 11.5px;">
               <div style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; ${activeHorizon === '1_week' ? 'color: var(--accent-gold); font-weight: bold;' : ''}">
                 <span style="color: #fbbf24;">1-Week (7 DTE)</span>
-                <span class="highlight-gold">$${h1w && h1w.structure ? h1w.structure.max_pain.toFixed(0) : '--'}</span>
-                <span style="color: ${h1w && h1w.structure ? h1w.structure.gex_color : '#8b949e'};">$${h1w && h1w.structure ? h1w.structure.gamma_flip.toFixed(0) : '--'}</span>
-                <span class="color-bull">$${h1w && h1w.structure ? h1w.structure.call_wall.toFixed(0) : '--'}</span>
-                <span class="color-bear">$${h1w && h1w.structure ? h1w.structure.put_wall.toFixed(0) : '--'}</span>
+                <span class="highlight-gold">$${h1w && h1w.structure ? fx(h1w.structure.max_pain, 0) : '--'}</span>
+                <span style="color: ${h1w && h1w.structure ? h1w.structure.gex_color : '#8b949e'};">$${h1w && h1w.structure ? fx(h1w.structure.gamma_flip, 0) : '--'}</span>
+                <span class="color-bull">$${h1w && h1w.structure ? fx(h1w.structure.call_wall, 0) : '--'}</span>
+                <span class="color-bear">$${h1w && h1w.structure ? fx(h1w.structure.put_wall, 0) : '--'}</span>
               </div>
               <div style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; ${activeHorizon === 'next_week' ? 'color: var(--accent-gold); font-weight: bold;' : ''}">
                 <span style="color: #38bdf8;">Next-Week (14 DTE)</span>
-                <span class="highlight-gold">$${hNext && hNext.structure ? hNext.structure.max_pain.toFixed(0) : '--'}</span>
-                <span style="color: ${hNext && hNext.structure ? hNext.structure.gex_color : '#8b949e'};">$${hNext && hNext.structure ? hNext.structure.gamma_flip.toFixed(0) : '--'}</span>
-                <span class="color-bull">$${hNext && hNext.structure ? hNext.structure.call_wall.toFixed(0) : '--'}</span>
-                <span class="color-bear">$${hNext && hNext.structure ? hNext.structure.put_wall.toFixed(0) : '--'}</span>
+                <span class="highlight-gold">$${hNext && hNext.structure ? fx(hNext.structure.max_pain, 0) : '--'}</span>
+                <span style="color: ${hNext && hNext.structure ? hNext.structure.gex_color : '#8b949e'};">$${hNext && hNext.structure ? fx(hNext.structure.gamma_flip, 0) : '--'}</span>
+                <span class="color-bull">$${hNext && hNext.structure ? fx(hNext.structure.call_wall, 0) : '--'}</span>
+                <span class="color-bear">$${hNext && hNext.structure ? fx(hNext.structure.put_wall, 0) : '--'}</span>
               </div>
               <div style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; ${activeHorizon === '1_month' ? 'color: var(--accent-gold); font-weight: bold;' : ''}">
                 <span style="color: #a78bfa;">1-Month (30 DTE)</span>
-                <span class="highlight-gold">$${h1m && h1m.structure ? h1m.structure.max_pain.toFixed(0) : '--'}</span>
-                <span style="color: ${h1m && h1m.structure ? h1m.structure.gex_color : '#8b949e'};">$${h1m && h1m.structure ? h1m.structure.gamma_flip.toFixed(0) : '--'}</span>
-                <span class="color-bull">$${h1m && h1m.structure ? h1m.structure.call_wall.toFixed(0) : '--'}</span>
-                <span class="color-bear">$${h1m && h1m.structure ? h1m.structure.put_wall.toFixed(0) : '--'}</span>
+                <span class="highlight-gold">$${h1m && h1m.structure ? fx(h1m.structure.max_pain, 0) : '--'}</span>
+                <span style="color: ${h1m && h1m.structure ? h1m.structure.gex_color : '#8b949e'};">$${h1m && h1m.structure ? fx(h1m.structure.gamma_flip, 0) : '--'}</span>
+                <span class="color-bull">$${h1m && h1m.structure ? fx(h1m.structure.call_wall, 0) : '--'}</span>
+                <span class="color-bear">$${h1m && h1m.structure ? fx(h1m.structure.put_wall, 0) : '--'}</span>
               </div>
             </div>
           </div>
@@ -1728,19 +1802,19 @@ function renderOptionsAnalysisSection() {
           <div class="options-levels-grid">
             <div class="opt-level-item">
               <span class="opt-level-label">MAX PAIN STRIKE (${hData ? hData.dte : 30}D)</span>
-              <span class="opt-level-val font-mono highlight-gold">$${struct.max_pain.toFixed(0)}</span>
+              <span class="opt-level-val font-mono highlight-gold">$${fx(struct.max_pain, 0)}</span>
             </div>
             <div class="opt-level-item">
               <span class="opt-level-label">GAMMA FLIP LEVEL (${hData ? hData.dte : 30}D)</span>
-              <span class="opt-level-val font-mono" style="color: ${struct.gex_color};">$${struct.gamma_flip.toFixed(0)}</span>
+              <span class="opt-level-val font-mono" style="color: ${struct.gex_color};">$${fx(struct.gamma_flip, 0)}</span>
             </div>
             <div class="opt-level-item">
               <span class="opt-level-label">CALL WALL (RESISTANCE)</span>
-              <span class="opt-level-val font-mono color-bull">$${struct.call_wall.toFixed(0)}</span>
+              <span class="opt-level-val font-mono color-bull">$${fx(struct.call_wall, 0)}</span>
             </div>
             <div class="opt-level-item">
               <span class="opt-level-label">PUT WALL (SUPPORT)</span>
-              <span class="opt-level-val font-mono color-bear">$${struct.put_wall.toFixed(0)}</span>
+              <span class="opt-level-val font-mono color-bear">$${fx(struct.put_wall, 0)}</span>
             </div>
           </div>
 

@@ -79,10 +79,65 @@ def cmd_score(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_options(args: argparse.Namespace) -> int:
+    """Pull option chains, the Treasury curve, and corporate reference data."""
+    from scorecard.pipeline import refresh_vendor_data
+    from scorecard.optionsdata import (
+        load_dividends_into_db, load_option_chains_into_db,
+        load_splits_into_db, load_ticker_reference_into_db,
+        load_treasury_yields_into_db,
+    )
+    from scorecard.config import OPTIONS_UNDERLYINGS
+    from scorecard.market import MAG7_TICKERS
+
+    init_db()
+    reference = tuple(OPTIONS_UNDERLYINGS) + MAG7_TICKERS
+    with db_session() as conn:
+        logger.info("Fetching constant-maturity Treasury curve...")
+        n_curve = load_treasury_yields_into_db(conn, force_api=args.force)
+        logger.info("Fetching option chains for %s...", ", ".join(OPTIONS_UNDERLYINGS))
+        n_chain = load_option_chains_into_db(conn, OPTIONS_UNDERLYINGS, force_api=args.force)
+        logger.info("Fetching splits, dividends and market caps...")
+        n_split = load_splits_into_db(conn, reference, force_api=args.force)
+        n_div = load_dividends_into_db(conn, reference, force_api=args.force)
+        n_ref = load_ticker_reference_into_db(conn, reference, force_api=args.force)
+
+    logger.info(
+        "Reference data loaded: %d curve days, %d option contracts, %d splits, "
+        "%d dividends, %d ticker profiles.",
+        n_curve, n_chain, n_split, n_div, n_ref,
+    )
+    return 0
+
+
+def cmd_sync(args: argparse.Namespace) -> int:
+    """Refresh every vendor feed, re-ingest, and rebuild all scoring tables."""
+    from scorecard.config import invalidate_as_of_cache, resolve_as_of_date
+    from scorecard.pipeline import refresh_vendor_data
+
+    logger.info("Pulling fresh vendor data (bars, chains, curve, reference)...")
+    fetch_summary = refresh_vendor_data(force=not args.cached)
+    logger.info("Fetch summary: %s", fetch_summary)
+
+    with db_session() as conn:
+        ingest = run_ingest(conn)
+        logger.info("Ingest summary: %s", ingest)
+
+    invalidate_as_of_cache()
+    as_of = resolve_as_of_date(refresh=True)
+    with db_session() as conn:
+        scores = run_scoring(conn, as_of_date=as_of)
+        logger.info("Scoring summary: %s", scores)
+
+    logger.info("Terminal is current as of %s.", as_of)
+    return 0
+
+
 def cmd_run(args: argparse.Namespace) -> int:
-    """Run full pipeline: market -> news -> ingest -> score."""
+    """Run full pipeline: market -> options -> news -> ingest -> score."""
     logger.info("Running full pipeline...")
     cmd_market(args)
+    cmd_options(args)
     cmd_news(args)
     cmd_ingest(args)
     cmd_score(args)
@@ -339,8 +394,24 @@ def main(argv: Optional[List[str]] = None) -> int:
     p_score = subparsers.add_parser("score", help="Rebuild all score tables")
     p_score.set_defaults(func=cmd_score)
 
+    # options
+    p_options = subparsers.add_parser(
+        "options",
+        help="Pull option chains, the Treasury curve, splits, dividends and market caps",
+    )
+    p_options.add_argument("--force", action="store_true", help="Re-fetch even if cached")
+    p_options.set_defaults(func=cmd_options)
+
+    # sync
+    p_sync = subparsers.add_parser(
+        "sync", help="Refresh every vendor feed, re-ingest, and rebuild all scores")
+    p_sync.add_argument("--cached", action="store_true",
+                        help="Replay the on-disk cache instead of re-fetching")
+    p_sync.set_defaults(func=cmd_sync)
+
     # run
-    p_run = subparsers.add_parser("run", help="Run full pipeline (market + news + ingest + score)")
+    p_run = subparsers.add_parser(
+        "run", help="Run full pipeline (market + options + news + ingest + score)")
     p_run.add_argument("--force", action="store_true", help="Force API fetch")
     p_run.set_defaults(func=cmd_run)
 

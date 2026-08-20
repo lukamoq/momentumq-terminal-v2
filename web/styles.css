@@ -4304,6 +4304,14 @@ body.modal-open {
   color: var(--text-dim);
 }
 
+/* Shown in place of the pill groups when the quick filter matches nothing. */
+.asset-pills-empty {
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  padding: var(--sp-2) 0;
+}
+
 /* Quant Tooling Toolbar (Inspired by DataFinx & Vorenq) */
 .quant-toolbar {
   display: flex;
@@ -4943,8 +4951,858 @@ body.modal-open {
   padding-top: 8px;
 }
 
+/* ==========================================================================
+   Bloomberg & Classic Financial Terminal Engine Styles
+   ========================================================================== */
 
+/* 1. Top Live Macro Ticker Tape Ribbon */
+.terminal-tape-ribbon {
+  background: #090c14;
+  border-bottom: 1px solid #1f293d;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  font-size: 11px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
 
+.tape-track-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+  flex: 1;
+}
 
+.tape-label {
+  color: var(--accent-gold);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
 
+.live-dot-green {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 6px #38bdf8;
+  display: inline-block;
+  animation: pulseDot 2s infinite ease-in-out;
+}
 
+.tape-marquee {
+  display: flex;
+  overflow: hidden;
+  user-select: none;
+  gap: 20px;
+  flex: 1;
+}
+
+.tape-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+  animation: scrollTape 50s linear infinite;
+}
+
+.tape-content:hover {
+  animation-play-state: paused;
+}
+
+@keyframes scrollTape {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.tape-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: background 0.12s ease;
+  white-space: nowrap;
+}
+
+.tape-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tape-sym {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 11px;
+}
+
+.tape-val {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.tape-chg {
+  font-size: 10.5px;
+}
+
+.tape-quick-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  border-left: 1px solid #1f293d;
+  padding-left: 10px;
+}
+
+.term-tool-btn {
+  background: #141b29;
+  border: 1px solid #27344d;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.term-tool-btn:hover {
+  color: var(--text-primary);
+  background: #1d263b;
+  border-color: var(--accent-gold);
+}
+
+.term-tool-btn.is-active {
+  color: var(--accent-gold);
+  border-color: var(--accent-gold);
+  background: rgba(251, 191, 36, 0.1);
+}
+
+.term-key-badge {
+  color: var(--accent-gold);
+  font-weight: 700;
+}
+
+/* 2. Bloomberg Function Keys Bar */
+.terminal-func-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  background: #0f131d;
+  border-bottom: 1px solid #1c2436;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.terminal-func-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.func-key {
+  background: #182030;
+  border: 1px solid #26324a;
+  border-radius: 3px;
+  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+}
+
+.func-key:hover {
+  background: #232e44;
+  border-color: var(--accent-gold);
+  transform: translateY(-1px);
+}
+
+.func-key .f-num {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--accent-gold);
+  background: rgba(251, 191, 36, 0.12);
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+.func-key .f-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.func-key.highlight-cmd {
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.func-key.highlight-cmd .f-num {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.18);
+}
+
+/* 3. Terminal Command Omnibar Modal (Cmd+K / F2) */
+.terminal-cmd-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 7, 14, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 9999;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.terminal-cmd-backdrop.is-visible {
+  opacity: 1;
+}
+
+.terminal-cmd-dialog {
+  width: 90%;
+  max-width: 680px;
+  background: #131926;
+  border: 1px solid #33415c;
+  border-radius: 8px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  transform: translateY(-8px) scale(0.98);
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.terminal-cmd-backdrop.is-visible .terminal-cmd-dialog {
+  transform: translateY(0) scale(1);
+}
+
+.cmd-input-row {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  background: #0d121c;
+  border-bottom: 1px solid #232d3f;
+  gap: 10px;
+}
+
+.cmd-prompt-prefix {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent-gold);
+  user-select: none;
+}
+
+.cmd-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.cmd-input::placeholder {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.cmd-go-btn {
+  background: var(--accent-gold);
+  color: #0b0f19;
+  border: none;
+  font-weight: 800;
+  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: opacity 0.12s ease;
+}
+
+.cmd-go-btn:hover {
+  opacity: 0.9;
+}
+
+.cmd-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.cmd-close-btn:hover {
+  color: var(--text-primary);
+}
+
+.cmd-category-hints {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #101622;
+  border-bottom: 1px solid #1c2536;
+  overflow-x: auto;
+}
+
+.cmd-hint-chip {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: #182030;
+  border: 1px solid #28354c;
+  padding: 2px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.12s ease;
+}
+
+.cmd-hint-chip:hover {
+  color: var(--accent-gold);
+  border-color: var(--accent-gold);
+  background: rgba(251, 191, 36, 0.08);
+}
+
+.cmd-results-list {
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.cmd-result-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.1s ease;
+  border: 1px solid transparent;
+}
+
+.cmd-result-item:hover,
+.cmd-result-item.is-selected {
+  background: #1a2233;
+  border-color: #2e3d5a;
+}
+
+.cmd-item-left {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.cmd-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-gold);
+  white-space: nowrap;
+}
+
+.cmd-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cmd-execute-tag {
+  font-size: 10px;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 2px 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.cmd-result-item.is-selected .cmd-execute-tag {
+  color: var(--accent-gold);
+  background: rgba(251, 191, 36, 0.15);
+}
+
+.cmd-no-match {
+  padding: 30px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.cmd-no-match-sub {
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.cmd-footer-shortcuts {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: #0d121c;
+  border-top: 1px solid #1c2536;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.cmd-footer-shortcuts kbd {
+  background: #1a2333;
+  border: 1px solid #2c3950;
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--text-secondary);
+}
+
+/* 4. Quick Ticker Snapshot Dialog */
+.terminal-snapshot-backdrop,
+.terminal-help-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 7, 14, 0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  padding: 20px;
+}
+
+.terminal-snapshot-backdrop.is-visible,
+.terminal-help-backdrop.is-visible {
+  opacity: 1;
+}
+
+.terminal-snapshot-dialog {
+  width: 92%;
+  max-width: 900px;
+  max-height: 88vh;
+  background: #141a28;
+  border: 1px solid #2e3c54;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: scale(0.96);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.terminal-snapshot-backdrop.is-visible .terminal-snapshot-dialog {
+  transform: scale(1);
+}
+
+.snapshot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: #0e131e;
+  border-bottom: 1px solid #232d3f;
+}
+
+.snapshot-kicker {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent-gold);
+  letter-spacing: 0.08em;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.snapshot-title-group h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.snapshot-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.snap-action-btn {
+  background: #1c2638;
+  border: 1px solid #2c3c58;
+  color: var(--text-primary);
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.snap-action-btn:hover {
+  background: #27364f;
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+.snapshot-body {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.snap-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 800px) {
+  .snap-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.snap-card {
+  background: #0e131e;
+  border: 1px solid #222d3e;
+  border-radius: 6px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.snap-card-title {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+.snap-metric-big {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.snap-metric-sub {
+  font-size: 9.5px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.snap-divider {
+  height: 1px;
+  background: #1f2838;
+  margin: 4px 0 10px 0;
+}
+
+.snap-key-val {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  padding: 4px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+}
+
+.snap-key-val span {
+  color: var(--text-muted);
+}
+
+.snap-section {
+  background: #0e131e;
+  border: 1px solid #222d3e;
+  border-radius: 6px;
+  padding: 14px;
+}
+
+.snap-section-header {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent-gold);
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+
+.snap-calls-mini-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.snap-call-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #141b27;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #202b3c;
+  font-size: 11px;
+}
+
+/* 5. Terminal Help Dialog */
+.terminal-help-dialog {
+  width: 90%;
+  max-width: 760px;
+  max-height: 85vh;
+  background: #131926;
+  border: 1px solid #33415c;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: scale(0.96);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.terminal-help-backdrop.is-visible .terminal-help-dialog {
+  transform: scale(1);
+}
+
+.terminal-help-body {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.help-section h4 {
+  margin: 0 0 10px 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent-gold);
+  letter-spacing: 0.06em;
+}
+
+.help-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 650px) {
+  .help-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.help-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0d121c;
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid #1c2536;
+  font-size: 11px;
+}
+
+.help-row kbd,
+.help-row code {
+  color: var(--accent-gold);
+  font-weight: 700;
+  background: rgba(251, 191, 36, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.help-row span {
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+}
+
+/* 6. Terminal Toast */
+.terminal-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #141b29;
+  border: 1px solid var(--accent-gold);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 10px 16px;
+  border-radius: 5px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.terminal-toast.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-gold);
+  box-shadow: 0 0 8px var(--accent-gold);
+}
+
+.terminal-target-highlight {
+  animation: targetFlash 1.8s ease;
+}
+
+@keyframes targetFlash {
+  0% { outline: 2px solid var(--accent-gold); background: rgba(251, 191, 36, 0.1); }
+  100% { outline: 2px solid transparent; background: transparent; }
+}
+
+/* ==========================================================================
+   7. CRT Theme Mode Overrides: Bloomberg Amber & Phosphor Green
+   ========================================================================== */
+
+/* Bloomberg Amber CRT Theme */
+body.theme-amber {
+  --bg-canvas: #100b03;
+  --bg-surface: #181005;
+  --bg-surface-elevated: #241808;
+  --bg-input: #120c04;
+  --border-subtle: #3d290c;
+  --border-strong: #664414;
+  --text-primary: #ffaa00;
+  --text-secondary: #d99100;
+  --text-muted: #996600;
+  --text-dim: #734c00;
+  --accent-gold: #ffaa00;
+  --accent-primary: #cc8800;
+  --accent-fg: #ffbb33;
+  --accent-blue: #ffaa00;
+  --color-bull: #ffbb00;
+  --color-bear: #ff4400;
+  --chart-line: #ffaa00;
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+}
+
+body.theme-amber .blotter-container {
+  background: #100b03;
+}
+
+body.theme-amber .terminal-tape-ribbon {
+  background: #0a0601;
+  border-color: #3d290c;
+}
+
+body.theme-amber .terminal-func-bar {
+  background: #0f0902;
+  border-color: #3d290c;
+}
+
+body.theme-amber .blotter-table th {
+  background: #160e04;
+  color: #ffaa00;
+  border-color: #3d290c;
+}
+
+body.theme-amber .blotter-table td {
+  border-color: #2b1d09;
+}
+
+body.theme-amber .stat-card,
+body.theme-amber .finding-card,
+body.theme-amber .options-asset-card,
+body.theme-amber .macro-factor-box {
+  background: #181005;
+  border-color: #3d290c;
+}
+
+/* Matrix Phosphor Green CRT Theme */
+body.theme-green {
+  --bg-canvas: #020f06;
+  --bg-surface: #06190b;
+  --bg-surface-elevated: #0a2612;
+  --bg-input: #041408;
+  --border-subtle: #14401e;
+  --border-strong: #236932;
+  --text-primary: #33ff77;
+  --text-secondary: #26c95d;
+  --text-muted: #19803b;
+  --text-dim: #13612d;
+  --accent-gold: #66ff99;
+  --accent-primary: #23a34a;
+  --accent-fg: #66ff99;
+  --accent-blue: #33ff77;
+  --color-bull: #33ff77;
+  --color-bear: #ff3344;
+  --chart-line: #33ff77;
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+}
+
+body.theme-green .blotter-container {
+  background: #020f06;
+}
+
+body.theme-green .terminal-tape-ribbon {
+  background: #010803;
+  border-color: #14401e;
+}
+
+body.theme-green .terminal-func-bar {
+  background: #031207;
+  border-color: #14401e;
+}
+
+body.theme-green .blotter-table th {
+  background: #061e0d;
+  color: #33ff77;
+  border-color: #14401e;
+}
+
+body.theme-green .blotter-table td {
+  border-color: #0f2e16;
+}
+
+body.theme-green .stat-card,
+body.theme-green .finding-card,
+body.theme-green .options-asset-card,
+body.theme-green .macro-factor-box {
+  background: #06190b;
+  border-color: #14401e;
+}

@@ -80,3 +80,66 @@ def test_api_sectors_endpoint(client):
     assert res.status_code == 200
     data = res.json()
     assert "sectors" in data
+
+
+def test_credit_signal_is_computed_not_hardcoded(conn):
+    """
+    Regression: this block queried HYG and IEF, discarded the result, and set
+    the signal to "RISK_ON" whenever the query returned any row at all -- so
+    the terminal reported risk-on credit unconditionally, including through a
+    drawdown.
+    """
+    regime = compute_macro_regime(conn)
+    factors = regime["factors"]
+    assert factors["credit_signal"] in ("RISK_ON", "RISK_OFF", "STABLE", "UNAVAILABLE")
+
+    rel = factors["credit_relative_return_60d_pct"]
+    if factors["credit_signal"] == "UNAVAILABLE":
+        assert rel is None
+        return
+
+    assert rel is not None
+    # The label must follow the measurement.
+    if rel > 1.0:
+        assert factors["credit_signal"] == "RISK_ON"
+    elif rel < -1.0:
+        assert factors["credit_signal"] == "RISK_OFF"
+    else:
+        assert factors["credit_signal"] == "STABLE"
+
+    # And it must equal a direct HYG/IEF computation.
+    hyg = [float(r["close"]) for r in conn.execute(
+        "SELECT close FROM market_observation WHERE ticker='HYG' ORDER BY date DESC LIMIT 61").fetchall()]
+    ief = [float(r["close"]) for r in conn.execute(
+        "SELECT close FROM market_observation WHERE ticker='IEF' ORDER BY date DESC LIMIT 61").fetchall()]
+    expected = ((hyg[0] / ief[0]) / (hyg[60] / ief[60]) - 1.0) * 100.0
+    assert rel == pytest.approx(expected, abs=0.01)
+
+
+def test_confidence_is_derived_from_the_evidence(conn):
+    """
+    Regression: confidence was a literal per branch -- "Bull Trending" always
+    printed 94% -- so it conveyed which branch fired, not how well the data
+    agreed. It must now vary with the inputs.
+    """
+    from scorecard.regime import _condition_strength, _confidence
+
+    regime = compute_macro_regime(conn)
+    assert 50.0 <= regime["confidence_pct"] <= 95.0
+    # Not one of the old hardcoded constants (except by coincidence of scale).
+    assert regime["confidence_pct"] not in (88.0, 94.0, 78.0, 85.0, 72.0)
+
+    # The scaler is monotone and clamped.
+    assert _condition_strength(0.0, 0.0, 0.1) == 0.0
+    assert _condition_strength(0.1, 0.0, 0.1) == 1.0
+    assert _condition_strength(0.5, 0.0, 0.1) == 1.0
+    assert _condition_strength(0.05, 0.0, 0.1) == pytest.approx(0.5)
+    assert _confidence([0.0, 0.0]) == 50.0
+    assert _confidence([1.0, 1.0]) == 95.0
+    assert _confidence([]) == 50.0
+
+
+def test_credit_signal_appears_as_a_reported_signal(conn):
+    regime = compute_macro_regime(conn)
+    names = {s["name"] for s in regime["signals"]}
+    assert "Credit Risk Appetite" in names

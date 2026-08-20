@@ -40,6 +40,10 @@ CREATE TABLE IF NOT EXISTS market_observation (
     vwap NUMERIC,
     num_trades INTEGER,
     index_level NUMERIC,
+    -- Which feed this bar came from. The vendor plan serves a rolling
+    -- five-year window, so anything older is archive from a different source
+    -- and the terminal should be able to say which is which.
+    source TEXT NOT NULL DEFAULT 'massive_aggregates',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (date, ticker)
 );
@@ -248,4 +252,101 @@ CREATE TABLE IF NOT EXISTS score_bank (
     avg_lag_ratio NUMERIC,
     status_label TEXT NOT NULL DEFAULT 'evaluated',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 7. Observed Options Chain Snapshots
+--
+-- One row per listed contract per snapshot date, straight from the vendor
+-- chain endpoint. Open interest, volume and the settle/close price are
+-- *observed*, never modeled: every downstream figure (GEX, max pain, the
+-- gamma walls, put/call ratios, the volatility surface and the VIX-style
+-- index) is derived from these rows.
+CREATE TABLE IF NOT EXISTS option_contract (
+    snapshot_date TEXT NOT NULL,
+    underlying TEXT NOT NULL,
+    contract_ticker TEXT NOT NULL,
+    expiration_date TEXT NOT NULL,
+    strike NUMERIC NOT NULL CHECK(strike > 0),
+    contract_type TEXT NOT NULL CHECK(contract_type IN ('call', 'put')),
+    open_interest NUMERIC,
+    volume NUMERIC,
+    close NUMERIC,
+    vendor_iv NUMERIC,
+    vendor_delta NUMERIC,
+    vendor_gamma NUMERIC,
+    vendor_theta NUMERIC,
+    vendor_vega NUMERIC,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (snapshot_date, contract_ticker)
+);
+
+CREATE INDEX IF NOT EXISTS idx_option_underlying_exp
+    ON option_contract(underlying, snapshot_date, expiration_date);
+
+-- 8. Risk-Free Curve
+--
+-- Constant-maturity Treasury yields, used as the discount rate r in every
+-- Black-Scholes evaluation instead of a hardcoded constant. Stored in
+-- percent, exactly as published.
+CREATE TABLE IF NOT EXISTS treasury_yield (
+    date TEXT PRIMARY KEY,
+    yield_1_month NUMERIC,
+    yield_3_month NUMERIC,
+    yield_6_month NUMERIC,
+    yield_1_year NUMERIC,
+    yield_2_year NUMERIC,
+    yield_5_year NUMERIC,
+    yield_10_year NUMERIC,
+    yield_30_year NUMERIC,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 9. Corporate Reference Data
+--
+-- Live market capitalisation and the split history behind every
+-- target-normalisation, pulled from the vendor reference endpoints rather
+-- than typed into a constant table that silently goes stale.
+CREATE TABLE IF NOT EXISTS ticker_reference (
+    ticker TEXT PRIMARY KEY,
+    name TEXT,
+    market_cap NUMERIC,
+    shares_outstanding NUMERIC,
+    sic_description TEXT,
+    primary_exchange TEXT,
+    as_of_date TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS ticker_split (
+    ticker TEXT NOT NULL,
+    execution_date TEXT NOT NULL,
+    split_from NUMERIC NOT NULL,
+    split_to NUMERIC NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (ticker, execution_date)
+);
+
+CREATE TABLE IF NOT EXISTS ticker_dividend (
+    ticker TEXT NOT NULL,
+    ex_dividend_date TEXT NOT NULL,
+    cash_amount NUMERIC NOT NULL,
+    frequency INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (ticker, ex_dividend_date)
+);
+
+-- 10. Volatility Index History
+--
+-- One row per snapshot of the model-free volatility surface, so the terminal
+-- accumulates a real implied-volatility history instead of reading percentiles
+-- off an ETF share price whose level is reverse-split history.
+CREATE TABLE IF NOT EXISTS vol_index_observation (
+    date TEXT NOT NULL,
+    underlying TEXT NOT NULL,
+    iv_9d NUMERIC,
+    iv_30d NUMERIC,
+    iv_90d NUMERIC,
+    realized_vol_21d NUMERIC,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (date, underlying)
 );

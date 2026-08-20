@@ -7,13 +7,12 @@ import logging
 import sqlite3
 from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterable, List, Optional
 from zoneinfo import ZoneInfo
 
 import httpx
 
 from scorecard.config import (
-    AS_OF_DATE,
     HISTORY_START_DATE,
     MASSIVE_API_KEY,
     MASSIVE_BASE_URL,
@@ -44,7 +43,23 @@ MACRO_TICKERS = (
 # AI / semis complex the desks called alongside the Magnificent 7.
 AI_ADJACENT_TICKERS = ("AVGO", "TSM", "AMD", "ORCL", "CRM", "NFLX", "PLTR", "MU", "SMCI", "ASML", "ARM", "INTC")
 
-DEFAULT_TICKERS = CORE_TICKERS + MAG7_TICKERS + SECTOR_TICKERS + MACRO_TICKERS + AI_ADJACENT_TICKERS
+# Large caps outside tech, carried so that "breadth" means breadth.
+#
+# The Fear & Greed breadth and liquidity scorers name a cross-sector universe
+# (financials, healthcare, energy, industrials, discretionary) but none of those
+# symbols were ever ingested, and both scorers skip a ticker with no bars
+# without saying so. Half the named universe silently vanished and what
+# survived was eight mega-cap tech names -- so the "advance/decline" and
+# "% above the 200-day" readings were tech momentum wearing a breadth label.
+BREADTH_TICKERS = (
+    "JPM", "BAC", "GS", "UNH", "JNJ", "LLY", "PFE", "HD", "MCD",
+    "XOM", "CVX", "DIS", "CAT", "BA", "HON", "PG", "KO", "WMT", "COST", "VZ",
+)
+
+DEFAULT_TICKERS = (
+    CORE_TICKERS + MAG7_TICKERS + SECTOR_TICKERS + MACRO_TICKERS
+    + AI_ADJACENT_TICKERS + BREADTH_TICKERS
+)
 
 # Ticker lineage: which vendor symbol carried the company we are scoring, over
 # which dates. Vendor aggregates key on the *symbol*, not the issuer, so a
@@ -81,6 +96,25 @@ def lineage_segments(ticker: str) -> List[Tuple[str, Optional[str], Optional[str
 def lineage_source_symbols(ticker: str) -> List[str]:
     """Vendor symbols that must be cached to build `ticker`."""
     return [src for src, _, _ in lineage_segments(ticker)]
+
+
+def expand_to_source_symbols(tickers: Iterable[str]) -> tuple[str, ...]:
+    """Every vendor symbol needed to assemble `tickers`, canonical order preserved.
+
+    A canonical series can be spliced from more than one vendor symbol -- META
+    needs FB for everything before the 2022 rename. Fetching only the canonical
+    names left the other segment's cache frozen at whatever window it was first
+    pulled on, and because the plan serves a *rolling* five-year window the two
+    halves drifted apart: META kept a 2021-08-20 bar that every freshly-fetched
+    peer had already rolled off, so the equal-weight basket and the normalised
+    return chart no longer shared a first session.
+    """
+    out: List[str] = []
+    for ticker in tickers:
+        for source in lineage_source_symbols(ticker):
+            if source not in out:
+                out.append(source)
+    return tuple(out)
 
 
 def parse_massive_response(raw_data: Dict[str, Any], ticker: str) -> List[Dict[str, Any]]:
@@ -161,14 +195,21 @@ def load_lineage_observations(ticker: str) -> List[Dict[str, Any]]:
 def fetch_and_cache_market_data(
     tickers: tuple[str, ...] = DEFAULT_TICKERS,
     from_date: str = HISTORY_START_DATE,
-    to_date: str = AS_OF_DATE,
+    to_date: Optional[str] = None,
     force_api: bool = False,
 ) -> Dict[str, int]:
-    """Fetch market data from Massive or load from disk cache."""
+    """Fetch market data from Massive or load from disk cache.
+
+    ``to_date`` defaults to *today*, not to the configured as-of date. Pinning
+    the upper bound to the as-of date made refreshing circular: the as-of date
+    is derived from the newest bar in the database, so a fetch bounded by it
+    could never pull the bar that would move it forward.
+    """
     MASSIVE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    to_date = to_date or date.today().isoformat()
     counts = {}
 
-    for ticker in tickers:
+    for ticker in expand_to_source_symbols(tickers):
         cache_file = MASSIVE_CACHE_DIR / f"{ticker.upper()}.json"
         data = None
 
@@ -204,22 +245,41 @@ def fetch_and_cache_market_data(
 
 
 def load_market_data_into_db(conn: sqlite3.Connection, tickers: tuple[str, ...] = DEFAULT_TICKERS) -> int:
-    """Load all cached/fetched market data into the SQLite market_observation table."""
+    """Load all cached/fetched market data into the SQLite market_observation table.
+
+    The vendor plan serves a rolling five-year window, so a fetch can only ever
+    speak for the span it actually returned. Reconciliation is therefore bounded
+    to ``[min(fetched), max(fetched)]``: inside that span a date the vendor no
+    longer lists is genuinely stale and is removed (this is what evicts a
+    reassigned symbol's bars); outside it, the rows are deep history from
+    :mod:`scorecard.backfill` and must survive untouched.
+
+    Bounding this was not cosmetic. Reconciling against the whole table deleted
+    every bar older than the vendor window on each run, so one `ingest` -- or
+    one press of the terminal's SYNC button -- cut SPY from 6,696 bars back to
+    2000 down to 1,254 back to 2021 and silently turned the "27-year" cycle
+    curves into six years.
+    """
     total_loaded = 0
     for ticker in tickers:
         canonical = ticker.upper()
         observations = load_lineage_observations(canonical)
         if observations:
-            # Drop anything previously loaded outside the lineage window so a
-            # re-run cannot leave a reassigned symbol's bars behind.
             valid = {o["date"] for o in observations}
+            window_start = min(valid)
+            window_end = max(valid)
             existing = [
                 r["date"] for r in conn.execute(
-                    "SELECT date FROM market_observation WHERE ticker = ?", (canonical,)
+                    "SELECT date FROM market_observation WHERE ticker = ? AND date BETWEEN ? AND ?",
+                    (canonical, window_start, window_end),
                 ).fetchall()
             ]
             stale = [d for d in existing if d not in valid]
             if stale:
+                logger.info(
+                    "%s: evicting %d stale bar(s) inside the vendor window %s..%s",
+                    canonical, len(stale), window_start, window_end,
+                )
                 conn.executemany(
                     "DELETE FROM market_observation WHERE ticker = ? AND date = ?",
                     [(canonical, d) for d in stale],

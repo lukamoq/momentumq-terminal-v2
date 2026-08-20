@@ -42,13 +42,37 @@ def db_session(db_path: Path | str | None = None) -> Generator[sqlite3.Connectio
         conn.close()
 
 
+# Columns added after the first release. CREATE TABLE IF NOT EXISTS will not
+# add a column to a table that already exists, so they are applied explicitly.
+_MIGRATIONS: tuple[tuple[str, str, str], ...] = (
+    (
+        "market_observation",
+        "source",
+        "ALTER TABLE market_observation ADD COLUMN source TEXT NOT NULL DEFAULT 'massive_aggregates'",
+    ),
+)
+
+
+def _apply_migrations(conn: sqlite3.Connection) -> None:
+    for table, column, ddl in _MIGRATIONS:
+        exists = conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)
+        ).fetchone()
+        if not exists:
+            continue
+        columns = {r[1] for r in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+        if column not in columns:
+            conn.execute(ddl)
+
+
 def init_db(db_path: Path | str | None = None) -> None:
-    """Initialize SQLite database with schema."""
+    """Initialize SQLite database with schema, applying any pending migrations."""
     with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
         schema_sql = f.read()
 
     with db_session(db_path) as conn:
         conn.executescript(schema_sql)
+        _apply_migrations(conn)
 
 
 def reset_score_tables(conn: sqlite3.Connection) -> None:

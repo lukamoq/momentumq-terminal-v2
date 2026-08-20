@@ -181,7 +181,8 @@ function updateMag7HeaderTicker() {
   const s = mag7State.stats;
   
   const capEl = document.getElementById('tickerMag7Cap');
-  if (capEl) capEl.textContent = s.mag7_aggregate_market_cap || '$16.2T';
+  /* Market cap is looked up live; a dash beats a stale constant. */
+  if (capEl) capEl.textContent = s.mag7_aggregate_market_cap || '--';
 
   const spyEl = document.getElementById('tickerSpyYtd');
   if (spyEl) {
@@ -519,7 +520,9 @@ function renderMag7Chart() {
 
   // Draw Research Call Markers & Target Price Lines Overlay
   const callsToDraw = mag7State.calls.filter(c => {
-    if (activeTicker === 'ALL') return true;
+    // 'ALL' draws the seven constituents but not the basket, so a basket marker
+    // would be anchored to a MAG7 line that is not on the chart.
+    if (activeTicker === 'ALL') return c.ticker !== 'MAG7_BASKET';
     if (activeTicker === 'BENCHMARKS') return c.ticker === 'MAG7_BASKET';
     return c.ticker === activeTicker;
   });
@@ -884,7 +887,7 @@ function renderMag7StocksGrid() {
           </div>
           <div class="stock-cap-badge">
             <span class="stock-cap-label">MKT CAP</span>
-            <span class="stock-cap-val">${s.market_cap}</span>
+            <span class="stock-cap-val">${s.market_cap || '--'}</span>
           </div>
         </div>
 
@@ -1050,10 +1053,16 @@ function renderMag7CallsTable() {
     list = list.filter(c => c.verdict === mag7State.callVerdictFilter);
   }
 
-  // Exit Mode Filter
+  // Exit Mode Filter. Both exit dates are always populated: `switch_date` falls
+  // back to the as-of date for a position the desk never revised, and
+  // `exit_date` falls back to it for a horizon that has not elapsed yet. Only
+  // the flags say which exit actually happened, so filter on those -- testing
+  // `switch_date` for truthiness matched every row and filtered nothing.
   const exitFilter = mag7State.callExitFilter || 'dual';
   if (exitFilter === 'switch') {
-    list = list.filter(c => c.has_switched === 1 || c.switch_date);
+    list = list.filter(c => c.has_switched === 1);
+  } else if (exitFilter === 'horizon') {
+    list = list.filter(c => c.is_window_complete === 1);
   }
 
   if (list.length === 0) {
@@ -1063,7 +1072,7 @@ function renderMag7CallsTable() {
           <div class="empty-state-card">
             <div class="empty-state-icon">⌕</div>
             <div class="empty-state-title">No Matching Mag 7 Calls Found</div>
-            <div class="empty-state-desc">No curated institutional tech calls match your current keyword or verdict filters. Try resetting your criteria.</div>
+            <div class="empty-state-desc">No curated institutional tech calls match your current keyword, ticker, verdict or exit filters. Try resetting your criteria.</div>
             <button class="empty-state-reset-btn" id="mag7EmptyStateResetBtn">Reset Search &amp; Filters</button>
           </div>
         </td>

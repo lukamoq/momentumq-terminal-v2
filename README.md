@@ -3,10 +3,10 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python: 3.11+](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)](https://fastapi.tiangolo.com)
-[![Tests: 68 Passed](https://img.shields.io/badge/tests-68%20passed-success.svg)](https://pytest.org)
+[![Tests: 143 Passed](https://img.shields.io/badge/tests-143%20passed-success.svg)](https://pytest.org)
 [![Architecture: Swiss Dark Blotter](https://img.shields.io/badge/Design-Swiss%20Industrial%20Dark-gold.svg)](web/styles.css)
 
-An institutional-grade, open-source quantitative research platform and analytics terminal evaluating Wall Street sell-side research calls (2021–2026), multi-asset seasonality, cross-asset macro regimes, Black-Scholes-Merton (BSM) options Greeks & dealer GEX positioning, Fear & Greed Index 2.0, and VIX term structure.
+An institutional-grade, open-source quantitative research platform and analytics terminal evaluating Wall Street sell-side research calls (2021–2026), multi-asset seasonality, cross-asset macro regimes, Black-Scholes-Merton (BSM) options Greeks & dealer GEX positioning computed from observed option chains, Fear & Greed Index 2.0, and a model-free implied volatility term structure.
 
 ---
 
@@ -29,22 +29,63 @@ An institutional-grade, open-source quantitative research platform and analytics
 - **27-Year Daily Cycle Curves**: Forward-fills completed years to 252 trading days, eliminating calendar misalignment.
 - **Dynamic Cycle Span Filtering**: Filter curves by `ALL (27Y)`, `20Y`, `10Y`, `5Y`, `POST_COVID`, `ELECTION`, `DECADE_2020S`, `DECADE_2010S`, `DECADE_2000S`.
 - **Monthly Return Heatmaps**: Historical month-by-month return matrix and distribution statistics for `SPY`, `QQQ`, `IWM`, and major sectors.
+- **Complete months only**: the live, part-finished month is still drawn in the
+  grid but excluded from every average, median, win rate and volatility figure,
+  and each month reports the sample size behind it (`monthly_sample_counts`).
+  Counting a two-week stub as a full month moved SPY's 27-year August mean by
+  about a quarter of its own size.
+- **Months compound to the year**: an annual return is measured from the prior
+  year's final close — the same base January uses — so the twelve monthly
+  returns multiply out to the annual figure.
 
-### 4. Options Volatility Skew & Multi-Horizon BSM Greeks (`/seasonality.html#secOptionsAnalysis`)
-- **Closed-Form BSM Analytical Engine**: Computes exact 1st- and 2nd-order Greeks with continuous dividend yield cost-of-carry ($b = r - q$):
+### 4. Options Volatility Surface & Multi-Horizon BSM Greeks (`/seasonality.html#secOptionsAnalysis`)
+
+Every figure on this page is computed from the **observed option chain** — real
+strikes, real settle prices, real exchange-reported open interest — stored in
+`option_contract` and refreshed by `python -m scorecard options`.
+
+- **Observed inputs**: ~15,000 listed contracts across SPY, QQQ and IWM (about
+  20 expiries each). Implied volatility is read off the surface at the forward;
+  open interest is the exchange print; the discount rate is the constant-maturity
+  Treasury curve interpolated at each option's own maturity; the dividend yield
+  is trailing twelve-month cash dividends over spot.
+- **Closed-Form BSM Analytical Engine**: exact 1st- and 2nd-order Greeks with
+  continuous dividend yield cost-of-carry ($b = r - q$):
   - **First-Order**: Call/Put Delta ($\Delta$), Gamma ($\Gamma$), Theta ($\Theta$/day decay), Vega ($\mathcal{V}$/1% IV), Rho ($\rho$).
   - **Second-Order**: Vanna ($\partial\Delta/\partial\sigma$), Charm ($\partial\Delta/\partial t$).
-- **Multi-Horizon Outlook**: Real-time forward views across:
-  - `1-Week (7 DTE)`: Peak Gamma risk and steep Theta decay acceleration.
-  - `Next-Week (14 DTE)`: Intermediate weekly rollover and transition window.
-  - `1-Month (30 DTE)`: Institutional benchmark cycle with high Vega sensitivity.
-  - `All Horizons Matrix`: Complete term structure comparison matrix.
-- **Dynamic Structure Levels**: Expiration-specific Max Pain, Gamma Flip level, Call Wall, Put Wall, and Expected Move Diffusion Cones ($\pm 1\sigma = S \cdot \sigma \sqrt{T}$).
+- **Constant-Maturity Term Structure**: implied volatility at 7 / 14 / 30 / 90
+  days, interpolated in **total variance** ($\sigma^2 T$ linear in $T$) between
+  the bracketing listed expiries — the only interpolation that stays
+  arbitrage-consistent in time.
+- **True 25-Delta Skew**: the IV interpolated at an actual $|\Delta| = 0.25$ on
+  each wing, not an offset applied to the at-the-money level.
+- **Dealer Positioning from Real Open Interest**: net/call/put GEX in dollars of
+  dealer delta per 1% move, the gamma flip level solved where net GEX crosses
+  zero, the call and put gamma walls, and max pain — all from the observed book.
+- **Expected Move Cones**: each tenor priced at its own constant-maturity IV
+  ($\pm 1\sigma = S \cdot \sigma_T \sqrt{T}$) rather than one IV fanned out by $\sqrt{t}$.
+- **Missing data is reported, never filled in**: with no chain ingested the
+  endpoint returns `data_available: false` and nulls, and the UI renders dashes.
 
-### 5. Macro Regime, Fear & Greed 2.0, and VIX Term Structure
-- **Fear & Greed Index 2.0**: 7-component institutional model (Price Momentum, Stock Price Strength, Market Breadth, Put/Call Ratio, Volatility Skew, Safe-Haven Demand, Junk Bond Spread).
-- **Macro Regime Matrix**: Quad-state clustering (Risk-On Bull, High-Vol Expansion, Low-Vol Grind, Risk-Off Bear).
-- **VIX Term Structure**: Constant-maturity curve monitoring contango/backwardation curvature (VIX vs VIX3M vs VIX9D).
+### 5. Macro Regime, Fear & Greed 2.0, and the Volatility Term Structure
+- **Fear & Greed Index 2.0**: a 10-category weighted model — Sentiment (10%),
+  Volatility (10%), Positioning (15%), Trend (10%), Breadth (10%), Momentum
+  (10%), Liquidity (15%), Credit (10%), Macro (5%), Cross-Asset (5%).
+  Positioning uses observed SPY put/call ratios, Volatility uses model-free
+  implied volatility, Macro uses the observed 10Y−2Y Treasury slope, and
+  Breadth/Liquidity run over a 30-name cross-sector universe whose coverage is
+  reported alongside the score. A category that cannot be measured scores a
+  neutral 50, is flagged `measured: false`, and says why.
+- **Macro Regime Matrix**: five-state classification (Bull Trending, Bull
+  Exuberant, Volatile Correction, Bear Contraction, Rangebound) with a
+  **computed** confidence — the share of each regime's defining conditions the
+  tape satisfies, scaled by how far past each threshold it sits.
+- **Implied Volatility Term Structure**: 9 / 30 / 90-day constant-maturity
+  model-free implied volatility computed from the SPY chain with the CBOE
+  variance formula. Contango and backwardation are read off the 3M/1M ratio.
+  The vendor plan carries no index feed (`I:VIX` returns 403), so this is
+  computed rather than quoted — and it is scaled in volatility points, unlike
+  an ETF share price.
 
 ---
 
@@ -53,22 +94,29 @@ An institutional-grade, open-source quantitative research platform and analytics
 ```
 research/
 ├── src/scorecard/
-│   ├── config.py       # Constants, asset parameters, dividend yields, risk-free baseline
+│   ├── config.py       # Paths, band, horizons, dynamic as-of date resolution
 │   ├── schema.sql      # SQLite schema with triggers & constraints
-│   ├── db.py           # Connection handling & score table resets
+│   ├── db.py           # Connection handling, migrations, score table resets
 │   ├── derive.py       # Band-based direction classification, Brier, lag math
-│   ├── market.py       # Market data loader & ticker lineage reconstructor
-│   ├── options.py      # BSM analytical Greeks, 25Δ skew, dealer GEX, multi-horizon engine
-│   ├── fear_greed.py   # 7-component Fear & Greed Index 2.0 quantitative engine
-│   ├── vix.py          # VIX constant-maturity term structure engine
+│   ├── market.py       # Daily bars, ticker lineage reconstruction, universes
+│   ├── backfill.py     # Pre-vendor-window archive history (tagged by source)
+│   ├── optionsdata.py  # Observed feeds: option chains, Treasury curve, splits,
+│   │                   #   dividends, market cap
+│   ├── volatility.py   # BSM inversion, IV surface, variance-time interpolation,
+│   │                   #   CBOE model-free variance & volatility index
+│   ├── options.py      # BSM Greeks, true 25Δ skew, dealer GEX from observed OI
+│   ├── fear_greed.py   # 10-category Fear & Greed Index 2.0 engine
+│   ├── vix.py          # Implied volatility term structure & curve slope
 │   ├── regime.py       # Cross-asset macro regime & sector rotation breadth
-│   ├── seasonality.py  # 27-year seasonality matrix & 252-day forward-filled curve math
+│   ├── seasonality.py  # 27-year seasonality matrix & 252-day curve math
 │   ├── score.py        # 6 scoring paths, edge vs baseline, stance-days
-│   ├── mag7.py         # Mag 7 engine: equal-weight basket, split adjustment, derived verdicts
+│   ├── mag7.py         # Mag 7 engine: equal-weight basket, split adjustment
+│   ├── pipeline.py     # Single entry point for refreshing every vendor feed
 │   ├── api.py          # FastAPI REST endpoints & static file server
-│   └── cli.py          # Unified CLI (ingest, score, check, serve)
+│   └── cli.py          # Unified CLI (market, options, ingest, score, sync, serve)
 ├── data/
 │   ├── curated/        # Verified calls.yaml, institutions.yaml, events.yaml, mag7_calls.yaml
+│   ├── cache/massive/  # Vendor payload cache (bars, options/, reference/)
 │   └── scorecard.db    # SQLite database (auto-built via CLI)
 ├── web/
 │   ├── index.html      # S&P 500 Direction Scorecard UI (Dark blotter)
@@ -79,14 +127,49 @@ research/
 │   ├── mag7.js         # Mag 7 normalized return charts & audit blotter
 │   └── seasonality.js  # Seasonality, Options Skew, Fear & Greed, VIX UI
 └── tests/
-    ├── test_scorecard.py   # 22 tests for direction scoring & 8 acceptance criteria
-    ├── test_mag7.py        # 12 tests for Mag 7 stock breakdown & thematic dossiers
-    ├── test_seasonality.py # 5 tests for seasonality matrix & curves
-    ├── test_options.py     # 16 tests for BSM Greeks & multi-horizon term structure
-    ├── test_regime.py      # 6 tests for macro regime & correlations
-    ├── test_fear_greed.py  # 2 tests for Fear & Greed Index 2.0
-    └── test_vix.py         # 2 tests for VIX term structure
+    ├── test_scorecard.py   # Direction scoring & the 8 acceptance criteria
+    ├── test_mag7.py        # Mag 7 breakdown, split adjustment, thematic dossiers
+    ├── test_seasonality.py # Seasonality matrix, partial-month exclusion, curves
+    ├── test_options.py     # BSM Greeks, observed-chain GEX, skew, put/call
+    ├── test_volatility.py  # IV inversion, variance interpolation, model-free variance
+    ├── test_marketdata.py  # Bar reconciliation, Treasury curve, splits, dividends
+    ├── test_regime.py      # Macro regime, computed confidence, credit signal
+    ├── test_fear_greed.py  # Fear & Greed categories and universe coverage
+    └── test_vix.py         # Implied volatility term structure
 ```
+
+---
+
+## Data Provenance
+
+The terminal reports which feed every number came from. Nothing on any page is
+modeled, calibrated, or filled in with a stand-in value; where a measurement is
+unavailable the API returns `null` and the UI renders a dash.
+
+| Feed | Source | Covers |
+| :--- | :--- | :--- |
+| Daily OHLCV bars | Massive `/v2/aggs` | Rolling **five-year** window (the plan's limit) |
+| Archive bars | Yahoo chart endpoint | Everything **strictly before** that window, for the 27-year seasonality history |
+| Option chains | Massive `/v3/snapshot/options` | Strikes ±20% of spot, expiries ≤120 days, for SPY / QQQ / IWM |
+| Treasury curve | Massive `/fed/v1/treasury-yields` | 1M–30Y constant maturity, used as `r` at each option's own maturity |
+| Splits / dividends / market cap | Massive `/v3/reference/*` | Target normalisation, `q`, and the Mag 7 cap figures |
+
+The two bar feeds are kept in strictly separate date ranges — there is no
+session both can claim — and each row carries a `source` column. `GET /api/stats`
+returns the per-source bar counts and the option-chain snapshot date.
+
+**Not available on this plan** (do not build against them): index aggregates
+(`I:SPX`, `I:VIX`) and options quotes/trades both return `403 NOT_AUTHORIZED`.
+Two consequences the terminal states rather than hides:
+
+- The S&P 500 level is reconstructed as `SPY × 10`. SPY's price is the index
+  over ten less the dividend it has accrued but not yet distributed, so the
+  reconstruction runs a few tenths of a percent under the cash index and the gap
+  resets each ex-date. Scored *returns* are unaffected (both ends of every window
+  use the same series); a published target compared against spot is affected, and
+  `/api/stats` returns `spx_basis_note` saying so.
+- The volatility index is **computed** from the SPY chain with the CBOE
+  model-free formula rather than read off a VIX feed.
 
 ---
 
@@ -108,12 +191,16 @@ pip install -e ".[dev]"
 
 ### 2. API Keys & Environment Configuration
 
-The platform operates **100% offline out-of-the-box** using the included curated datasets (`data/curated/`). To fetch live market data or run search sweeps, configure your provider API keys:
+The scorecard and seasonality modules run offline from the shipped database and
+the curated datasets in `data/curated/`. The **options, volatility and dealer
+positioning pages need an ingested option chain** — without one they report
+`data_available: false` rather than showing a modeled substitute, so configure a
+Massive key and run `python -m scorecard options` to light them up.
 
-| Provider | Environment Variable | Purpose | Optional / Required |
+| Provider | Environment Variable | Purpose | Required for |
 | :--- | :--- | :--- | :--- |
-| **[Massive](https://massive.com)** | `MASSIVE_API_KEY` | Daily aggregate bars across 61 tickers | Optional (curated offline bars included) |
-| **[Tavily](https://app.tavily.com)** | `TAVILY_API_KEY` | Web search discovery sweeps for broker research | Optional (curated forecast YAMLs included) |
+| **[Massive](https://massive.com)** | `MASSIVE_API_KEY` | Daily bars (80 tickers), option chains, Treasury curve, splits, dividends, market caps | Live data, and **all** options/volatility analytics |
+| **[Tavily](https://app.tavily.com)** | `TAVILY_API_KEY` | Web search discovery sweeps for broker research | Discovery sweeps only (curated YAMLs included) |
 
 #### Interactive Setup Wizard
 Run the setup wizard to configure keys, initialize the database, and build the initial scorecard in one step:
@@ -136,16 +223,27 @@ python -m scorecard config
 
 ### 3. Initialize Database & Run Scoring Pipeline
 ```bash
-# Ingest curated Wall Street calls & historical market series
-python -m scorecard ingest
+# Pull every vendor feed, re-ingest, and rebuild all scores in one step
+python -m scorecard sync
 
-# Score all institutions across multi-horizon windows
-python -m scorecard score
+# ...or run the stages individually:
+python -m scorecard market --force   # daily bars (+ lineage source symbols)
+python -m scorecard options --force  # option chains, Treasury curve, splits, dividends, caps
+python -m scorecard ingest           # curated calls & market series into SQLite
+python -m scorecard score            # score all institutions across multi-horizon windows
 
-# Verify all invariants and test suite
+# Deep history for the 27-year seasonality window (pre-dates the vendor's
+# rolling five-year window; writes only dates before it, tagged by source)
+python -m scorecard.backfill
+
+# Verify all invariants and the test suite
 python -m scorecard check
 pytest -v
 ```
+
+`sync` is also wired to the terminal's **SYNC NOW** button
+(`POST /api/pipeline/sync`), which re-fetches from the vendor before rescoring
+and advances the as-of date to the newest bar in the database.
 
 ### 4. Launch Web Terminal
 ```bash

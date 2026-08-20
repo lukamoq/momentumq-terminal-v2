@@ -86,12 +86,20 @@ MAG7_META = {
 MAG7_BASKET_TICKER = "MAG7"
 MAG7_BASKET_BASE_LEVEL = 1000.0
 
-# Forward stock splits inside the evaluation window. Massive bars are
-# retroactively split-adjusted; published price targets are not. Dividing an
-# as-published target by the ratio of every split that happened AFTER the
-# publication date puts both on the same scale.
+# Seed split map, used only when the observed split table has not been
+# ingested yet (fresh clone, offline run, unit test against a bare schema).
+#
+# The authoritative source is `ticker_split`, populated from the vendor's
+# reference endpoint by scorecard.optionsdata.load_splits_into_db. Vendor bars
+# are retroactively split-adjusted while published price targets are not, so an
+# as-published target is divided by the ratio of every split executed AFTER its
+# publication date to put both on one scale.
+#
+# Keeping this by hand was already losing: NVDA's 2021-07-20 four-for-one split
+# is absent below, and nothing would have flagged it if a call had been dated
+# before it.
 STOCK_SPLITS: Dict[str, List[Tuple[str, float]]] = {
-    "NVDA": [("2024-06-10", 10.0)],
+    "NVDA": [("2024-06-10", 10.0), ("2021-07-20", 4.0)],
     "AMZN": [("2022-06-06", 20.0)],
     "GOOGL": [("2022-07-18", 20.0)],
     "TSLA": [("2022-08-25", 3.0)],
@@ -102,8 +110,32 @@ STOCK_SPLITS: Dict[str, List[Tuple[str, float]]] = {
 NEUTRAL_ALPHA_BAND = 0.10
 
 
-def split_adjustment_factor(ticker: str, published_on: str) -> float:
-    """Cumulative split ratio applied to `ticker` strictly after `published_on`."""
+def split_adjustment_factor(
+    ticker: str, published_on: str, conn: Optional[sqlite3.Connection] = None
+) -> float:
+    """Cumulative split ratio applied to `ticker` strictly after `published_on`.
+
+    Prefers the observed `ticker_split` table; falls back to the seed map when
+    no split history has been ingested.
+    """
+    if conn is not None:
+        try:
+            rows = conn.execute(
+                "SELECT split_from, split_to FROM ticker_split WHERE ticker = ? AND execution_date > ?",
+                (ticker.upper(), published_on),
+            ).fetchall()
+            if rows is not None and conn.execute(
+                "SELECT COUNT(*) FROM ticker_split WHERE ticker = ?", (ticker.upper(),)
+            ).fetchone()[0] > 0:
+                factor = 1.0
+                for r in rows:
+                    frm, to = float(r[0] or 1.0), float(r[1] or 1.0)
+                    if frm > 0:
+                        factor *= to / frm
+                return factor
+        except sqlite3.Error:
+            pass
+
     factor = 1.0
     for split_date, ratio in STOCK_SPLITS.get(ticker.upper(), []):
         if published_on < split_date:
@@ -154,13 +186,18 @@ def build_mag7_basket_series(conn: sqlite3.Connection) -> int:
                 last_seen[t] = px
         if day != base_date:
             level *= 1.0 + (sum(daily_returns) / len(daily_returns))
+        # The basket is constructed here, not quoted anywhere, so it is tagged
+        # as derived rather than inheriting the vendor-feed default.
         conn.execute(
             """
-            INSERT INTO market_observation (date, ticker, open, high, low, close, volume, vwap, num_trades, index_level)
-            VALUES (?, ?, ?, ?, ?, ?, 0, ?, 0, ?)
+            INSERT INTO market_observation (
+                date, ticker, open, high, low, close, volume, vwap, num_trades, index_level, source
+            )
+            VALUES (?, ?, ?, ?, ?, ?, 0, ?, 0, ?, 'derived_equal_weight_basket')
             ON CONFLICT(date, ticker) DO UPDATE SET
                 open = excluded.open, high = excluded.high, low = excluded.low,
-                close = excluded.close, vwap = excluded.vwap, index_level = excluded.index_level
+                close = excluded.close, vwap = excluded.vwap,
+                index_level = excluded.index_level, source = excluded.source
             """,
             (day, MAG7_BASKET_TICKER, level, level, level, level, level, level),
         )
@@ -403,7 +440,7 @@ def ingest_and_score_mag7(conn: sqlite3.Connection, yaml_path: Optional[Path] = 
             )
 
             # Targets are published pre-split; market bars are split-adjusted.
-            split_factor = split_adjustment_factor(ticker, published_on)
+            split_factor = split_adjustment_factor(ticker, published_on, conn)
             target_adj = (float(target_price) / split_factor) if target_price else None
             target_implied_ret = (target_adj / spot_at_pub - 1.0) if (target_adj and spot_at_pub) else None
             target_err = (
@@ -674,6 +711,33 @@ def compute_mag7_bank_scorecard(conn: sqlite3.Connection) -> List[Dict[str, Any]
     return bank_scores
 
 
+def live_market_cap(conn: sqlite3.Connection, ticker: str) -> Optional[str]:
+    """Formatted market capitalisation from the observed reference table.
+
+    The constants that used to fill this field had gone badly stale -- NVDA was
+    carried at $3.1T against an observed $5.3T, GOOGL at $2.2T against $4.2T,
+    TSLA at $0.7T against $1.3T, and the basket at $16.2T against $23.2T. They
+    are now looked up, and a ticker with nothing ingested returns None so the
+    UI can print a dash instead of a wrong number.
+    """
+    from scorecard.optionsdata import format_market_cap, market_cap
+
+    if ticker.upper() in ("MAG7_BASKET", "MAG7"):
+        total = 0.0
+        for t in MAG7_TICKERS:
+            cap = market_cap(conn, t)
+            if cap is None:
+                return None
+            total += cap
+        return format_market_cap(total)
+    return format_market_cap(market_cap(conn, ticker))
+
+
+def mag7_aggregate_market_cap(conn: sqlite3.Connection) -> Optional[str]:
+    """Combined observed market capitalisation of the seven constituents."""
+    return live_market_cap(conn, "MAG7_BASKET")
+
+
 def compute_mag7_stock_breakdown(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
     """Return performance and sell-side call statistics for each individual Mag 7 stock and basket."""
     stocks = []
@@ -729,7 +793,8 @@ def compute_mag7_stock_breakdown(conn: sqlite3.Connection) -> List[Dict[str, Any
                 "ticker": ticker,
                 "name": meta["name"],
                 "sector": meta["sector"],
-                "market_cap": meta["market_cap_t"],
+                "market_cap": live_market_cap(conn, ticker),
+                "market_cap_measured": live_market_cap(conn, ticker) is not None,
                 "key_theme": meta["theme"],
                 "color": meta["color"],
                 "latest_price": round(latest_price, 2),

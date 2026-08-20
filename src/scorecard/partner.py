@@ -88,7 +88,10 @@ def compute_partner_reliability(conn: sqlite3.Connection) -> List[Dict[str, Any]
         avg_mape = (sum(mapes) / len(mapes)) if mapes else None
         mape_measured = avg_mape is not None
         mape_n = len(mapes)
-        avg_mape_display = avg_mape if mape_measured else 0.12
+        # None all the way through. The old fallback substituted 0.12 so the
+        # field always rendered a number, which reads as a 12% measured error
+        # for a desk that has no resolved year-end to be measured against.
+        avg_mape_display = avg_mape
 
         # 3. Regime Specific Performance: 2022 Bear Market (Defensive Risk) vs 2023-2026 Bull Market
         # 2022 Bear: Evaluated calls with published_on in 2021/2022 for YE_2022
@@ -150,16 +153,21 @@ def compute_partner_reliability(conn: sqlite3.Connection) -> List[Dict[str, Any]
 
         # 5. Composite Reliability Index Calculation (0 to 100)
         # Components:
-        # - Base: 50.0
-        # - Stance Edge contribution: + 120.0 * stance_edge (typically ranges from -0.20 to +0.05)
-        # - Target Error Penalty: - 50.0 * avg_mape (avg MAPE 0.08 -> -4 pts, 0.16 -> -8 pts)
+        # - Base: 55.0
+        # - Stance Edge contribution: + 90.0 * stance_edge
+        # - Target Error Penalty: - 45.0 * avg_mape, applied only when a MAPE
+        #   was actually measured. A desk with no resolved year-end to score
+        #   against takes no penalty; it previously took the penalty for a
+        #   substituted 0.12, which is a 5.4-point deduction for an error
+        #   nobody observed.
         # - Agility contribution: (agility_score - 50.0) * 0.25
-        # - Bear Market Defense: + 40.0 * bear_edge
-        # - Discriminant Call Bonus vs Permabull Penalty: -15.0 if always-bullish with 0 discriminating signal
+        # - Bear Market Defense: + 35.0 * bear_edge
+        # - Permabull penalty applied below.
+        mape_penalty = (avg_mape_display * 45.0) if mape_measured else 0.0
         raw_score = (
             55.0
             + (stance_edge * 90.0)
-            - (avg_mape_display * 45.0)
+            - mape_penalty
             + ((agility_score - 50.0) * 0.25)
             + (bear_edge * 35.0)
         )

@@ -35,6 +35,31 @@ def _safe_float(val: Any, default: float = 0.0) -> float:
         return default
 
 
+def _condition_strength(value: float, threshold: float, saturation: float) -> float:
+    """How decisively `value` clears `threshold`, on 0..1.
+
+    Zero at (or below) the threshold, one at `saturation` and beyond. This is
+    what turns a branch that merely fired into a graded statement about how
+    much room it fired by.
+    """
+    if saturation <= threshold:
+        return 1.0 if value >= threshold else 0.0
+    return max(0.0, min(1.0, (value - threshold) / (saturation - threshold)))
+
+
+def _confidence(strengths: List[float], floor: float = 50.0, ceiling: float = 95.0) -> float:
+    """Blend condition strengths into a confidence percentage.
+
+    Floored at 50 because a regime that fired at all has met its defining
+    inequalities; capped at 95 because no trend-following classifier earns
+    certainty.
+    """
+    if not strengths:
+        return floor
+    mean = sum(strengths) / len(strengths)
+    return round(floor + (ceiling - floor) * mean, 1)
+
+
 def compute_macro_regime(conn: sqlite3.Connection) -> Dict[str, Any]:
     """
     Detect market regime from SPY, RSP, VIXY, TLT, HYG, and IEF observations.
@@ -92,48 +117,88 @@ def compute_macro_regime(conn: sqlite3.Connection) -> Dict[str, Any]:
         spy_60d_ret = (spy_prices[-1] / spy_prices[-len(rsp_prices)]) - 1.0
         breadth_ratio = rsp_60d_ret - spy_60d_ret
 
-    # 4. Credit Risk Appetite (HYG vs IEF)
-    cur = conn.execute(
-        """
-        SELECT ticker, close, date
-        FROM market_observation
-        WHERE ticker IN ('HYG', 'IEF')
-        ORDER BY date DESC
-        LIMIT 120
-        """
-    )
-    credit_rows = cur.fetchall()
-    credit_spread_signal = "STABLE"
-    if credit_rows:
-        credit_spread_signal = "RISK_ON"
+    # 4. Credit Risk Appetite: high-yield versus duration-matched Treasuries.
+    #
+    # This block used to query HYG and IEF, discard the result, and set the
+    # signal to "RISK_ON" whenever the query returned any row at all -- so the
+    # terminal reported risk-on credit unconditionally, including through a
+    # drawdown. It now measures the 60-session relative return.
+    credit_spread_signal = "UNAVAILABLE"
+    credit_relative_return = None
+    hyg = [
+        float(r["close"]) for r in conn.execute(
+            "SELECT close FROM market_observation WHERE ticker = 'HYG' ORDER BY date DESC LIMIT 61"
+        ).fetchall()
+    ]
+    ief = [
+        float(r["close"]) for r in conn.execute(
+            "SELECT close FROM market_observation WHERE ticker = 'IEF' ORDER BY date DESC LIMIT 61"
+        ).fetchall()
+    ]
+    if len(hyg) >= 61 and len(ief) >= 61 and ief[0] > 0 and ief[60] > 0:
+        ratio_now = hyg[0] / ief[0]
+        ratio_then = hyg[60] / ief[60]
+        credit_relative_return = (ratio_now / ratio_then) - 1.0
+        if credit_relative_return > 0.01:
+            credit_spread_signal = "RISK_ON"
+        elif credit_relative_return < -0.01:
+            credit_spread_signal = "RISK_OFF"
+        else:
+            credit_spread_signal = "STABLE"
 
-    # 5. Regime Classification Logic
+    # 5. Regime Classification.
+    #
+    # Confidence used to be a literal attached to each branch -- "Bull
+    # Trending" always printed 94%, whatever the data looked like -- so it
+    # conveyed which branch fired, not how well the evidence agreed. It is now
+    # computed: each regime declares the conditions that define it, and
+    # confidence is the share of those conditions the tape currently satisfies,
+    # scaled by how far past each threshold it sits. A regime scraping in on
+    # marginal readings scores near 50; one meeting every condition decisively
+    # approaches 95.
+    trend_up_50 = _condition_strength(dist_50d, 0.015, 0.06)
+    trend_up_200 = _condition_strength(dist_200d, 0.04, 0.12)
+    calm = _condition_strength(0.18 - realized_vol_annual, 0.0, 0.06)
+    stretched = _condition_strength(dist_50d, 0.06, 0.12)
+    below_50 = _condition_strength(-dist_50d, 0.01, 0.05)
+    above_200 = _condition_strength(dist_200d, 0.0, 0.06)
+    below_200 = _condition_strength(-dist_200d, 0.02, 0.10)
+    stressed = _condition_strength(realized_vol_annual - 0.22, 0.0, 0.10)
+    breadth_ok = _condition_strength(breadth_ratio, -0.02, 0.03)
+    credit_ok = _condition_strength(credit_relative_return or 0.0, -0.01, 0.02)
+
     if dist_50d > 0.015 and dist_200d > 0.04 and realized_vol_annual < 0.18:
         if dist_50d > 0.06:
             regime = "BULL_EXUBERANT"
             label = "Bull Exuberance (Overextended Momentum)"
-            confidence = 88.0
             color = "#fbbf24"
+            confidence = _confidence([trend_up_200, calm, stretched, breadth_ok])
         else:
             regime = "BULL_TRENDING"
             label = "Bull Trending (Low-Vol Expansion)"
-            confidence = 94.0
             color = "#34d399"
+            confidence = _confidence([trend_up_50, trend_up_200, calm, breadth_ok, credit_ok])
     elif dist_50d < -0.01 and dist_200d > 0.0:
         regime = "VOLATILE_CORRECTION"
         label = "Volatile Pullback / Dip Opportunity"
-        confidence = 78.0
         color = "#f59e0b"
+        confidence = _confidence([below_50, above_200, 1.0 - calm])
     elif dist_200d < -0.02 and realized_vol_annual > 0.22:
         regime = "BEAR_CONTRACTION"
         label = "Bearish Liquidity Contraction"
-        confidence = 85.0
         color = "#ef4444"
+        confidence = _confidence([below_200, stressed, 1.0 - credit_ok])
     else:
         regime = "RANGEBOUND"
         label = "Rangebound Consolidation"
-        confidence = 72.0
         color = "#7aa2ff"
+        # Rangebound is the residual: confidence is highest when nothing else
+        # is close to firing, i.e. when every directional signal is weak.
+        confidence = _confidence([
+            1.0 - max(trend_up_50, below_50),
+            1.0 - max(trend_up_200, below_200),
+            1.0 - stressed,
+        ])
 
     return {
         "regime": regime,
@@ -149,7 +214,10 @@ def compute_macro_regime(conn: sqlite3.Connection) -> Dict[str, Any]:
             "dist_200d_pct": round(dist_200d * 100, 2),
             "realized_vol_pct": round(realized_vol_annual * 100, 1),
             "breadth_spread_pct": round(breadth_ratio * 100, 2),
-            "credit_signal": credit_spread_signal
+            "credit_signal": credit_spread_signal,
+            "credit_relative_return_60d_pct": (
+                round(credit_relative_return * 100, 2) if credit_relative_return is not None else None
+            ),
         },
         "signals": [
             {
@@ -171,7 +239,19 @@ def compute_macro_regime(conn: sqlite3.Connection) -> Dict[str, Any]:
                 "name": "Equal-Weight Breadth",
                 "value": f"{'+' if breadth_ratio>=0 else ''}{breadth_ratio*100:.1f}% RSP Alpha",
                 "status": "BULL" if breadth_ratio >= 0 else "NEUTRAL"
-            }
+            },
+            {
+                "name": "Credit Risk Appetite",
+                "value": (
+                    f"HYG/IEF {credit_relative_return*100:+.1f}% / 60d"
+                    if credit_relative_return is not None else "No HYG/IEF history"
+                ),
+                "status": (
+                    "BULL" if credit_spread_signal == "RISK_ON"
+                    else "BEAR" if credit_spread_signal == "RISK_OFF"
+                    else "NEUTRAL"
+                ),
+            },
         ]
     }
 

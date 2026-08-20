@@ -63,10 +63,15 @@ def test_mag7_position_switch_exits(mag7_db):
         assert call1["switch_stock_return"] > 2.0  # +297% return
         assert call1["switch_alpha"] > 2.0
 
-        # Latest call: 2026-01-14 is active standing (has_switched = 0)
+        # Latest call: 2026-01-14 is active standing (has_switched = 0). A
+        # standing call marks out to the as-of date, which is now read from the
+        # newest bar in the database rather than pinned to a constant -- so this
+        # asserts against that, not against a literal that a sync would break.
+        from scorecard.config import resolve_as_of_date
+
         call_latest = dict(calls[-1])
         assert call_latest["has_switched"] == 0
-        assert call_latest["switch_date"] == "2026-08-18"
+        assert call_latest["switch_date"] == resolve_as_of_date()
         assert "Active standing" in call_latest["switch_reason"]
 
 
