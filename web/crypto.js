@@ -547,6 +547,106 @@
         </tr>
       `;
     }).join('');
+
+    renderHalvingFullFlows();
+  }
+
+  function renderHalvingFullFlows() {
+    const container = document.getElementById('halvingFullFlowsGrid');
+    if (!container || !cryptoState.halving) return;
+
+    const flows = cryptoState.halving.full_cycle_flows || [];
+    container.innerHTML = flows.map(cf => {
+      const isActive = cf.status === 'ACTIVE_CYCLE';
+      const isProj = cf.status === 'PROJECTED';
+      const borderColor = isActive ? 'rgba(251,191,36,0.6)' : (isProj ? 'rgba(192,132,252,0.4)' : 'var(--border-color)');
+      const bgGrad = isActive ? 'linear-gradient(180deg, rgba(251,191,36,0.06) 0%, var(--bg-surface) 100%)' : 'var(--bg-surface)';
+
+      return `
+        <div style="background:${bgGrad}; border:1px solid ${borderColor}; border-radius:6px; padding:16px;">
+          <!-- Cycle Flow Header -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:8px;">
+            <div>
+              <span class="font-mono ${isActive ? 'highlight-gold' : (isProj ? 'color-purple' : 'color-cyan')}" style="font-size:14px; font-weight:800;">${escapeHtml(cf.cycle_title || cf.cycle_label)}</span>
+              <span class="text-muted font-mono" style="font-size:11px; margin-left:10px;">${escapeHtml(cf.timeframe)}</span>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span class="status-badge ${isActive ? 'live' : ''}" style="font-size:10px;">${cf.status}</span>
+              ${cf.next_halving?.total_cycle_return ? `<span class="tier-badge tier-1 font-mono" style="font-size:10px;">Total Return: ${cf.next_halving.total_cycle_return}</span>` : ''}
+            </div>
+          </div>
+
+          <!-- 8-Stage Chronological Flow Cards -->
+          <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:8px;">
+            <!-- Stage 1: Halving Event -->
+            <div style="background:rgba(0,0,0,0.3); border-left:3px solid #38bdf8; border-radius:3px; padding:8px 10px;">
+              <div class="font-mono text-muted" style="font-size:9.5px;">1. HALVING EVENT (DAY 0)</div>
+              <div class="font-mono highlight-cyan" style="font-size:12.5px; font-weight:700;">${cf.start_halving.date}</div>
+              <div class="font-mono" style="font-size:11.5px; font-weight:700; color:#fff;">${cf.start_halving.price}</div>
+              <div class="text-muted" style="font-size:10px;">${cf.start_halving.cut}</div>
+            </div>
+
+            <!-- Stage 2: Miner Chop -->
+            <div style="background:rgba(0,0,0,0.3); border-left:3px solid #f87171; border-radius:3px; padding:8px 10px;">
+              <div class="font-mono text-muted" style="font-size:9.5px;">2. MINER CHOP (${cf.chop_phase.window})</div>
+              <div class="font-mono color-bear" style="font-size:12px; font-weight:700;">${cf.chop_phase.dates}</div>
+              <div class="font-mono" style="font-size:11px;">Range: ${cf.chop_phase.range}</div>
+              <div class="text-muted" style="font-size:9.5px; line-height:1.3;">${cf.chop_phase.desc}</div>
+            </div>
+
+            <!-- Stage 3: Breakout Inflection -->
+            <div style="background:rgba(0,0,0,0.3); border-left:3px solid #34d399; border-radius:3px; padding:8px 10px;">
+              <div class="font-mono text-muted" style="font-size:9.5px;">3. BREAKOUT (DAY ${cf.breakout.day})</div>
+              <div class="font-mono color-bull" style="font-size:12.5px; font-weight:700;">${cf.breakout.date}</div>
+              <div class="font-mono" style="font-size:11.5px; font-weight:700; color:#fff;">${cf.breakout.price}</div>
+              <div class="text-muted" style="font-size:9.5px; line-height:1.3;">${cf.breakout.desc}</div>
+            </div>
+
+            <!-- Stage 4: Macro Peak -->
+            <div style="background:rgba(0,0,0,0.3); border-left:3px solid #fbbf24; border-radius:3px; padding:8px 10px;">
+              <div class="font-mono text-muted" style="font-size:9.5px;">4. MACRO PEAK (DAY ${cf.macro_peak.day})</div>
+              <div class="font-mono highlight-gold" style="font-size:12.5px; font-weight:700;">${cf.macro_peak.date}</div>
+              <div class="font-mono" style="font-size:11.5px; font-weight:700; color:#fbbf24;">${typeof cf.macro_peak.price === 'number' ? `$${fmtNum(cf.macro_peak.price, 2)}` : cf.macro_peak.price}</div>
+              <div class="font-mono color-bull" style="font-size:10px;">${cf.macro_peak.gain}</div>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px;">
+            <!-- Stage 5: Bear Trough -->
+            <div style="background:rgba(0,0,0,0.3); border-left:3px solid #ef4444; border-radius:3px; padding:8px 10px;">
+              <div class="font-mono text-muted" style="font-size:9.5px;">5. BEAR TROUGH (DAY ${cf.bear_trough.day})</div>
+              <div class="font-mono color-bear" style="font-size:12.5px; font-weight:700;">${cf.bear_trough.date}</div>
+              <div class="font-mono" style="font-size:11.5px; font-weight:700; color:#ef4444;">${typeof cf.bear_trough.price === 'number' ? `$${fmtNum(cf.bear_trough.price, 2)}` : cf.bear_trough.price}</div>
+              <div class="font-mono color-bear" style="font-size:10px;">${cf.bear_trough.drawdown}</div>
+            </div>
+
+            <!-- Stage 6: Winter Base -->
+            <div style="background:rgba(0,0,0,0.3); border-left:3px solid #94a3b8; border-radius:3px; padding:8px 10px;">
+              <div class="font-mono text-muted" style="font-size:9.5px;">6. WINTER BASE (${cf.winter_base.window})</div>
+              <div class="font-mono text-muted" style="font-size:12px; font-weight:700;">${cf.winter_base.dates}</div>
+              <div class="font-mono" style="font-size:11px;">Range: ${cf.winter_base.range}</div>
+              <div class="text-muted" style="font-size:9.5px; line-height:1.3;">${cf.winter_base.desc}</div>
+            </div>
+
+            <!-- Stage 7: When It Rises Again -->
+            <div style="background:rgba(0,0,0,0.3); border-left:3px solid #10b981; border-radius:3px; padding:8px 10px;">
+              <div class="font-mono text-muted" style="font-size:9.5px;">7. RISES AGAIN (DAY ${cf.rises_again.day})</div>
+              <div class="font-mono color-bull" style="font-size:12.5px; font-weight:700;">${cf.rises_again.date}</div>
+              <div class="font-mono" style="font-size:11.5px; font-weight:700; color:#34d399;">${cf.rises_again.price}</div>
+              <div class="font-mono highlight-gold" style="font-size:10px;">${cf.rises_again.lead}</div>
+            </div>
+
+            <!-- Stage 8: Next Halving -->
+            <div style="background:rgba(0,0,0,0.3); border-left:3px solid #c084fc; border-radius:3px; padding:8px 10px;">
+              <div class="font-mono text-muted" style="font-size:9.5px;">8. NEXT HALVING (DAY ${cf.next_halving.day})</div>
+              <div class="font-mono" style="font-size:12.5px; font-weight:700; color:#c084fc;">${cf.next_halving.date}</div>
+              <div class="font-mono" style="font-size:11.5px; font-weight:700; color:#fff;">${cf.next_halving.price}</div>
+              <div class="font-mono color-bull" style="font-size:10px;">${cf.next_halving.gain_from_rise} from Rise</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 
   function renderHalvingFormulas() {
