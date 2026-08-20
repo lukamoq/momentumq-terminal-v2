@@ -993,8 +993,8 @@ function renderSeasonalityCurves() {
       </span>
       ${displayLegendYears.map(y => `
         <span class="legend-item">
-          <span class="legend-color-dot" style="background: ${highlightYearColors[y] || '#888'};"></span>
-          <strong style="color: ${highlightYearColors[y] || '#888'};">${y}</strong>
+          <span class="legend-color-dot" style="background: ${highlightYearColors[y] || '#9ba6c0'};"></span>
+          <strong style="color: ${highlightYearColors[y] || '#9ba6c0'};">${y}</strong>
         </span>
       `).join('')}
       <span class="legend-item" style="color: var(--text-dim);">
@@ -1011,7 +1011,7 @@ function renderSeasonalityCurves() {
   baseline.setAttribute('x2', margin.left + plotWidth);
   baseline.setAttribute('y1', y100);
   baseline.setAttribute('y2', y100);
-  baseline.setAttribute('stroke', '#4a443b');
+  baseline.setAttribute('stroke', 'rgba(155, 166, 192, 0.45)');
   baseline.setAttribute('stroke-dasharray', '4,4');
   gridGroup.appendChild(baseline);
 

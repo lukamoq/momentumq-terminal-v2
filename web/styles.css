@@ -158,6 +158,46 @@ section[id] { scroll-margin-top: calc(var(--h-chrome) + var(--sp-4)); }
   padding: 0;
 }
 
+/* --------------------------------------------------------------- links ---
+   Only `.source-box .source-link` was ever styled, so the "Source" links in
+   the call blotter fell through to the user-agent defaults and rendered in the
+   browser's visited-link maroon — which reads as a broken link, not a citation.
+   Outbound citations get one treatment everywhere. */
+a { color: var(--accent-fg); }
+
+.source-link {
+  color: var(--accent-fg);
+  text-decoration: none;
+  font-size: var(--fs-meta);
+  border-bottom: 1px solid transparent;
+  transition: color var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out);
+}
+
+.source-link:hover,
+.source-link:focus-visible {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent-fg);
+}
+
+.source-link:visited { color: var(--accent-fg); }
+
+/* ---------------------------------------------------------- scrollbars ---
+   The page scrollbar was left at the OS default: a bright slab against a dark
+   canvas. Matching it to the surface keeps the chrome quiet. */
+html {
+  scrollbar-color: var(--border-strong) var(--bg-canvas);
+  scrollbar-width: thin;
+}
+
+body::-webkit-scrollbar { width: 12px; height: 12px; }
+body::-webkit-scrollbar-track { background: var(--bg-canvas); }
+body::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 6px;
+  border: 3px solid var(--bg-canvas);
+}
+body::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
 body {
   background-color: var(--bg-canvas);
   color: var(--text-primary);
@@ -310,17 +350,32 @@ body {
   margin-top: 4px;
 }
 
+/* Second line inside a stat tile, for a qualitative read under a number. */
+.ticker-sub {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
 .stats-ticker {
   display: flex;
   gap: 12px;
 }
 
 .ticker-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: 4px;
+  border-radius: var(--r-2);
   padding: 8px 14px;
   min-width: 110px;
+  box-shadow: var(--edge-top);
 }
 
 .ticker-label {
@@ -2060,6 +2115,15 @@ body.modal-open {
 }
 .nav-tabs-wrapper::-webkit-scrollbar { display: none; }
 
+.nav-tabs-wrapper.is-overflowing {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+}
+.nav-tabs-wrapper.is-overflowing.is-scroll-end {
+  -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent 100%);
+  mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent 100%);
+}
+
 /* Below this the brand + badge + six tabs stop fitting on one line, so the
    bar becomes two rows with the tab strip scrolling under them. */
 @media (max-width: 1080px) {
@@ -2129,9 +2193,13 @@ body.modal-open {
   border-color: rgba(255, 255, 255, 0.28);
 }
 
-/* Pointer users never press F7; the hint is for keyboard users only. */
-@media (hover: none), (max-width: 1180px) {
-  .nav-page-fkey { display: none; }
+/* Seven tabs plus seven key badges overrun the bar at ordinary widths and
+   clip the active tab, so the hints are opt-in on wide displays only. Every
+   binding is listed in the F1 help sheet regardless. */
+.nav-page-fkey { display: none; }
+
+@media (min-width: 1800px) and (hover: hover) {
+  .nav-page-fkey { display: inline-block; }
 }
 
 .nav-page-btn.active .nav-page-num {

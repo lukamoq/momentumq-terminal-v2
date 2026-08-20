@@ -768,8 +768,9 @@
                 <div class="help-row"><kbd>F6</kbd><span>Jump to Options Volatility &amp; GEX Surface</span></div>
                 <div class="help-row"><kbd>F7</kbd><span>Jump to Page 05 (Macro Regime &amp; Fear/Greed)</span></div>
                 <div class="help-row"><kbd>F8</kbd><span>Jump to Page 06 (AI Agents &amp; Dossiers)</span></div>
-                <div class="help-row"><kbd>F9</kbd><span>Trigger Live Pipeline Sync &amp; Recalculate</span></div>
-                <div class="help-row"><kbd>F10</kbd><span>Cycle CRT Themes (Obsidian / Amber / Green)</span></div>
+                <div class="help-row"><kbd>F9</kbd><span>Jump to Page 07 (Crypto &amp; Digital Assets)</span></div>
+                <div class="help-row"><kbd>F10</kbd><span>Trigger Live Pipeline Sync &amp; Recalculate</span></div>
+                <div class="help-row"><kbd>F11</kbd><span>Cycle CRT Themes (Obsidian / Amber / Green)</span></div>
                 <div class="help-row"><kbd>Esc</kbd><span>Dismiss Active Modal / Clear Search</span></div>
               </div>
             </div>
@@ -928,6 +929,30 @@
     );
   }
 
+  // The seven page tabs can outrun the bar on narrow displays. Same idea as
+  // the table affordance: only hint when there is actually more to reach.
+  function initNavOverflowAffordance() {
+    const strip = document.querySelector('.nav-tabs-wrapper');
+    if (!strip) return;
+    const sync = () => {
+      const overflowing = strip.scrollWidth - strip.clientWidth > 2;
+      strip.classList.toggle('is-overflowing', overflowing);
+      strip.classList.toggle(
+        'is-scroll-end',
+        overflowing && strip.scrollLeft >= strip.scrollWidth - strip.clientWidth - 2
+      );
+    };
+    strip.addEventListener('scroll', sync, { passive: true });
+    window.addEventListener('resize', sync, { passive: true });
+    if (typeof ResizeObserver === 'function') new ResizeObserver(sync).observe(strip);
+    sync();
+    // Land the current page in view when the strip opens scrolled.
+    const active = strip.querySelector('.nav-page-btn.active');
+    if (active && typeof active.scrollIntoView === 'function') {
+      active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
+  }
+
   function initTableOverflowAffordance() {
     const seen = new WeakSet();
 
@@ -975,6 +1000,7 @@
     applyTerminalTheme(terminalState.theme);
     renderTerminalTape();
     initTableOverflowAffordance();
+    initNavOverflowAffordance();
     setupGlobalTerminalShortcuts();
   }
 

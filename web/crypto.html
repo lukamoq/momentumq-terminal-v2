@@ -18,8 +18,6 @@
         <a href="index.html" class="nav-brand-link" style="display:flex; align-items:center; text-decoration:none;">
           <img src="images/logo.png" alt="MomentumQ" class="nav-brand-logo" height="24">
         </a>
-        <span class="nav-brand-divider">/</span>
-        <span class="nav-brand-suite">CRYPTO &amp; DIGITAL ASSETS</span>
       </div>
       <div class="nav-tabs-wrapper">
         <a href="index.html" class="nav-page-btn"><span class="nav-page-num">01</span> Forecasts<kbd class="nav-page-fkey">F3</kbd></a>
@@ -50,35 +48,38 @@
     </nav>
 
     <!-- Header -->
-    <header class="header">
-      <div class="header-main">
-        <div class="brand-group">
-          <div class="logo-lockup">
-            <span class="logo-mark">MoQ</span>
-            <span class="logo-tag">DIGITAL ASSETS INTELLIGENCE</span>
+    <header class="blotter-header">
+      <div class="brand-row">
+        <div class="brand-title">
+          <div class="brand-top-meta">
+            <span class="brand-tag">MoQ-DIGITAL // CRYPTO &amp; DIGITAL ASSETS DESK</span>
+            <div class="sync-status-indicator" id="syncStatusIndicator">
+              <span class="sync-dot pulsing"></span>
+              <span class="sync-text" id="syncStatusText">SPOT FEED: AGGREGATED</span>
+              <span class="sync-time" id="syncTimeText">Last refreshed: Checking...</span>
+              <button class="sync-now-btn" id="syncNowBtn" title="Re-aggregate spot, ETF flow and on-chain series">&#8635; SYNC NOW</button>
+            </div>
           </div>
-          <span class="logo-sub">CRYPTO SPOT TAPE &bull; INSTITUTIONAL ETF FLOWS &bull; 4-YEAR HALVING CYCLES &bull; MASSIVE.COM AGGREGATES</span>
+          <h1>CRYPTO &amp; DIGITAL ASSETS STUDIO</h1>
+          <span class="subhead">CRYPTO SPOT TAPE // INSTITUTIONAL ETF FLOWS // 4-YEAR HALVING CYCLES // MASSIVE.COM AGGREGATES</span>
         </div>
-        <div class="header-kpis">
-          <div class="kpi-group">
-            <span class="kpi-label">TOTAL CRYPTO CAP</span>
-            <span class="kpi-value highlight-gold font-mono" id="kpiCryptoCap">$3.08T</span>
-            <span class="kpi-sub">Aggregate Valuation</span>
+        <div class="stats-ticker" id="statsTicker">
+          <div class="ticker-box">
+            <span class="ticker-label">TOTAL CRYPTO CAP</span>
+            <span class="ticker-val highlight-gold" id="kpiCryptoCap">$3.08T</span>
           </div>
-          <div class="kpi-group">
-            <span class="kpi-label">BTC DOMINANCE</span>
-            <span class="kpi-value color-bull font-mono" id="kpiBtcDom">58.4%</span>
-            <span class="kpi-sub">Macro Quality Flight</span>
+          <div class="ticker-box">
+            <span class="ticker-label">BTC DOMINANCE</span>
+            <span class="ticker-val" id="kpiBtcDom">58.4%</span>
           </div>
-          <div class="kpi-group">
-            <span class="kpi-label">30D ETF INFLOWS</span>
-            <span class="kpi-value color-bull font-mono" id="kpiEtfInflows">+$6.66B</span>
-            <span class="kpi-sub">Net Institutional Inflow</span>
+          <div class="ticker-box">
+            <span class="ticker-label">30D ETF INFLOWS</span>
+            <span class="ticker-val color-bull" id="kpiEtfInflows">+$6.66B</span>
           </div>
-          <div class="kpi-group">
-            <span class="kpi-label">CRYPTO SENTIMENT</span>
-            <span class="kpi-value color-bull font-mono" id="kpiCryptoScore">76.8 / 100</span>
-            <span class="kpi-sub" id="kpiCryptoLabel">EXTREME GREED</span>
+          <div class="ticker-box">
+            <span class="ticker-label">CRYPTO SENTIMENT</span>
+            <span class="ticker-val" id="kpiCryptoScore">76.8 / 100</span>
+            <span class="ticker-sub" id="kpiCryptoLabel">EXTREME GREED</span>
           </div>
         </div>
       </div>

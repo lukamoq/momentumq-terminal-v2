@@ -251,6 +251,20 @@ function initTimelineViewport() {
   state.viewport.fullMaxDate = lastDate;
   state.viewport.viewMinDate = firstDate;
   state.viewport.viewMaxDate = lastDate;
+
+  // The full bounds stay at the price history so panning and zooming can reach
+  // back to 2000, but the opening view is the scored window. Without this the
+  // page loaded showing 2000-2026 while the RANGE control read "ALL (2021-26)",
+  // and every stance lane was crushed into the right-hand quarter of the chart.
+  const callDates = (state.timeline.calls || [])
+    .map(c => new Date(c.published_on).getTime())
+    .filter(t => !isNaN(t));
+  if (callDates.length) {
+    state.viewport.viewMinDate = Math.max(
+      firstDate,
+      Math.min(...callDates) - (120 * 86400000)
+    );
+  }
 }
 
 function setupEventListeners() {
@@ -975,15 +989,34 @@ function renderTimeline() {
   const endYear = new Date(maxDate).getFullYear();
   const gridDates = [];
 
-  for (let y = startYear; y <= endYear; y++) {
-    const monthsList = spanDays > 400 ? ['01-01', '04-01', '07-01', '10-01'] : ['01-01', '02-01', '03-01', '04-01', '05-01', '06-01', '07-01', '08-01', '09-01', '10-01', '11-01', '12-01'];
-    monthsList.forEach(md => {
-      const dStr = `${y}-${md}`;
-      const t = new Date(dStr).getTime();
-      if (t >= minDate && t <= maxDate) {
-        gridDates.push(dStr);
-      }
-    });
+  // A fixed "quarterly past 400 days" rule produced 104 ticks across the full
+  // 2000-2026 range: roughly 10px per label for labels ~34px wide, which
+  // rendered as a solid smear. The interval is chosen from the pixel budget
+  // instead, so labels stay readable at every zoom level.
+  const axisW = Math.max(1, width - margin.left - margin.right);
+  const MIN_LABEL_PITCH = 54;   // px of clear space each label needs
+  const maxTicks = Math.max(2, Math.floor(axisW / MIN_LABEL_PITCH));
+  const totalMonths = Math.max(1, Math.round(spanDays / 30.44));
+
+  // Coarsest-to-finest ladder, in months.
+  const STEPS = [1, 2, 3, 6, 12, 24, 60, 120];
+  let stepMonths = STEPS.find(st => totalMonths / st <= maxTicks) || 120;
+  // Beyond the ladder, fall back to a whole number of years.
+  if (totalMonths / stepMonths > maxTicks) {
+    stepMonths = Math.ceil(totalMonths / maxTicks / 12) * 12;
+  }
+  // Only label whole years once the step is a year or more, so a tick never
+  // reads "Jan 04" next to a tick that reads "2004".
+  const yearOnly = stepMonths >= 12;
+
+  const cursor = new Date(startYear, 0, 1);
+  while (cursor.getTime() <= maxDate) {
+    const t = cursor.getTime();
+    if (t >= minDate) {
+      const mm = String(cursor.getMonth() + 1).padStart(2, '0');
+      gridDates.push(`${cursor.getFullYear()}-${mm}-01`);
+    }
+    cursor.setMonth(cursor.getMonth() + stepMonths);
   }
 
   gridDates.forEach(mStr => {
@@ -1005,7 +1038,9 @@ function renderTimeline() {
     text.setAttribute('font-size', '10px');
     text.setAttribute('text-anchor', 'middle');
     const d = new Date(mStr);
-    text.textContent = d.toLocaleString('en-US', { month: 'short', year: spanDays > 300 ? '2-digit' : undefined });
+    text.textContent = yearOnly
+      ? String(d.getFullYear())
+      : d.toLocaleString('en-US', { month: 'short', year: spanDays > 300 ? '2-digit' : undefined });
     svg.appendChild(text);
   });
 

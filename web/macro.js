@@ -128,7 +128,12 @@
     const fg = macroState.fearGreed;
     if (fg) {
       const fgEl = document.getElementById('tickerFgScore');
-      if (fgEl) fgEl.textContent = `${fg.score} / 100 (${fg.label || 'GREED'})`;
+      if (fgEl) {
+        const score = fgScore(fg);
+        fgEl.textContent = score == null
+          ? '\u2014'
+          : `${score.toFixed(1)} / 100 (${fg.label || 'Neutral'})`;
+      }
     }
 
     const vix = macroState.vixStructure;
@@ -225,49 +230,119 @@
      Section 02: Fear & Greed Index 2.0
      ========================================================================== */
 
+  /* The payload exposes the composite as `composite_score`; `fg.score` never
+     existed, so the hero printed "undefined / 100". `categories` is an object
+     keyed by factor, so the old `categories.length > 0` guard was always false
+     and the whole panel silently fell back to a hardcoded placebo table. Both
+     now read the live payload, and the placeholder table is gone. */
+
+  function fgScore(fg) {
+    if (!fg) return null;
+    const v = Number(fg.composite_score);
+    return Number.isFinite(v) ? v : null;
+  }
+
+  function fgToneClass(score) {
+    if (score == null) return '';
+    if (score < 40) return 'color-bear';
+    if (score > 60) return 'color-bull';
+    return 'highlight-gold';
+  }
+
+  /* The four snapshot rows were static numbers typed into macro.html while the
+     payload was already carrying 300 days of scored history. They are derived
+     from that history now, so they move with the data. */
+  function renderFearGreedSnapshot(fg) {
+    const hist = Array.isArray(fg.history) ? fg.history : [];
+    const scores = hist
+      .map(h => Number(h.score))
+      .filter(Number.isFinite);
+
+    const set = (id, text) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    };
+
+    if (scores.length === 0) {
+      ['fgPrevClose', 'fgWeekAvg', 'fgMonthAvg', 'fgYearRange'].forEach(id => set(id, '\u2014'));
+      return;
+    }
+
+    // The last entry is today's reading; "previous close" is the one before it.
+    const prev = scores.length > 1 ? scores[scores.length - 2] : scores[scores.length - 1];
+    const mean = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+    const tail = n => scores.slice(Math.max(0, scores.length - n));
+
+    const band = v => {
+      if (v < 25) return 'EXTREME FEAR';
+      if (v < 45) return 'FEAR';
+      if (v <= 55) return 'NEUTRAL';
+      if (v <= 75) return 'GREED';
+      return 'EXTREME GREED';
+    };
+    const fmt = v => `${v.toFixed(1)} (${band(v)})`;
+
+    set('fgPrevClose', fmt(prev));
+    set('fgWeekAvg', fmt(mean(tail(5))));
+    set('fgMonthAvg', fmt(mean(tail(21))));
+
+    const yr = tail(252);
+    const lo = Math.min(...yr);
+    const hi = Math.max(...yr);
+    set('fgYearRange', `${fmt(lo)} \u2014 ${fmt(hi)}`);
+  }
+
   function renderFearGreedSection() {
     const fg = macroState.fearGreed;
     if (!fg) return;
 
+    const score = fgScore(fg);
     const scoreEl = document.getElementById('fgScoreHero');
     const labelEl = document.getElementById('fgLabelHero');
-    if (scoreEl) scoreEl.textContent = fg.score || 68;
+    if (scoreEl) scoreEl.textContent = score == null ? '\u2014' : score.toFixed(1);
     if (labelEl) {
-      labelEl.textContent = fg.label || 'GREED';
-      labelEl.className = `fg-label-hero font-mono ${fg.score < 40 ? 'color-bear' : (fg.score > 60 ? 'color-bull' : 'highlight-gold')}`;
+      labelEl.textContent = (fg.label || 'Neutral').toUpperCase();
+      labelEl.className = `fg-label-hero font-mono ${fgToneClass(score)}`;
     }
+
+    renderFearGreedSnapshot(fg);
 
     const list = document.getElementById('fgCategoriesList');
     if (!list) return;
 
-    const defaultCategories = [
-      { name: 'Put/Call Ratio (Positioning)', score: 72, weight: '15%', desc: 'SPY Put/Call volume ratio at 0.78 (Complacent / Call Buying)' },
-      { name: 'Implied Volatility (VIX 30D)', score: 65, weight: '10%', desc: 'Model-free constant-maturity IV at 14.82 (Subdued Fear)' },
-      { name: 'S&P 500 Trend Strength', score: 82, weight: '10%', desc: 'Price action +10.9% above 200-day moving average' },
-      { name: 'Stock Price Breadth (Adv/Dec)', score: 70, weight: '10%', desc: 'Cumulative NYSE McClellan Oscillator positive' },
-      { name: 'Stock Price Momentum (RSI 14D)', score: 66, weight: '10%', desc: '14-day momentum running above 58 baseline' },
-      { name: 'High-Yield Credit Spreads (OAS)', score: 78, weight: '10%', desc: 'Junk bond yield spread vs Treasuries at multi-year lows' },
-      { name: 'Macro Treasury Yield Slope (10Y-2Y)', score: 68, weight: '5%', desc: 'Yield curve positively sloped at +30 bps' },
-      { name: 'Market Liquidity & Bid-Ask Tightness', score: 64, weight: '15%', desc: 'Observed spreads in top 30 universe at minimum friction' },
-      { name: 'Cross-Asset Volatility Premium', score: 58, weight: '5%', desc: 'Bond MOVE Index normalized alongside equity VIX' },
-      { name: 'Retail & Survey Sentiment', score: 60, weight: '5%', desc: 'AAII Bull-Bear ratio moderately optimistic' }
-    ];
+    // `category_order` is the desk's intended reading order; fall back to
+    // whatever keys the payload actually carries.
+    const cats = fg.categories || {};
+    const order = Array.isArray(fg.category_order) && fg.category_order.length
+      ? fg.category_order
+      : Object.keys(cats);
+    const degraded = new Set(fg.degraded_categories || []);
 
-    const categories = fg.categories && fg.categories.length > 0 ? fg.categories : defaultCategories;
+    const rows = order.map(key => cats[key]).filter(Boolean);
+    if (rows.length === 0) {
+      list.innerHTML = `<div class="fg-empty font-mono">Fear &amp; Greed factor chain unavailable for this session.</div>`;
+      return;
+    }
 
-    list.innerHTML = categories.map(c => {
-      const s = c.score || 50;
-      const barColor = s > 60 ? '#38bdf8' : (s < 40 ? '#f87171' : '#fbbf24');
+    list.innerHTML = rows.map(c => {
+      const s = Number.isFinite(Number(c.score)) ? Number(c.score) : null;
+      const pct = s == null ? 0 : Math.max(0, Math.min(100, s));
+      const barColor = c.bar_color || (pct > 60 ? '#38bdf8' : (pct < 40 ? '#f87171' : '#fbbf24'));
+      const isDegraded = degraded.has(c.key) || c.measured === false;
       return `
-        <div class="fg-category-row">
-          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;">
-            <span style="font-size:12px; font-weight:600; color:var(--text-primary);">${escapeHtml(c.name)} <span style="font-size:10px; color:var(--text-dim); font-family:var(--font-mono);">(${c.weight})</span></span>
-            <span style="font-family:var(--font-mono); font-weight:700; color:${barColor}; font-size:12px;">${s} / 100</span>
+        <div class="fg-category-row${isDegraded ? ' is-degraded' : ''}">
+          <div class="fg-cat-head">
+            <span class="fg-cat-name">
+              ${escapeHtml(c.label || c.key || '')}
+              <span class="fg-cat-weight font-mono">(${c.weight}%)</span>
+              ${isDegraded ? '<span class="fg-cat-flag font-mono">UNMEASURED</span>' : ''}
+            </span>
+            <span class="fg-cat-score font-mono" style="color:${barColor};">${s == null ? '\u2014' : s.toFixed(1)} <span class="fg-cat-denom">/ 100</span></span>
           </div>
-          <div style="height:6px; background:rgba(255,255,255,0.04); border-radius:3px; overflow:hidden; margin-bottom:4px;">
-            <div style="width:${s}%; height:100%; background:${barColor}; border-radius:3px; transition:width 0.4s ease;"></div>
+          <div class="fg-cat-track">
+            <div class="fg-cat-fill" style="width:${pct}%; background:${barColor};"></div>
           </div>
-          <span style="font-size:10.5px; color:var(--text-muted);">${escapeHtml(c.desc || c.explanation || '')}</span>
+          <span class="fg-cat-desc">${escapeHtml(c.description || '')}</span>
         </div>
       `;
     }).join('');

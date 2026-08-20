@@ -334,7 +334,7 @@ function renderMag7Chart() {
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
   svg.innerHTML = '';
 
-  const margin = { top: 25, right: 90, bottom: 40, left: 60 };
+  const margin = { top: 25, right: 86, bottom: 40, left: 62 };
   const plotWidth = width - margin.left - margin.right;
   const plotHeight = height - margin.top - margin.bottom;
 
@@ -368,8 +368,16 @@ function renderMag7Chart() {
   const uniqueDates = Array.from(new Set(allDates)).sort();
   // indexOf per point was O(dates) inside an O(points) loop — ~9M comparisons a redraw.
   const dateIndex = new Map(uniqueDates.map((d, i) => [d, i]));
-  minNorm = Math.max(20, Math.floor(minNorm / 10) * 10);
-  maxNorm = Math.ceil(maxNorm / 50) * 50;
+  // These series are normalised to base 100 and NVDA ends near 72,000 — a span
+  // of nearly three orders of magnitude. On a linear axis every ticker except
+  // the top one collapses onto the baseline and all seven y-labels stack into
+  // an unreadable blob in the bottom-left corner. Growth over a long window is
+  // a ratio quantity, so the axis is log and equal vertical distance means
+  // equal multiple.
+  minNorm = Math.max(1, Math.pow(10, Math.floor(Math.log10(Math.max(1, minNorm)))));
+  maxNorm = Math.max(minNorm * 10, Math.pow(10, Math.ceil(Math.log10(Math.max(10, maxNorm)))));
+  const logMin = Math.log10(minNorm);
+  const logMax = Math.log10(maxNorm);
 
   // Scale functions
   const xScale = (dStr) => {
@@ -378,7 +386,18 @@ function renderMag7Chart() {
   };
 
   const yScale = (normVal) => {
-    return margin.top + (1 - (normVal - minNorm) / (maxNorm - minNorm)) * plotHeight;
+    const v = Math.max(minNorm, Number(normVal) || minNorm);
+    return margin.top + (1 - (Math.log10(v) - logMin) / (logMax - logMin)) * plotHeight;
+  };
+
+  // Base 100 = 1x. Past a few hundred percent, "+71,940%" is noise where
+  // "719x" is instantly readable, so the axis speaks in multiples.
+  const fmtMultiple = (normVal) => {
+    const x = normVal / 100;
+    if (x >= 100) return `${Math.round(x)}\u00d7`;
+    if (x >= 10) return `${x.toFixed(0)}\u00d7`;
+    if (x >= 1) return `${x.toFixed(x % 1 === 0 ? 0 : 1)}\u00d7`;
+    return `${x.toFixed(2)}\u00d7`;
   };
 
   // Color mapping
@@ -424,12 +443,20 @@ function renderMag7Chart() {
   baseline.setAttribute('x2', margin.left + plotWidth);
   baseline.setAttribute('y1', y100);
   baseline.setAttribute('y2', y100);
-  baseline.setAttribute('stroke', '#4a443b');
+  baseline.setAttribute('stroke', 'rgba(155, 166, 192, 0.45)');
   baseline.setAttribute('stroke-dasharray', '4,4');
   gridGroup.appendChild(baseline);
 
-  // Y-axis grid ticks
-  const yTicks = [50, 100, 200, 300, 500, 800, 1200].filter(v => v >= minNorm && v <= maxNorm);
+  // Y-axis grid ticks: 1-2-5 per decade, which is the standard readable
+  // subdivision for a log axis (the old fixed list was linear-spaced and all
+  // seven values landed inside the bottom 2% of the plot).
+  const yTicks = [];
+  for (let d = Math.floor(logMin); d <= Math.ceil(logMax); d++) {
+    [1, 2, 5].forEach(m => {
+      const v = m * Math.pow(10, d);
+      if (v >= minNorm && v <= maxNorm) yTicks.push(v);
+    });
+  }
   yTicks.forEach(val => {
     const y = yScale(val);
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -437,44 +464,60 @@ function renderMag7Chart() {
     line.setAttribute('x2', margin.left + plotWidth);
     line.setAttribute('y1', y);
     line.setAttribute('y2', y);
-    line.setAttribute('stroke', '#26221d');
+    line.setAttribute('stroke', 'rgba(255, 255, 255, 0.06)');
     gridGroup.appendChild(line);
 
     const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     txt.setAttribute('x', margin.left - 8);
     txt.setAttribute('y', y + 4);
     txt.setAttribute('text-anchor', 'end');
-    txt.setAttribute('fill', '#888');
+    txt.setAttribute('fill', '#6b7794');
     txt.setAttribute('font-size', '11px');
     txt.setAttribute('font-family', 'IBM Plex Mono');
-    txt.textContent = `${val >= 100 ? '+' : ''}${val - 100}%`;
+    txt.textContent = fmtMultiple(val);
     gridGroup.appendChild(txt);
   });
 
-  // X-axis year ticks (2022, 2023, 2024, 2025, 2026)
-  const years = [uniqueDates[0], '2023-01-03', '2024-01-02', '2025-01-02', '2026-01-02', uniqueDates[uniqueDates.length - 1]]
-    .filter((d, i, arr) => d && arr.indexOf(d) === i);
+  // Ticks are derived from the dates actually present rather than a hardcoded
+  // list. The old version appended both '2026-01-02' and the final date, which
+  // both render as "2026" — hence the duplicated label — and printed the first
+  // tick as a full ISO date while every other tick was a bare year.
+  const firstYear = Number(uniqueDates[0].slice(0, 4));
+  const lastYear = Number(uniqueDates[uniqueDates.length - 1].slice(0, 4));
+  const span = Math.max(1, lastYear - firstYear);
+  // Keep roughly 8 labels whatever the window, so they never collide.
+  const step = Math.max(1, Math.ceil(span / 8));
+
+  const seenX = [];
+  const years = [];
+  for (let y = firstYear; y <= lastYear; y += step) {
+    const d = uniqueDates.find(dt => Number(dt.slice(0, 4)) >= y);
+    if (d && !years.includes(d)) years.push(d);
+  }
+
   years.forEach(dStr => {
-    const idx = uniqueDates.findIndex(d => d >= dStr);
+    const idx = uniqueDates.indexOf(dStr);
     if (idx !== -1) {
       const x = margin.left + (idx / (uniqueDates.length - 1)) * plotWidth;
+      // Belt-and-braces against two ticks landing on the same pixel column.
+      if (seenX.some(px => Math.abs(px - x) < 28)) return;
+      seenX.push(x);
       const vLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       vLine.setAttribute('x1', x);
       vLine.setAttribute('x2', x);
       vLine.setAttribute('y1', margin.top);
       vLine.setAttribute('y2', margin.top + plotHeight);
-      vLine.setAttribute('stroke', '#221f1a');
+      vLine.setAttribute('stroke', 'rgba(255, 255, 255, 0.045)');
       gridGroup.appendChild(vLine);
 
       const yrText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       yrText.setAttribute('x', x);
       yrText.setAttribute('y', margin.top + plotHeight + 18);
       yrText.setAttribute('text-anchor', 'middle');
-      yrText.setAttribute('fill', '#999');
+      yrText.setAttribute('fill', '#6b7794');
       yrText.setAttribute('font-size', '11px');
       yrText.setAttribute('font-family', 'IBM Plex Mono');
       yrText.textContent = dStr.split('-')[0];
-      if (dStr === uniqueDates[0]) yrText.textContent = dStr;
       gridGroup.appendChild(yrText);
     }
   });
@@ -482,6 +525,7 @@ function renderMag7Chart() {
   svg.appendChild(gridGroup);
 
   // Draw Line Paths for each ticker
+  const endLabels = [];
   tickersToDraw.forEach(t => {
     const series = mag7State.marketSeries[t] || [];
     if (series.length === 0) return;
@@ -501,22 +545,61 @@ function renderMag7Chart() {
     path.setAttribute('opacity', (activeTicker !== 'ALL' && activeTicker !== 'BENCHMARKS' && t === 'SPY') ? '0.6' : '0.9');
     svg.appendChild(path);
 
-    // Label at end of line
+    // Collected, not drawn: several lines finish within a few pixels of each
+    // other, so the labels have to be pushed apart as a set once every series
+    // is known. Drawn immediately they overlapped into an unreadable stack.
     const lastPt = series[series.length - 1];
     if (lastPt) {
-      const lx = margin.left + plotWidth + 6;
-      const ly = yScale(lastPt.normalized);
-      const lText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      lText.setAttribute('x', lx);
-      lText.setAttribute('y', ly + 4);
-      lText.setAttribute('fill', tickerColors[t] || '#fff');
-      lText.setAttribute('font-size', '11px');
-      lText.setAttribute('font-weight', 'bold');
-      lText.setAttribute('font-family', 'IBM Plex Mono');
-      lText.textContent = `${t} (${lastPt.return_pct >= 0 ? '+' : ''}${lastPt.return_pct}%)`;
-      svg.appendChild(lText);
+      endLabels.push({
+        ticker: t,
+        color: tickerColors[t] || '#fff',
+        yWanted: yScale(lastPt.normalized),
+        text: `${t} ${fmtMultiple(lastPt.normalized)}`
+      });
     }
   });
+
+  // Push labels apart to a legible minimum pitch, keeping them inside the plot
+  // and as close to their line as the collisions allow.
+  if (endLabels.length) {
+    const PITCH = 13;
+    const top = margin.top + 5;
+    const bottom = margin.top + plotHeight - 3;
+
+    endLabels.sort((a, b) => a.yWanted - b.yWanted);
+    endLabels.forEach((l, i) => { l.y = Math.max(l.yWanted, top + i * PITCH); });
+    // Second pass from the bottom, in case the first pass ran past the floor.
+    for (let i = endLabels.length - 1; i >= 0; i--) {
+      const limit = (i === endLabels.length - 1)
+        ? bottom
+        : endLabels[i + 1].y - PITCH;
+      endLabels[i].y = Math.min(endLabels[i].y, limit);
+    }
+
+    endLabels.forEach(l => {
+      const lx = margin.left + plotWidth + 6;
+      // A leader line keeps the association when a label has been nudged away
+      // from where its series actually ends.
+      if (Math.abs(l.y - l.yWanted) > 2) {
+        const leader = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        leader.setAttribute('d', `M ${margin.left + plotWidth} ${l.yWanted} L ${lx - 3} ${l.y - 3}`);
+        leader.setAttribute('stroke', l.color);
+        leader.setAttribute('fill', 'none');
+        leader.setAttribute('stroke-width', '1');
+        leader.setAttribute('opacity', '0.4');
+        svg.appendChild(leader);
+      }
+      const lText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lText.setAttribute('x', lx);
+      lText.setAttribute('y', l.y);
+      lText.setAttribute('fill', l.color);
+      lText.setAttribute('font-size', '10.5px');
+      lText.setAttribute('font-weight', 'bold');
+      lText.setAttribute('font-family', 'IBM Plex Mono');
+      lText.textContent = l.text;
+      svg.appendChild(lText);
+    });
+  }
 
   // Draw Research Call Markers & Target Price Lines Overlay
   const callsToDraw = mag7State.calls.filter(c => {

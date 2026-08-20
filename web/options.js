@@ -455,10 +455,10 @@
     const quarterly = em.quarterly || { dollar: 54.61, pct: 7.10, upper_1s: spot + 54.61, lower_1s: spot - 54.61, iv: 14.3 };
 
     const horizons = [
-      { name: '1-DAY HORIZON (INTRADAY / 0DTE)', iv: `${daily.iv || 11.4}%`, oneSigma: `±$${fmtNum(daily.dollar, 2)} (±${fmtNum(daily.pct, 2)}%)`, twoSigma: `±$${fmtNum(daily.dollar * 2, 2)}`, spotRange: `$${fmtNum(daily.lower_1s, 2)} — $${fmtNum(daily.upper_1s, 2)}` },
-      { name: '1-WEEK HORIZON (7 CALENDAR DAYS)', iv: `${weekly.iv || 10.6}%`, oneSigma: `±$${fmtNum(weekly.dollar, 2)} (±${fmtNum(weekly.pct, 2)}%)`, twoSigma: `±$${fmtNum(weekly.dollar * 2, 2)}`, spotRange: `$${fmtNum(weekly.lower_1s, 2)} — $${fmtNum(weekly.upper_1s, 2)}` },
-      { name: '1-MONTH HORIZON (30 CALENDAR DAYS)', iv: `${monthly.iv || 12.4}%`, oneSigma: `±$${fmtNum(monthly.dollar, 2)} (±${fmtNum(monthly.pct, 2)}%)`, twoSigma: `±$${fmtNum(monthly.dollar * 2, 2)}`, spotRange: `$${fmtNum(monthly.lower_1s, 2)} — $${fmtNum(monthly.upper_1s, 2)}` },
-      { name: '3-MONTH HORIZON (90 CALENDAR DAYS)', iv: `${quarterly.iv || 14.3}%`, oneSigma: `±$${fmtNum(quarterly.dollar, 2)} (±${fmtNum(quarterly.pct, 2)}%)`, twoSigma: `±$${fmtNum(quarterly.dollar * 2, 2)}`, spotRange: `$${fmtNum(quarterly.lower_1s, 2)} — $${fmtNum(quarterly.upper_1s, 2)}` }
+      { name: '1-DAY HORIZON \u00b7 0DTE', iv: `${daily.iv || 11.4}%`, oneSigma: `±$${fmtNum(daily.dollar, 2)} (±${fmtNum(daily.pct, 2)}%)`, twoSigma: `±$${fmtNum(daily.dollar * 2, 2)}`, spotRange: `$${fmtNum(daily.lower_1s, 2)} — $${fmtNum(daily.upper_1s, 2)}` },
+      { name: '1-WEEK HORIZON \u00b7 7D', iv: `${weekly.iv || 10.6}%`, oneSigma: `±$${fmtNum(weekly.dollar, 2)} (±${fmtNum(weekly.pct, 2)}%)`, twoSigma: `±$${fmtNum(weekly.dollar * 2, 2)}`, spotRange: `$${fmtNum(weekly.lower_1s, 2)} — $${fmtNum(weekly.upper_1s, 2)}` },
+      { name: '1-MONTH HORIZON \u00b7 30D', iv: `${monthly.iv || 12.4}%`, oneSigma: `±$${fmtNum(monthly.dollar, 2)} (±${fmtNum(monthly.pct, 2)}%)`, twoSigma: `±$${fmtNum(monthly.dollar * 2, 2)}`, spotRange: `$${fmtNum(monthly.lower_1s, 2)} — $${fmtNum(monthly.upper_1s, 2)}` },
+      { name: '3-MONTH HORIZON \u00b7 90D', iv: `${quarterly.iv || 14.3}%`, oneSigma: `±$${fmtNum(quarterly.dollar, 2)} (±${fmtNum(quarterly.pct, 2)}%)`, twoSigma: `±$${fmtNum(quarterly.dollar * 2, 2)}`, spotRange: `$${fmtNum(quarterly.lower_1s, 2)} — $${fmtNum(quarterly.upper_1s, 2)}` }
     ];
 
     grid.innerHTML = horizons.map(h => `
