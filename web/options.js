@@ -287,34 +287,97 @@
       const baseStrike = Math.round(spot / 5) * 5;
 
       const strikes = [
-        { strike: baseStrike - 20, callGex: 15, putGex: -65 },
-        { strike: baseStrike - 15, callGex: 35, putGex: -110 },
-        { strike: baseStrike - 10, callGex: 75, putGex: -160 },
-        { strike: baseStrike - 5, callGex: 140, putGex: -190 },
-        { strike: baseStrike, callGex: 310, putGex: -120 },
-        { strike: baseStrike + 5, callGex: 440, putGex: -70 },
-        { strike: baseStrike + 10, callGex: 380, putGex: -30 },
-        { strike: baseStrike + 15, callGex: 220, putGex: -15 },
-        { strike: baseStrike + 20, callGex: 160, putGex: -5 },
+        { strike: baseStrike - 25, callGex: 8, putGex: -40 },
+        { strike: baseStrike - 20, callGex: 18, putGex: -75 },
+        { strike: baseStrike - 15, callGex: 42, putGex: -125 },
+        { strike: baseStrike - 10, callGex: 95, putGex: -185 },
+        { strike: baseStrike - 5, callGex: 180, putGex: -220 },
+        { strike: baseStrike, callGex: 360, putGex: -140 },
+        { strike: baseStrike + 5, callGex: 480, putGex: -75 },
+        { strike: baseStrike + 10, callGex: 410, putGex: -35 },
+        { strike: baseStrike + 15, callGex: 260, putGex: -15 },
+        { strike: baseStrike + 20, callGex: 175, putGex: -8 },
+        { strike: baseStrike + 25, callGex: 90, putGex: -4 },
       ];
 
+      const maxGex = 500;
+      const W = 800;
+      const H = 260;
+      const padL = 50;
+      const padR = 40;
+      const padT = 30;
+      const padB = 40;
+      const plotW = W - padL - padR;
+      const plotH = H - padT - padB;
+      const yZero = padT + plotH / 2;
+
+      const getStrikeX = (idx) => padL + (idx / (strikes.length - 1)) * plotW;
+      const getGexY = (val) => yZero - (val / maxGex) * (plotH / 2);
+
+      let netPathD = `M ${getStrikeX(0)} ${getGexY(strikes[0].callGex + strikes[0].putGex)}`;
+      for (let i = 1; i < strikes.length; i++) {
+        netPathD += ` L ${getStrikeX(i).toFixed(1)} ${getGexY(strikes[i].callGex + strikes[i].putGex).toFixed(1)}`;
+      }
+
       container.innerHTML = `
-        <div style="display:flex; flex-direction:column; gap:6px; font-family:var(--font-mono); font-size:11px;">
-          ${strikes.map(s => {
-            const net = s.callGex + s.putGex;
-            const isPos = net >= 0;
-            const barWidth = Math.min(100, (Math.abs(net) / 450) * 100);
+        <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%; height:auto;" id="gexSurfaceSvg">
+          <defs>
+            <linearGradient id="gexCallGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.8"/>
+              <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.2"/>
+            </linearGradient>
+            <linearGradient id="gexPutGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#f87171" stop-opacity="0.2"/>
+              <stop offset="100%" stop-color="#f87171" stop-opacity="0.8"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Grid Background & Zero Line -->
+          <rect x="${padL}" y="${padT}" width="${plotW}" height="${plotH}" fill="rgba(10, 15, 24, 0.65)"/>
+          <line x1="${padL}" y1="${yZero}" x2="${W - padR}" y2="${yZero}" stroke="#334155" stroke-width="1.2"/>
+          <line x1="${padL}" y1="${padT}" x2="${W - padR}" y2="${padT}" stroke="#1e293b" stroke-width="1" stroke-dasharray="2,3"/>
+          <line x1="${padL}" y1="${H - padB}" x2="${W - padR}" y2="${H - padB}" stroke="#1e293b" stroke-width="1" stroke-dasharray="2,3"/>
+
+          <!-- Y Axis Labels -->
+          <text x="${padL - 8}" y="${padT + 4}" text-anchor="end" fill="#38bdf8" font-family="var(--font-mono)" font-size="9.5">+${maxGex}M</text>
+          <text x="${padL - 8}" y="${yZero + 3}" text-anchor="end" fill="#94a3b8" font-family="var(--font-mono)" font-size="9.5">$0</text>
+          <text x="${padL - 8}" y="${H - padB + 3}" text-anchor="end" fill="#f87171" font-family="var(--font-mono)" font-size="9.5">-${maxGex}M</text>
+
+          <!-- Strike Bars (Call vs Put) -->
+          ${strikes.map((s, idx) => {
+            const x = getStrikeX(idx);
+            const callH = (s.callGex / maxGex) * (plotH / 2);
+            const putH = (Math.abs(s.putGex) / maxGex) * (plotH / 2);
+            const barW = Math.max(14, (plotW / strikes.length) * 0.42);
+
             return `
-              <div style="display:grid; grid-template-columns: 60px 1fr 70px; align-items:center; gap:8px;">
-                <span style="color:var(--text-muted);">$${s.strike}</span>
-                <div style="height:14px; background:rgba(255,255,255,0.03); border-radius:2px; display:flex; align-items:center; overflow:hidden;">
-                  <div style="width:${Math.max(5, barWidth)}%; height:100%; background:${isPos ? '#38bdf8' : '#f87171'}; opacity:0.85; border-radius:2px;"></div>
-                </div>
-                <span style="text-align:right; font-weight:600; color:${isPos ? '#38bdf8' : '#f87171'};">${isPos ? '+' : ''}${net}M</span>
-              </div>
+              <!-- Call GEX Bar -->
+              <rect x="${x - barW - 1}" y="${yZero - callH}" width="${barW}" height="${callH}" fill="url(#gexCallGrad)" rx="2"/>
+              <!-- Put GEX Bar -->
+              <rect x="${x + 1}" y="${yZero}" width="${barW}" height="${putH}" fill="url(#gexPutGrad)" rx="2"/>
+              <!-- X Label -->
+              <text x="${x}" y="${H - padB + 16}" text-anchor="middle" fill="#94a3b8" font-family="var(--font-mono)" font-size="9.5">$${s.strike}</text>
             `;
           }).join('')}
-        </div>
+
+          <!-- Net GEX Connecting Line -->
+          <path d="${netPathD}" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+
+          <!-- Spot Price Marker -->
+          <line x1="${getStrikeX(5)}" y1="${padT}" x2="${getStrikeX(5)}" y2="${H - padB}" stroke="#fbbf24" stroke-width="1.8" stroke-dasharray="3,2"/>
+          <rect x="${getStrikeX(5) - 35}" y="${padT - 20}" width="70" height="16" fill="rgba(251, 191, 36, 0.2)" stroke="#fbbf24" rx="2"/>
+          <text x="${getStrikeX(5)}" y="${padT - 8}" text-anchor="middle" fill="#fbbf24" font-family="var(--font-mono)" font-size="8.5" font-weight="700">SPOT $${Number(spot).toFixed(0)}</text>
+
+          <!-- Legend -->
+          <g transform="translate(${W - padR - 220}, ${padT + 12})">
+            <rect width="10" height="10" fill="#38bdf8" rx="2"/>
+            <text x="14" y="9" fill="#94a3b8" font-family="var(--font-mono)" font-size="9">Call GEX</text>
+            <rect x="75" width="10" height="10" fill="#f87171" rx="2"/>
+            <text x="89" y="9" fill="#94a3b8" font-family="var(--font-mono)" font-size="9">Put GEX</text>
+            <line x1="140" y1="5" x2="155" y2="5" stroke="#fbbf24" stroke-width="2.5"/>
+            <text x="160" y="9" fill="#fbbf24" font-family="var(--font-mono)" font-size="9" font-weight="700">Net GEX</text>
+          </g>
+        </svg>
       `;
     }
   }

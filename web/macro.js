@@ -274,7 +274,7 @@
 
     const hist = macroState.macroHistory;
     if (!hist || !hist.dates || hist.dates.length === 0) {
-      container.innerHTML = `<div style="padding:40px; color:var(--text-muted); font-family:var(--font-mono); font-size:12px;">Loading multi-asset macro historical series...</div>`;
+      container.innerHTML = `<div style="padding:40px; color:var(--text-muted); font-family:var(--font-mono); font-size:12px;"><span class="sync-dot pulsing"></span> Ingesting multi-asset macro historical series...</div>`;
       return;
     }
 
@@ -286,7 +286,6 @@
     const spyCloses = hist.spy.close.slice(start);
     const sma50 = hist.spy.sma_50.slice(start);
     const sma200 = hist.spy.sma_200.slice(start);
-    const sma125 = hist.spy.sma_125 ? hist.spy.sma_125.slice(start) : [];
     const rsi = hist.spy.rsi_14.slice(start);
     const rvol = hist.spy.realized_vol_21d.slice(start);
     const ind = hist.indicators;
@@ -355,27 +354,48 @@
     }
 
     const W = 1000;
-    const H = 340;
-    const padL = 55;
-    const padR = 65;
+    const H = 380;
+    const padL = 58;
+    const padR = 72;
     const plotW = W - padL - padR;
 
-    // Pane 1: Upper Track (Y: 25 to 175)
+    // Pane 1: Upper Track (Y: 25 to 185)
     const pTop = 25;
-    const pBottom = 175;
+    const pBottom = 185;
     const pH = pBottom - pTop;
 
-    // Pane 2: Lower Track (Y: 205 to 310)
-    const lTop = 205;
-    const lBottom = 310;
+    // Pane 2: Lower Track (Y: 220 to 330)
+    const lTop = 220;
+    const lBottom = 330;
     const lH = lBottom - lTop;
+
+    // Minimap Track (Y: 348 to 368)
+    const mTop = 348;
+    const mBottom = 368;
+    const mH = mBottom - mTop;
 
     const minP = Math.min(...spyCloses) * 0.985;
     const maxP = Math.max(...spyCloses) * 1.015;
 
-    const getX = (i) => padL + (i / (dates.length - 1)) * plotW;
-    const getYPrice = (p) => pTop + (1.0 - (p - minP) / (maxP - minP)) * pH;
-    const getYLower = (val) => lTop + (1.0 - (val - lowerMin) / (lowerMax - lowerMin)) * lH;
+    const getX = (i) => padL + (i / Math.max(1, dates.length - 1)) * plotW;
+    const getYPrice = (p) => pTop + (1.0 - (p - minP) / Math.max(1, (maxP - minP))) * pH;
+    const getYLower = (val) => lTop + (1.0 - (val - lowerMin) / Math.max(1, (lowerMax - lowerMin))) * lH;
+
+    // Minimap full-series calculation
+    const allCloses = hist.spy.close;
+    const minAllP = Math.min(...allCloses) * 0.95;
+    const maxAllP = Math.max(...allCloses) * 1.05;
+    const getMiniX = (i) => padL + (i / Math.max(1, allCloses.length - 1)) * plotW;
+    const getMiniY = (p) => mTop + (1.0 - (p - minAllP) / Math.max(1, (maxAllP - minAllP))) * mH;
+
+    let miniPathD = `M ${getMiniX(0)} ${getMiniY(allCloses[0])}`;
+    for (let i = 1; i < allCloses.length; i++) {
+      miniPathD += ` L ${getMiniX(i).toFixed(1)} ${getMiniY(allCloses[i]).toFixed(1)}`;
+    }
+
+    const miniViewLeft = getMiniX(start);
+    const miniViewRight = getMiniX(totalN - 1);
+    const miniViewWidth = Math.max(12, miniViewRight - miniViewLeft);
 
     // Paths
     let priceLineD = `M ${getX(0)} ${getYPrice(spyCloses[0])}`;
@@ -406,7 +426,7 @@
     priceAreaD += ` L ${getX(dates.length - 1)} ${pBottom} Z`;
 
     // Price Gridlines
-    const priceTicks = [0, 0.33, 0.66, 1.0].map(ratio => {
+    const priceTicks = [0, 0.25, 0.5, 0.75, 1.0].map(ratio => {
       const val = minP + ratio * (maxP - minP);
       return { val: val.toFixed(1), y: getYPrice(val) };
     });
@@ -427,59 +447,84 @@
       <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%; height:auto;" id="macroMasterSvg">
         <defs>
           <linearGradient id="macroPriceGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#ffaa00" stop-opacity="0.25"/>
+            <stop offset="0%" stop-color="#ffaa00" stop-opacity="0.32"/>
+            <stop offset="60%" stop-color="#ffaa00" stop-opacity="0.08"/>
             <stop offset="100%" stop-color="#ffaa00" stop-opacity="0.0"/>
           </linearGradient>
+          <linearGradient id="macroLowerGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.25"/>
+            <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.0"/>
+          </linearGradient>
+          <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="1.8" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
         </defs>
+
+        <!-- CRT Scanline Grid Background -->
+        <rect x="${padL}" y="${pTop}" width="${plotW}" height="${pBottom - pTop}" fill="rgba(10, 15, 24, 0.65)"/>
+        <rect x="${padL}" y="${lTop}" width="${plotW}" height="${lBottom - lTop}" fill="rgba(10, 15, 24, 0.65)"/>
 
         <!-- Pane 1: SPY Price Gridlines -->
         ${priceTicks.map(t => `
-          <line x1="${padL}" y1="${t.y}" x2="${W - padR}" y2="${t.y}" stroke="#1c2536" stroke-width="1" stroke-dasharray="2,3"/>
-          <text x="${W - padR + 6}" y="${t.y + 4}" fill="#718096" font-family="var(--font-mono)" font-size="10">$${t.val}</text>
+          <line x1="${padL}" y1="${t.y}" x2="${W - padR}" y2="${t.y}" stroke="#172234" stroke-width="1" stroke-dasharray="2,3"/>
+          <text x="${W - padR + 6}" y="${t.y + 4}" fill="#94a3b8" font-family="var(--font-mono)" font-size="10">$${t.val}</text>
         `).join('')}
 
         <!-- Price Area & Line -->
         <path d="${priceAreaD}" fill="url(#macroPriceGrad)" />
-        <path d="${priceLineD}" fill="none" stroke="#ffaa00" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="${priceLineD}" fill="none" stroke="#ffaa00" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" filter="url(#neonGlow)"/>
 
         ${metric === 'smas' && sma50D ? `<path d="${sma50D}" fill="none" stroke="#34d399" stroke-width="1.6" stroke-dasharray="4,2"/>` : ''}
         ${metric === 'smas' && sma200D ? `<path d="${sma200D}" fill="none" stroke="#f472b6" stroke-width="1.8"/>` : ''}
 
-        <text x="${padL + 8}" y="${pTop + 14}" fill="#ffaa00" font-family="var(--font-mono)" font-size="11" font-weight="700">
-          S&amp;P 500 ETF (SPY) CLOSE PRICE ($) ${metric === 'smas' ? ' // 50D (GREEN) & 200D (PINK) SMAs' : ''}
+        <!-- Upper Track Header Tag -->
+        <rect x="${padL + 6}" y="${pTop + 4}" width="340" height="18" fill="rgba(15, 23, 34, 0.85)" rx="3" stroke="#1e293b"/>
+        <text x="${padL + 12}" y="${pTop + 16}" fill="#fbbf24" font-family="var(--font-mono)" font-size="10" font-weight="700">
+          S&amp;P 500 ETF (SPY) CLOSE PRICE ${metric === 'smas' ? ' // 50D (GREEN) & 200D (PINK) SMAs' : ''}
         </text>
 
         <!-- Pane Divider -->
-        <line x1="${padL}" y1="190" x2="${W - padR}" y2="190" stroke="#263449" stroke-width="1.2"/>
+        <line x1="${padL}" y1="202" x2="${W - padR}" y2="202" stroke="#263449" stroke-width="1.2"/>
 
         <!-- Pane 2: Lower Indicator Track -->
         ${metric === 'fear_greed' ? `
-          <rect x="${padL}" y="${getYLower(100)}" width="${plotW}" height="${getYLower(75) - getYLower(100)}" fill="rgba(16, 185, 129, 0.08)"/>
+          <rect x="${padL}" y="${getYLower(100)}" width="${plotW}" height="${getYLower(75) - getYLower(100)}" fill="rgba(34, 197, 94, 0.08)"/>
           <rect x="${padL}" y="${getYLower(25)}" width="${plotW}" height="${getYLower(0) - getYLower(25)}" fill="rgba(239, 68, 68, 0.08)"/>
-          <line x1="${padL}" y1="${getYLower(75)}" x2="${W - padR}" y2="${getYLower(75)}" stroke="rgba(16, 185, 129, 0.3)" stroke-width="1" stroke-dasharray="3,3"/>
+          <line x1="${padL}" y1="${getYLower(75)}" x2="${W - padR}" y2="${getYLower(75)}" stroke="rgba(34, 197, 94, 0.35)" stroke-width="1" stroke-dasharray="3,3"/>
           <line x1="${padL}" y1="${getYLower(50)}" x2="${W - padR}" y2="${getYLower(50)}" stroke="rgba(251, 191, 36, 0.25)" stroke-width="1" stroke-dasharray="2,2"/>
-          <line x1="${padL}" y1="${getYLower(25)}" x2="${W - padR}" y2="${getYLower(25)}" stroke="rgba(239, 68, 68, 0.3)" stroke-width="1" stroke-dasharray="3,3"/>
-          <text x="${W - padR + 6}" y="${getYLower(75) + 3}" fill="#34d399" font-family="var(--font-mono)" font-size="9">75 (GREED)</text>
-          <text x="${W - padR + 6}" y="${getYLower(25) + 3}" fill="#ef4444" font-family="var(--font-mono)" font-size="9">25 (FEAR)</text>
+          <line x1="${padL}" y1="${getYLower(25)}" x2="${W - padR}" y2="${getYLower(25)}" stroke="rgba(239, 68, 68, 0.35)" stroke-width="1" stroke-dasharray="3,3"/>
+          <text x="${W - padR + 6}" y="${getYLower(75) + 3}" fill="#4ade80" font-family="var(--font-mono)" font-size="9">75 (GREED)</text>
+          <text x="${W - padR + 6}" y="${getYLower(50) + 3}" fill="#fbbf24" font-family="var(--font-mono)" font-size="9">50 (NEUTRAL)</text>
+          <text x="${W - padR + 6}" y="${getYLower(25) + 3}" fill="#f87171" font-family="var(--font-mono)" font-size="9">25 (FEAR)</text>
         ` : `
-          <line x1="${padL}" y1="${yBase}" x2="${W - padR}" y2="${yBase}" stroke="#4a5568" stroke-width="1" stroke-dasharray="3,3"/>
-          <text x="${W - padR + 6}" y="${yBase + 3}" fill="#a0aec0" font-family="var(--font-mono)" font-size="9">${lowerBaseline}</text>
+          <line x1="${padL}" y1="${yBase}" x2="${W - padR}" y2="${yBase}" stroke="#334155" stroke-width="1" stroke-dasharray="3,3"/>
+          <text x="${W - padR + 6}" y="${yBase + 3}" fill="#94a3b8" font-family="var(--font-mono)" font-size="9">${lowerBaseline}</text>
         `}
 
-        <path d="${lowerLineD}" fill="none" stroke="#38bdf8" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
-        <text x="${padL + 8}" y="${lTop + 14}" fill="#38bdf8" font-family="var(--font-mono)" font-size="11" font-weight="700">${lowerLabel}</text>
+        <path d="${lowerLineD}" fill="none" stroke="#38bdf8" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round" filter="url(#neonGlow)"/>
+
+        <!-- Lower Track Header Tag -->
+        <rect x="${padL + 6}" y="${lTop + 4}" width="340" height="18" fill="rgba(15, 23, 34, 0.85)" rx="3" stroke="#1e293b"/>
+        <text x="${padL + 12}" y="${lTop + 16}" fill="#38bdf8" font-family="var(--font-mono)" font-size="10" font-weight="700">${lowerLabel}</text>
 
         <!-- Date Ticks -->
         ${dateTicks.map(t => `
           <line x1="${t.x}" y1="${lBottom}" x2="${t.x}" y2="${lBottom + 4}" stroke="#4a5568" stroke-width="1"/>
-          <text x="${t.x}" y="${lBottom + 16}" text-anchor="middle" fill="#718096" font-family="var(--font-mono)" font-size="9.5">${t.label}</text>
+          <text x="${t.x}" y="${lBottom + 13}" text-anchor="middle" fill="#718096" font-family="var(--font-mono)" font-size="9.5">${t.label}</text>
         `).join('')}
+
+        <!-- Minimap Full History Track -->
+        <rect x="${padL}" y="${mTop}" width="${plotW}" height="${mH}" fill="#080c14" stroke="#1e293b" rx="2"/>
+        <path d="${miniPathD}" fill="none" stroke="#475569" stroke-width="1.0" opacity="0.6"/>
+        <rect x="${miniViewLeft}" y="${mTop}" width="${miniViewWidth}" height="${mH}" fill="rgba(251, 191, 36, 0.15)" stroke="#fbbf24" stroke-width="1.2" rx="2"/>
+        <text x="${padL + 4}" y="${mTop - 3}" fill="#64748b" font-family="var(--font-mono)" font-size="8.5">5-YEAR FULL TIMELINE OVERVIEW (DRAG PRESETS TO ZOOM)</text>
 
         <!-- Dynamic Hover Tracking Guides -->
         <g id="macroHoverGroup" style="display:none;">
-          <line id="macroHoverLine" x1="0" y1="${pTop}" x2="0" y2="${lBottom}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" opacity="0.75"/>
-          <circle id="macroHoverPriceDot" cx="0" cy="0" r="4.5" fill="#ffaa00" stroke="#0e131e" stroke-width="2"/>
-          <circle id="macroHoverLowerDot" cx="0" cy="0" r="4.5" fill="#38bdf8" stroke="#0e131e" stroke-width="2"/>
+          <line id="macroHoverLine" x1="0" y1="${pTop}" x2="0" y2="${lBottom}" stroke="#f8fafc" stroke-width="1" stroke-dasharray="2,2" opacity="0.75"/>
+          <circle id="macroHoverPriceDot" cx="0" cy="0" r="5" fill="#fbbf24" stroke="#090d13" stroke-width="2"/>
+          <circle id="macroHoverLowerDot" cx="0" cy="0" r="5" fill="#38bdf8" stroke="#090d13" stroke-width="2"/>
         </g>
 
         <!-- Invisible Mouse Target Layer -->
@@ -521,13 +566,15 @@
         lowerDot.setAttribute('cx', x);
         lowerDot.setAttribute('cy', yL);
 
-        const m50Val = sma50[idx] ? `$${sma50[idx]}` : '\u2014';
-        const m200Val = sma200[idx] ? `$${sma200[idx]}` : '\u2014';
+        const m50Val = sma50[idx] ? `$${Number(sma50[idx]).toFixed(2)}` : '\u2014';
+        const m200Val = sma200[idx] ? `$${Number(sma200[idx]).toFixed(2)}` : '\u2014';
         const rsiVal = rsi[idx] || 50.0;
         const rvolVal = rvol[idx] || 13.0;
 
+        const dist200 = sma200[idx] ? (((p / sma200[idx]) - 1.0) * 100.0).toFixed(1) : '0.0';
+
         readout.innerHTML = `
-          <strong>${d}</strong> &bull; SPY: <strong style="color:#ffaa00;">$${p}</strong> &bull; 50D: <span style="color:#34d399;">${m50Val}</span> &bull; 200D: <span style="color:#f472b6;">${m200Val}</span> &bull; ${lowerLabel.split(':')[0]}: <strong style="color:#38bdf8;">${Number(lVal).toFixed(2)}</strong> &bull; RSI: <strong>${rsiVal}</strong> &bull; Vol: <strong>${rvolVal}%</strong>
+          <strong>${d}</strong> &bull; SPY: <strong class="highlight-gold">$${Number(p).toFixed(2)}</strong> &bull; 50D: <span class="color-bull">${m50Val}</span> &bull; 200D: <span style="color:#f472b6;">${m200Val} (${dist200 >= 0 ? '+' : ''}${dist200}%)</span> &bull; ${lowerLabel.split(':')[0]}: <strong class="color-bull">${Number(lVal).toFixed(2)}</strong> &bull; RSI: <strong>${rsiVal}</strong> &bull; 21D Vol: <strong>${rvolVal}%</strong>
         `;
       });
 
