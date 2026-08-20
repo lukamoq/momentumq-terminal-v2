@@ -304,11 +304,20 @@ export async function mount(ctx) {
       label: 'Bitcoin post-halving trajectories, indexed to the halving price',
     });
 
-    fill(cycleLegend, h('div.row', { style: { justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' } },
-      legend(keys.map((s) => ({ color: s.color, label: s.label }))),
-      h('span.tbar__count', cyc.timing_roadmap
-        ? `median peak D${cyc.timing_roadmap.days_to_peak_median} (${cyc.timing_roadmap.peak_window})`
-        : '')));
+    // Say where the live curve is measured from. A break in it is data the
+    // database does not hold, and the reader should not have to guess that.
+    const prov = cyc.cycle4_provenance;
+    const provNote = prov && isNum(prov.first_measurable_day)
+      ? `2024 cycle measured from observed closes · bars begin day ${prov.first_measurable_day} (${date(prov.first_bar_date)})`
+      : null;
+
+    fill(cycleLegend, h('div.stack', { style: { gap: '4px' } },
+      h('div.row', { style: { justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' } },
+        legend(keys.map((s) => ({ color: s.color, label: s.label }))),
+        h('span.tbar__count', cyc.timing_roadmap
+          ? `median peak D${cyc.timing_roadmap.days_to_peak_median} (${cyc.timing_roadmap.peak_window})`
+          : '')),
+      provNote ? h('span.tbar__count', { style: { textAlign: 'left' } }, provNote) : null));
     pCycle.setMeta(`${active.cycle_name || 'active cycle'} · day ${int(active.days_post_halving)} · ${titleCase(active.cycle_phase || '')}`);
     pCycle.setFoot(h('span.clamp-2', cyc.structural_takeaway || ''));
   }

@@ -16,7 +16,7 @@ import json
 import logging
 import math
 import sqlite3
-from datetime import datetime, timezone
+from datetime import date as _date, datetime, timedelta as _timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -709,6 +709,37 @@ def compute_bitcoin_halving_cycles(conn: Optional[sqlite3.Connection] = None) ->
 
     # 7. Multi-Cycle Full 4-Year Trajectory Curves (Day 0 to Day 1,460 - Halving to Halving)
     cur_mult = round(current_btc / 63800.0, 2)
+
+    # ------------------------------------------------------------------
+    # The live cycle is measured, not asserted.
+    #
+    # Cycles 1-3 below are curated history: the 2012, 2016 and 2020 halvings
+    # predate every bar this database holds, so their trajectories can only be
+    # carried as published figures. Cycle 4 is different -- it is happening now,
+    # and its prices are sitting in `price_bar`. Reading them off the tape is
+    # the only defensible way to draw it, and a day with no bar stays empty
+    # rather than being filled in with a plausible-looking number.
+    # ------------------------------------------------------------------
+    HALVING_4_DATE = _date(2024, 4, 19)
+    HALVING_4_PRICE = 63800.0
+    _btc_close_by_date = {b["date"]: float(b["close"]) for b in btc_bars if b.get("close") is not None}
+    # Measurable only as far as the tape runs.
+    _last_bar = _date.fromisoformat(btc_bars[-1]["date"]) if btc_bars else HALVING_4_DATE
+    days_elapsed_c4 = (_last_bar - HALVING_4_DATE).days
+
+    def _cycle4_multiple(day_offset: int) -> Optional[float]:
+        """Observed BTC close on a given day after the 2024 halving, over the halving price."""
+        if day_offset == 0:
+            return 1.0  # identity, not a measurement: the halving close over itself
+        if day_offset > days_elapsed_c4:
+            return None  # the future is not data
+        target = HALVING_4_DATE + _timedelta(days=day_offset)
+        # Walk back a few days: a missing bar should not blank a whole milestone.
+        for back in range(0, 5):
+            close = _btc_close_by_date.get((target - _timedelta(days=back)).isoformat())
+            if close:
+                return round(close / HALVING_4_PRICE, 3)
+        return None
     cycle_curves = [
         {"day": 0, "month": 0.0, "cycle1": 1.0, "cycle2": 1.0, "cycle3": 1.0, "cycle4": 1.0, "cycle4_proj": None, "median": 1.0, "phase": "Halving Day 0 (Month 0.0)"},
         {"day": 50, "month": 1.6, "cycle1": 1.4, "cycle2": 0.95, "cycle3": 1.15, "cycle4": 1.02, "cycle4_proj": None, "median": 1.08, "phase": "Post-Halving Chop (Month 1.6)"},
@@ -729,6 +760,19 @@ def compute_bitcoin_halving_cycles(conn: Optional[sqlite3.Connection] = None) ->
         {"day": 1380, "month": 45.3, "cycle1": 48.5, "cycle2": 11.2, "cycle3": 8.58, "cycle4": None, "cycle4_proj": 6.20, "median": 9.89, "phase": "Pre-Halving Peak Push (Month 45.3)"},
         {"day": 1460, "month": 48.0, "cycle1": 53.06, "cycle2": 13.23, "cycle3": 7.42, "cycle4": None, "cycle4_proj": 7.50, "median": 10.33, "phase": "Next Block Reward Halving (Month 48.0 / April 2028)"},
     ]
+
+    # Overwrite the live cycle with what actually happened. The literals above
+    # are placeholders for shape only; several of them understated the cycle by
+    # a third or more, and four elapsed milestones were left empty despite the
+    # prices being on hand.
+    for _row in cycle_curves:
+        _row["cycle4"] = _cycle4_multiple(_row["day"])
+    # The current-position row is spot, which is fresher than the last close.
+    for _row in cycle_curves:
+        if _row["day"] == 853:
+            _row["cycle4"] = cur_mult
+            _row["cycle4_proj"] = cur_mult
+    cycle4_measured_days = sum(1 for _row in cycle_curves if _row["cycle4"] is not None)
 
     # 8. Full End-to-End Halving-to-Halving Chronological Cycle Flows (with Months)
     full_cycle_flows = [
@@ -814,6 +858,20 @@ def compute_bitcoin_halving_cycles(conn: Optional[sqlite3.Connection] = None) ->
         "phases": phases,
         "timing_roadmap": timing_roadmap,
         "cycle_curves": cycle_curves,
+        # Say where the live curve comes from and where it necessarily stops,
+        # so the UI can label it instead of leaving an unexplained gap.
+        "cycle4_provenance": {
+            "basis": "observed_daily_closes",
+            "halving_date": HALVING_4_DATE.isoformat(),
+            "halving_price": HALVING_4_PRICE,
+            "first_bar_date": btc_bars[0]["date"] if btc_bars else None,
+            "first_measurable_day": (
+                (_date.fromisoformat(btc_bars[0]["date"]) - HALVING_4_DATE).days if btc_bars else None
+            ),
+            "last_measurable_day": days_elapsed_c4,
+            "milestones_measured": cycle4_measured_days,
+            "milestones_elapsed": sum(1 for _r in cycle_curves if _r["day"] <= days_elapsed_c4),
+        },
         "structural_takeaway": "Post-halving analysis reveals a consistent sequence: 165 days of miner chop/re-accumulation, followed by a parabolic breakout window (Days 150–480), peak euphoria (Days 480–550), and bear trough (Days 800–900). When it rises again: Secular pre-halving accumulation consistently ignites ~12 months prior to the next halving (projected Spring 2027).",
     }
 

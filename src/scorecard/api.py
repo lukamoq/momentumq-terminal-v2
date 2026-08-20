@@ -923,6 +923,11 @@ async def _revalidate_web_assets(request, call_next):
     response = await call_next(request)
     path = request.url.path
     if path.startswith("/api/"):
+        # Market data must never be served from a heuristic cache. With no
+        # Cache-Control at all a browser is free to invent a freshness lifetime
+        # and hand back yesterday's tape; the client keeps its own short-lived
+        # cache, which is the one that should decide.
+        response.headers["Cache-Control"] = "no-store"
         return response
     if path.endswith((".js", ".css", ".html")) or path in ("/", ""):
         response.headers["Cache-Control"] = "no-cache"
