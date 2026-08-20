@@ -3,10 +3,36 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python: 3.11+](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)](https://fastapi.tiangolo.com)
-[![Tests: 143 Passed](https://img.shields.io/badge/tests-143%20passed-success.svg)](https://pytest.org)
+[![Tests: 173 Passed](https://img.shields.io/badge/tests-173%20passed-success.svg)](https://pytest.org)
 [![UI: Keyboard-first workspace](https://img.shields.io/badge/UI-Keyboard--first%20workspace-gold.svg)](web/app/main.js)
 
 An institutional-grade, open-source quantitative research platform and analytics terminal evaluating Wall Street sell-side research calls (2021–2026), multi-asset seasonality, cross-asset macro regimes, Black-Scholes-Merton (BSM) options Greeks & dealer GEX positioning computed from observed option chains, Fear & Greed Index 2.0, and a model-free implied volatility term structure.
+
+
+![The Forecasts module](docs/screenshots/01-forecasts.jpg)
+
+<p align="center"><em>Forecasts — desk rail, published targets against the realised path, call blotter, audit dossier. One screen, no scrolling.</em></p>
+
+---
+
+## Screens
+
+Seven modules, one page. Nothing scrolls at the document level: each panel
+scrolls its own body, so the answer stays on screen and switching modules never
+loses your place.
+
+| | |
+|:--|:--|
+| **Mag 7** — big-tech calls audited for alpha against SPY<br><img src="docs/screenshots/02-mag7.jpg" alt="Mag 7 module"> | **Seasonality** — 27 years of monthly returns and day-of-year paths<br><img src="docs/screenshots/03-seasonality.jpg" alt="Seasonality module"> |
+| **Options** — Greeks, skew and dealer gamma from the observed chain<br><img src="docs/screenshots/04-options.jpg" alt="Options module"> | **Macro** — regime, fear &amp; greed, rotation and the volatility curve<br><img src="docs/screenshots/05-macro.jpg" alt="Macro module"> |
+| **AI Desk** — news wire, insider flow and the research desk<br><img src="docs/screenshots/06-ai-desk.jpg" alt="AI Desk module"> | **Crypto** — spot, ETF flows and the Bitcoin halving cycle<br><img src="docs/screenshots/07-crypto.jpg" alt="Crypto module"> |
+
+### Getting around
+
+| | |
+|:--|:--|
+| **Modules menu** — names every module and what is in it, with its key beside it. The way in if you have never met the shortcuts.<br><img src="docs/screenshots/module-menu.jpg" alt="Module menu"> | **Command palette** (<kbd>⌘K</kbd>) — fuzzy search over modules, desks, instruments, reports and views.<br><img src="docs/screenshots/command-palette.jpg" alt="Command palette"> |
+| **Keyboard shortcuts** (<kbd>?</kbd>) — generated from the live binding registry, so it can never drift from what the keys actually do.<br><img src="docs/screenshots/keyboard-shortcuts.jpg" alt="Keyboard shortcuts sheet"> | |
 
 ---
 

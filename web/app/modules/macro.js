@@ -214,18 +214,23 @@ export async function mount(ctx) {
       legend(cfg.series.map((s) => ({ color: s.color, label: s.label }))),
       st.path === 'fg' ? null : legend(Object.entries(REGIME_COLOR).map(([k, v]) => ({ color: v, label: titleCase(k), box: true })))));
 
+    // The footer is one fixed-height line, so it carries short labels only —
+    // seven verbose fields competing for the same strip just truncates all of
+    // them and communicates nothing.
     const ss = hist.summary_stats || {};
     pPath.setFoot(
       h('span', `${int(ss.total_bars)} bars`),
-      h('span', `52w range ${num(ss.low_52w, 2)} – ${num(ss.high_52w, 2)}`),
-      h('span', `max drawdown ${num(ss.max_drawdown, 1)}%`),
+      h('span', `52w ${num(ss.low_52w, 2)}–${num(ss.high_52w, 2)}`),
+      h('span', `max DD ${num(ss.max_drawdown, 1)}%`),
       h('span', `CAGR ${num(ss.cagr, 1)}%`),
       h('span', `vol ${num(ss.annualized_vol, 1)}%`),
       h('span', `Sharpe ${num(ss.sharpe_ratio, 2)}`));
     pPath.setMeta(`${date(dates[0])} → ${date(dates[dates.length - 1])}`);
     if (st.path !== 'fg' && bands.length) {
-      pPath.foot.appendChild(h('span', { style: { marginLeft: 'auto' } },
-        'shading = regime holding the majority of each rolling month'));
+      pPath.foot.appendChild(h('span', {
+        style: { marginLeft: 'auto' },
+        title: 'Each band is the regime that held for the majority of a rolling 21-session window, so single-session flips do not shade the chart.',
+      }, 'shading: monthly majority regime'));
     }
   }
 

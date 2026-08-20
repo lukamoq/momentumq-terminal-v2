@@ -137,6 +137,7 @@ document.body.append(shell, navMenu.el, palette.scrim, palette.el, drawer.scrim,
 
 let active = null;         // {id, mod, instance}
 let loadToken = 0;
+let globalAsOf = null;     // dataset as-of, used when a module has no own date
 
 function setTab(id) {
   for (const [mid, node] of tabNodes) {
@@ -231,7 +232,9 @@ async function activate(id, params) {
   document.title = `${m.title} — MomentumQ Terminal`;
 
   const ctx = makeCtx(m);
-  ctx.setStatus({ asOf: null, rows: null, mode: m.title });
+  // Fall back to the dataset's as-of date. A module that has no date of its
+  // own (seasonality spans 27 years) should show the corpus date, not a dash.
+  ctx.setStatus({ asOf: globalAsOf, rows: null, mode: m.title });
 
   try {
     const mod = await m.load();
@@ -434,6 +437,7 @@ bus.on('api:done', () => { latencyEl.textContent = `${api.stats.lastMs} ms`; });
 bus.on('api:error', () => { liveDot.className = 'dot dot--err'; setTimeout(() => { liveDot.className = 'dot dot--live'; }, 2500); });
 
 api.get('/api/stats').then((s) => {
+  globalAsOf = s.as_of_date;
   asOfEl.textContent = date(s.as_of_date);
   syncEl.textContent = s.option_chain?.snapshot_date ? `chain ${date(s.option_chain.snapshot_date)}` : 'daily 12:00';
 }).catch(() => { syncEl.textContent = 'unavailable'; });

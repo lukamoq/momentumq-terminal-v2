@@ -129,6 +129,11 @@ export function keycaps(combo) {
     if (p === 'arrowright') return '→';
     if (p === 'enter') return '↵';
     if (p === 'space') return 'Space';
+    if (p === 'home') return 'Home';
+    if (p === 'end') return 'End';
+    if (p === 'pageup') return 'PgUp';
+    if (p === 'pagedown') return 'PgDn';
+    if (p === 'tab') return 'Tab';
     return p.length === 1 ? p.toUpperCase() : p;
   });
 }

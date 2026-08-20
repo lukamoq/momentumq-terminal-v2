@@ -117,8 +117,11 @@ mark { background: none; color: var(--gold-fg); font-weight: 600; }
   padding: var(--sp-4) var(--sp-5); border-bottom: 1px solid var(--line);
 }
 .sheet__body {
-  flex: 1 1 auto; min-height: 0; padding: var(--sp-5);
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--sp-6);
+  /* The binding list grows with the active module, so the body scrolls rather
+     than pushing the sheet past the bottom of the window. */
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: var(--sp-5);
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--sp-6); align-content: start;
 }
 .keys { display: flex; flex-direction: column; gap: 1px; }
 .keys__r {
