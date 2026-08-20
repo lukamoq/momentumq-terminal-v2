@@ -365,10 +365,91 @@
       </div>
     </section>
 
+    <!-- Section 06: Commodities, Precious Metals & Energy Intelligence -->
+    <section class="section-commodities" id="secCommodities">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">06 // COMMODITIES &amp; ENERGY BENCHMARKS</span>
+          <h2>Gold, Brent / Crude Oil, Silver &amp; Currency Macro Intelligence</h2>
+          <span class="section-meta">Multi-factor valuation multiples, real yield sensitivities, inflation hedging betas, and cross-commodity relative ratios.</span>
+        </div>
+      </div>
+
+      <!-- Commodity Macro Stance Banner -->
+      <div class="macro-regime-hero" style="margin-bottom: var(--sp-4);">
+        <div class="macro-hero-top-row">
+          <div class="macro-hero-tag-group">
+            <span class="macro-regime-pill font-mono" id="commStancePill">PRECIOUS METALS EXPANSION</span>
+            <span class="macro-regime-sub font-mono" id="commAsOfDate">AS OF 2026-08-19</span>
+          </div>
+          <div class="macro-hero-conf font-mono" id="commHeroHeadline">
+            REAL YIELD HEDGE &bull; SOVEREIGN GOLD DEMAND ELEVATED
+          </div>
+        </div>
+        <p class="macro-regime-desc" id="commStanceDesc">
+          Gold leading broad commodity complex alongside energy stability, driven by real yield decoupling and central bank reserve diversification.
+        </p>
+      </div>
+
+      <!-- Cross-Commodity Valuation Multiples & Ratios Strip -->
+      <div class="macro-stats-strip" id="commRatiosStrip" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:10px; margin-bottom:var(--sp-4);">
+        <div class="stat-card" style="padding:10px 14px;">
+          <span class="stat-label">GOLD / SILVER RATIO</span>
+          <span class="stat-value highlight-gold font-mono" id="commRatioGoldSilver">6.90x</span>
+          <span class="stat-sub font-mono">GLD / SLV Spot Spread</span>
+        </div>
+        <div class="stat-card" style="padding:10px 14px;">
+          <span class="stat-label">GOLD / OIL RATIO</span>
+          <span class="stat-value font-mono" id="commRatioGoldOil">3.16x</span>
+          <span class="stat-sub font-mono">Gold Oz per Crude Unit</span>
+        </div>
+        <div class="stat-card" style="padding:10px 14px;">
+          <span class="stat-label">OIL / TREASURY (TLT)</span>
+          <span class="stat-value font-mono" id="commRatioOilTlt">1.58x</span>
+          <span class="stat-sub font-mono">Energy vs Duration</span>
+        </div>
+        <div class="stat-card" style="padding:10px 14px;">
+          <span class="stat-label">GOLD vs TIPS (REAL RATES)</span>
+          <span class="stat-value font-mono color-bull" id="commCorrGoldTips">+0.48</span>
+          <span class="stat-sub font-mono">60D Rolling Beta</span>
+        </div>
+        <div class="stat-card" style="padding:10px 14px;">
+          <span class="stat-label">COMMODITIES vs DXY</span>
+          <span class="stat-value font-mono color-bear" id="commCorrDxy">-0.42</span>
+          <span class="stat-sub font-mono">Dollar Headwind Beta</span>
+        </div>
+      </div>
+
+      <!-- 5-Asset Commodities & Energy Institutional Table -->
+      <div class="table-responsive is-auto-height">
+        <table class="blotter-table" id="commoditiesTable">
+          <thead>
+            <tr>
+              <th style="min-width:140px;">COMMODITY / ASSET</th>
+              <th class="text-right" style="min-width:95px;">SPOT PRICE</th>
+              <th class="text-right" style="min-width:85px;">DAY CHG</th>
+              <th class="text-right" style="min-width:85px;">1-MO RETURN</th>
+              <th class="text-right" style="min-width:85px;">3-MO RETURN</th>
+              <th class="text-right" style="min-width:85px;">1-YR RETURN</th>
+              <th class="text-right" style="min-width:110px;">52W RANGE</th>
+              <th class="text-center" style="min-width:90px;">21D VOL</th>
+              <th class="text-center" style="min-width:80px;">14D RSI</th>
+              <th class="text-center" style="min-width:130px;">TREND POSTURE</th>
+            </tr>
+          </thead>
+          <tbody id="commoditiesTbody">
+            <tr class="skeleton-row"><td colspan="10"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+            <tr class="skeleton-row"><td colspan="10"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+            <tr class="skeleton-row"><td colspan="10"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <!-- Footer -->
     <footer class="footer">
       <div class="footer-meta">
-        <span>MQ-MACRO // 5-STATE QUANTITATIVE REGIME &amp; SENTIMENT INTELLIGENCE</span>
+        <span>MQ-MACRO // 5-STATE QUANTITATIVE REGIME &amp; COMMODITIES INTELLIGENCE</span>
         <span>NO LAG HEURISTICS // CONTINUOUS OBSERVED TAPE</span>
         <span>OPEN SPECIFICATION // VERIFIED HISTORICAL RECORD</span>
       </div>

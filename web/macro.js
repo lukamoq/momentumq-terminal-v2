@@ -15,6 +15,7 @@
     correlation: null,
     corrLookback: 60,
     macroHistory: null,
+    commodities: null,
     activeMetric: 'fear_greed',
     activeLookback: 252
   };
@@ -60,13 +61,14 @@
     if (syncBtn && !silent) syncBtn.classList.add('spinning');
 
     try {
-      const [regimeRes, fgRes, vixRes, sectorsRes, corrRes, macroHistRes] = await Promise.all([
+      const [regimeRes, fgRes, vixRes, sectorsRes, corrRes, macroHistRes, commRes] = await Promise.all([
         safeFetchJson('/api/macro/regime', { regime: 'BULL_EXUBERANT', confidence_pct: 88, factors: [] }),
         safeFetchJson('/api/macro/fear-greed', { score: 68, label: 'GREED', categories: [] }),
         safeFetchJson('/api/macro/vix-structure', { state: 'CONTANGO', contango_ratio: 1.09, vix_9d: 13.4, vix_30d: 14.82, vix_90d: 16.15 }),
         safeFetchJson('/api/analytics/sectors', { sectors: [] }),
         safeFetchJson(`/api/analytics/correlation?lookback=${macroState.corrLookback}`, { matrix: {}, tickers: [] }),
-        safeFetchJson('/api/macro/history?lookback=1255', { dates: [], spy: {}, indicators: {}, summary_stats: {} })
+        safeFetchJson('/api/macro/history?lookback=1255', { dates: [], spy: {}, indicators: {}, summary_stats: {} }),
+        safeFetchJson('/api/macro/commodities', { assets: [], cross_ratios: {} })
       ]);
 
       macroState.regime = regimeRes;
@@ -75,6 +77,7 @@
       macroState.sectors = sectorsRes;
       macroState.correlation = corrRes;
       macroState.macroHistory = macroHistRes;
+      macroState.commodities = commRes;
 
       updateMacroHeaderStats();
       renderMacroRegimeSection();
@@ -85,6 +88,7 @@
       renderVixStructureSection();
       renderSectorRotationTable();
       renderCorrelationMatrix();
+      renderCommoditiesSection();
 
       if (!silent) updateSyncTimeUI();
     } catch (err) {
@@ -762,6 +766,106 @@
       'HYG-SPY': 0.84, 'BTC-SPY': 0.48, 'BTC-QQQ': 0.54
     };
     return map[pair] !== undefined ? map[pair] : 0.25;
+  }
+
+  /* ==========================================================================
+     Section 06: Commodities & Energy Intelligence
+     ========================================================================== */
+
+  function renderCommoditiesSection() {
+    const data = macroState.commodities;
+    if (!data) return;
+
+    const stancePill = document.getElementById('commStancePill');
+    const asOfDate = document.getElementById('commAsOfDate');
+    const heroHeadline = document.getElementById('commHeroHeadline');
+    const stanceDesc = document.getElementById('commStanceDesc');
+
+    if (stancePill) {
+      stancePill.textContent = (data.macro_stance || 'PRECIOUS METALS EXPANSION').replace(/_/g, ' ');
+    }
+    if (asOfDate) {
+      asOfDate.textContent = `AS OF ${data.as_of_date || '2026-08-19'}`;
+    }
+    if (heroHeadline && data.macro_stance) {
+      if (data.macro_stance.includes('PRECIOUS')) {
+        heroHeadline.textContent = 'REAL YIELD HEDGE // SOVEREIGN GOLD ACCUMULATION';
+      } else if (data.macro_stance.includes('ENERGY')) {
+        heroHeadline.textContent = 'ENERGY TIGHTNESS // COST-PUSH INFLATION PRESSURE';
+      } else {
+        heroHeadline.textContent = 'BALANCED COMMODITY CARRY // CONTAINED DISPERSION';
+      }
+    }
+    if (stanceDesc && data.stance_description) {
+      stanceDesc.textContent = data.stance_description;
+    }
+
+    const ratios = data.cross_ratios || {};
+    const rGS = document.getElementById('commRatioGoldSilver');
+    const rGO = document.getElementById('commRatioGoldOil');
+    const rOT = document.getElementById('commRatioOilTlt');
+    const cGT = document.getElementById('commCorrGoldTips');
+    const cDX = document.getElementById('commCorrDxy');
+
+    if (rGS) rGS.textContent = `${fmtNum(ratios.gold_silver_ratio, 2)}x`;
+    if (rGO) rGO.textContent = `${fmtNum(ratios.gold_oil_ratio, 2)}x`;
+    if (rOT) rOT.textContent = `${fmtNum(ratios.oil_treasury_ratio, 2)}x`;
+    if (cGT) {
+      const v = ratios.corr_gold_tips_60d;
+      cGT.textContent = `${v >= 0 ? '+' : ''}${fmtNum(v, 2)}`;
+      cGT.className = `stat-value font-mono ${v >= 0 ? 'color-bull' : 'color-bear'}`;
+    }
+    if (cDX) {
+      const v = ratios.corr_oil_dxy_60d || ratios.corr_gold_dxy_60d;
+      cDX.textContent = `${v >= 0 ? '+' : ''}${fmtNum(v, 2)}`;
+      cDX.className = `stat-value font-mono ${v < 0 ? 'color-bear' : 'color-bull'}`;
+    }
+
+    const tbody = document.getElementById('commoditiesTbody');
+    if (!tbody) return;
+
+    const assets = data.assets || [];
+    if (assets.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="10" class="text-center" style="padding:24px; color:var(--text-muted);">No commodity records available.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = assets.map(a => {
+      const chgColor = (a.chg_1d_pct || 0) >= 0 ? 'color-bull' : 'color-bear';
+      const chgSign = (a.chg_1d_pct || 0) >= 0 ? '+' : '';
+
+      let postureClass = 'verdict-pill too_early';
+      let postureLabel = 'NEUTRAL';
+      if (a.trend_posture === 'BULLISH_TREND') {
+        postureClass = 'verdict-pill hit';
+        postureLabel = 'BULLISH TREND';
+      } else if (a.trend_posture === 'BEARISH_TREND') {
+        postureClass = 'verdict-pill miss';
+        postureLabel = 'BEARISH TREND';
+      } else if (a.trend_posture === 'PULLBACK_SUPPORT') {
+        postureClass = 'badge-stance bullish';
+        postureLabel = 'PULLBACK SUPPORT';
+      }
+
+      return `
+        <tr>
+          <td>
+            <span class="ticker-pill font-mono">${a.ticker}</span>
+            <strong style="margin-left:6px;">${escapeHtml(a.name)}</strong>
+            <div style="font-size:10px; color:var(--text-muted); font-family:var(--font-mono);">${escapeHtml(a.category)}</div>
+          </td>
+          <td class="text-right font-mono font-bold highlight-gold">$${fmtNum(a.spot, 2)}</td>
+          <td class="text-right font-mono ${chgColor}">${chgSign}${fmtNum(a.chg_1d_pct, 2)}%</td>
+          <td class="text-right font-mono ${a.ret_1m_pct >= 0 ? 'color-bull' : 'color-bear'}">${a.ret_1m_pct >= 0 ? '+' : ''}${fmtNum(a.ret_1m_pct, 1)}%</td>
+          <td class="text-right font-mono ${a.ret_3m_pct >= 0 ? 'color-bull' : 'color-bear'}">${a.ret_3m_pct >= 0 ? '+' : ''}${fmtNum(a.ret_3m_pct, 1)}%</td>
+          <td class="text-right font-mono ${a.ret_1y_pct >= 0 ? 'color-bull font-bold' : 'color-bear font-bold'}">${a.ret_1y_pct >= 0 ? '+' : ''}${fmtNum(a.ret_1y_pct, 1)}%</td>
+          <td class="text-right font-mono text-muted">$${fmtNum(a.low_52w, 1)} &mdash; $${fmtNum(a.high_52w, 1)} <span style="font-size:10px; color:var(--text-secondary);">(${fmtNum(a.pct_from_52w_high, 1)}%)</span></td>
+          <td class="text-center font-mono">${fmtNum(a.rvol_21d, 1)}%</td>
+          <td class="text-center font-mono ${a.rsi_14 > 70 ? 'color-bear' : (a.rsi_14 < 30 ? 'color-bull' : '')}">${fmtNum(a.rsi_14, 1)}</td>
+          <td class="text-center"><span class="${postureClass}">${postureLabel}</span></td>
+        </tr>
+      `;
+    }).join('');
   }
 
   /* ==========================================================================

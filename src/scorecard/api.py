@@ -617,6 +617,7 @@ from scorecard.regime import (
     compute_sector_rotation,
     compute_macro_history,
 )
+from scorecard.commodities import compute_commodities_analytics
 from scorecard.vix import compute_vix_structure
 from scorecard.fear_greed import compute_fear_greed_index, compute_fear_greed_history
 from scorecard.options import compute_options_analytics, compute_options_trio_comparison
@@ -632,6 +633,12 @@ def get_macro_regime() -> Response:
 def get_macro_history(lookback: int = 1255) -> Response:
     """Return comprehensive multi-year historical macro indicators, SPY price, SMAs, drawdowns and cross-asset relative series."""
     return _cached_json_response(f"macro_history_{lookback}", lambda: compute_macro_history(get_connection(), lookback_days=lookback))
+
+
+@app.get("/api/macro/commodities")
+def get_macro_commodities() -> Response:
+    """Return comprehensive quantitative analytics, ratios and inflation sensitivities for Gold, Brent/Oil, Silver, and Commodities."""
+    return _cached_json_response("macro_commodities", lambda: compute_commodities_analytics(get_connection()))
 
 
 @app.get("/api/macro/vix-structure")

@@ -47,7 +47,12 @@
       { sym: 'GOOGL', name: 'Alphabet Inc.', type: 'EQUITY', sector: 'Digital Ads / AI' },
       { sym: 'META', name: 'Meta Platforms Inc.', type: 'EQUITY', sector: 'Social / AI' },
       { sym: 'TSLA', name: 'Tesla Inc.', type: 'EQUITY', sector: 'EV / Autonomy' },
-      { sym: 'MAG7_BASKET', name: 'Equal-Weight Magnificent 7 Basket', type: 'SYNTHETIC', sector: 'Big Tech' }
+      { sym: 'MAG7_BASKET', name: 'Equal-Weight Magnificent 7 Basket', type: 'SYNTHETIC', sector: 'Big Tech' },
+      { sym: 'GLD', name: 'SPDR Gold Shares', type: 'COMMODITY ETF', sector: 'Precious Metals' },
+      { sym: 'USO', name: 'United States Oil Fund (Crude Oil / Brent Proxy)', type: 'COMMODITY ETF', sector: 'Energy' },
+      { sym: 'SLV', name: 'iShares Silver Trust', type: 'COMMODITY ETF', sector: 'Precious Metals' },
+      { sym: 'DBC', name: 'Invesco DB Commodity Index Tracking Fund', type: 'COMMODITY ETF', sector: 'Broad Commodities' },
+      { sym: 'UUP', name: 'Invesco DB US Dollar Index Bullish Fund', type: 'CURRENCY ETF', sector: 'FX' }
     ],
     commands: [
       { cmd: 'SPY <GO>', desc: 'Quick quantitative audit & Greeks snapshot for SPY', action: () => openTickerSnapshot('SPY') },
@@ -60,6 +65,11 @@
       { cmd: 'TSLA <GO>', desc: 'Tesla audit, targets & seasonality', action: () => openTickerSnapshot('TSLA') },
       { cmd: 'QQQ <GO>', desc: 'Nasdaq 100 ETF audit & Greeks snapshot', action: () => openTickerSnapshot('QQQ') },
       { cmd: 'IWM <GO>', desc: 'Russell 2000 ETF audit & Greeks snapshot', action: () => openTickerSnapshot('IWM') },
+      { cmd: 'GLD <GO>', desc: 'Gold Bullion spot, real rate correlation & seasonality', action: () => openTickerSnapshot('GLD') },
+      { cmd: 'BRENT <GO>', desc: 'Crude Oil / Brent spot, energy alpha & term structure', action: () => openTickerSnapshot('USO') },
+      { cmd: 'USO <GO>', desc: 'Crude Oil / Brent Fund audit & statistics', action: () => openTickerSnapshot('USO') },
+      { cmd: 'SLV <GO>', desc: 'Silver Trust spot, gold/silver ratio & beta', action: () => openTickerSnapshot('SLV') },
+      { cmd: 'COMMODITIES <GO>', desc: 'Jump to Gold, Brent Oil, Silver & Dollar Intelligence Deck', action: () => navigateTo('macro.html#secCommodities') },
       { cmd: 'SCORE <GO>', desc: 'Jump to Sell-Side Direction & Allocation Scorecard', action: () => navigateTo('index.html') },
       { cmd: 'TIMELINE <GO>', desc: 'Jump to Wall Street Stance Timeline Chart', action: () => navigateTo('index.html#sectionTimeline') },
       { cmd: 'MAG7 <GO>', desc: 'Jump to Magnificent 7 Big Tech Leaderboard', action: () => navigateTo('mag7.html') },
