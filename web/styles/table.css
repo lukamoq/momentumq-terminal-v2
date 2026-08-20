@@ -1,0 +1,131 @@
+/* ==========================================================================
+   Table — the blotter. Sticky head, zebra-free hairlines, keyboard rows.
+   ========================================================================== */
+
+.tblwrap { position: absolute; inset: 0; }
+
+table.tbl {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--t-body);
+}
+table.tbl thead th {
+  position: sticky; top: 0; z-index: 2;
+  padding: 0 var(--cell-pad);
+  height: 25px;
+  background: var(--s-raised);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono); font-size: var(--t-label);
+  font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink-3); text-align: left; white-space: nowrap;
+  user-select: none;
+}
+table.tbl thead th.is-sortable { cursor: pointer; }
+table.tbl thead th.is-sortable:hover { color: var(--ink-1); background: var(--s-hover); }
+table.tbl thead th[aria-sort] { color: var(--brand-fg); }
+th .sortmark { display: inline-block; width: 9px; margin-left: 3px; opacity: 0.85; }
+
+table.tbl tbody td {
+  height: var(--row-h);
+  padding: 0 var(--cell-pad);
+  border-bottom: 1px solid var(--line-hair);
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+table.tbl td.num, table.tbl th.num { text-align: right; }
+table.tbl td.strong { color: var(--ink-1); font-weight: 500; }
+table.tbl td.wrap { white-space: normal; }
+
+table.tbl tbody tr { transition: background var(--d-1) var(--ease); }
+table.tbl tbody tr:hover { background: var(--s-hover); }
+table.tbl tbody tr[aria-selected='true'] { background: var(--brand-wash); }
+table.tbl tbody tr[aria-selected='true'] td:first-child { box-shadow: inset 2px 0 0 var(--brand); }
+table.tbl tbody tr.is-cursor td { background: var(--s-active); }
+table.tbl tbody tr.is-clickable { cursor: pointer; }
+
+/* Group separator row inside a blotter. */
+table.tbl tbody tr.grouprow td {
+  background: var(--s-void); color: var(--ink-4);
+  font-family: var(--font-mono); font-size: var(--t-micro);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  height: 20px; border-bottom: 1px solid var(--line);
+}
+
+/* First column of a ranked table: a fixed-width ordinal. */
+td.rank, th.rank { width: 34px; color: var(--ink-4); font-family: var(--font-mono); font-size: var(--t-micro); }
+
+/* Inline magnitude bar behind a numeric cell — reads the value without a chart. */
+.cellbar { position: relative; display: block; }
+.cellbar::before {
+  content: ''; position: absolute; top: 50%; right: 0; transform: translateY(-50%);
+  height: 12px; width: var(--w, 0%); border-radius: var(--r-1);
+  background: var(--bar-c, var(--brand-wash)); z-index: 0;
+}
+.cellbar > span { position: relative; z-index: 1; }
+
+/* Toolbar above a table: filters, search, counts. */
+.tbar {
+  flex: none; display: flex; align-items: center; gap: var(--sp-2);
+  padding: var(--sp-2) var(--panel-pad);
+  border-bottom: 1px solid var(--line);
+  background: var(--s-panel);
+}
+.tbar .grow { min-width: 60px; }
+.tbar__count {
+  font-family: var(--font-mono); font-size: var(--t-micro);
+  color: var(--ink-4); letter-spacing: 0.05em; white-space: nowrap;
+}
+
+/* Search field with a leading glyph. */
+.search { position: relative; display: flex; align-items: center; }
+.search svg { position: absolute; left: 7px; color: var(--ink-4); pointer-events: none; }
+.search .input { padding-left: 25px; }
+
+/* --- Matrix (correlation / seasonality heatmap) -------------------------- */
+/* The matrix earns its width: cells stretch to fill the panel rather than
+   leaving a dead column of background beside a cramped grid. */
+table.mtx {
+  width: 100%; border-collapse: separate; border-spacing: 1px;
+  font-family: var(--font-mono); table-layout: fixed;
+}
+table.mtx th:first-child, table.mtx tbody th { width: 52px; }
+table.mtx th {
+  font-size: var(--t-micro); font-weight: 500; color: var(--ink-3);
+  letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 5px; white-space: nowrap;
+}
+table.mtx thead th { position: sticky; top: 0; z-index: 2; background: var(--s-panel); text-align: center; }
+table.mtx tbody th { position: sticky; left: 0; z-index: 1; background: var(--s-panel); text-align: right; }
+table.mtx td {
+  padding: 0; text-align: center; border-radius: 2px;
+  font-size: var(--t-micro); font-variant-numeric: tabular-nums;
+  height: var(--cell-size, 22px); min-width: var(--cell-size, 34px);
+  color: var(--ink-1); cursor: default;
+  transition: outline-color var(--d-1) var(--ease);
+  outline: 1px solid transparent; outline-offset: -1px;
+}
+table.mtx td:hover { outline-color: var(--ink-1); }
+table.mtx td.mtx--void { color: var(--ink-4); background: var(--s-input) !important; }
+table.mtx td.mtx--partial { position: relative; }
+table.mtx td.mtx--partial::after {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(45deg, transparent 0 3px, rgba(255,255,255,0.16) 3px 4px);
+  pointer-events: none;
+}
+/* Summary rows stay pinned to the bottom of the scroll box. The cell itself
+   is opaque and the diverging colour rides on an inner block, so pinned rows
+   never let the data rows show through them. */
+table.mtx tfoot th, table.mtx tfoot td {
+  position: sticky; z-index: 3;
+  background: var(--s-panel); padding: 0;
+  border-top: 2px solid var(--line-strong); color: var(--ink-2); font-weight: 600;
+}
+/* Two pinned rows need two offsets, or the second one lands on top of the
+   first and both become unreadable. */
+table.mtx tfoot tr:last-child > * { bottom: 0; }
+table.mtx tfoot tr:nth-last-child(2) > * { bottom: calc(var(--cell-size, 22px) + 1px); }
+table.mtx tfoot td > i {
+  display: block; font-style: normal; border-radius: 2px;
+  line-height: var(--cell-size, 22px);
+}

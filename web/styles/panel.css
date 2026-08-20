@@ -1,0 +1,177 @@
+/* ==========================================================================
+   Panel — the only container in the terminal.
+   Header is fixed, body scrolls, footer is optional. Four states, never blank.
+   ========================================================================== */
+
+.panel {
+  display: flex; flex-direction: column;
+  min-width: 0; min-height: 0;
+  background: var(--s-panel);
+  box-shadow: var(--edge);
+  position: relative;
+}
+.panel.is-focus::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  box-shadow: inset 0 0 0 1px var(--brand-line);
+}
+
+.panel__head {
+  flex: none;
+  display: flex; align-items: center; gap: var(--sp-3);
+  height: 30px; padding: 0 var(--sp-3) 0 var(--panel-pad);
+  background: var(--s-raised);
+  border-bottom: 1px solid var(--line);
+}
+.panel__title {
+  display: flex; align-items: baseline; gap: 7px;
+  /* The title keeps a floor so a crowded header truncates the meta line
+     first — losing the panel's name is worse than losing its subtitle. */
+  min-width: 4.5rem; flex: 0 1 auto; white-space: nowrap; overflow: hidden;
+  font-size: var(--t-meta); font-weight: 600; color: var(--ink-1);
+  letter-spacing: 0.01em;
+}
+.panel__title > span:not(.panel__idx) { overflow: hidden; text-overflow: ellipsis; }
+.panel__idx {
+  font-family: var(--font-mono); font-size: var(--t-micro);
+  color: var(--brand-fg); letter-spacing: 0.08em;
+}
+.panel__meta {
+  font-family: var(--font-mono); font-size: var(--t-micro);
+  color: var(--ink-4); letter-spacing: 0.04em;
+  min-width: 0; flex: 1 1 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.panel__tools { margin-left: auto; display: flex; align-items: center; gap: var(--sp-2); flex: none; }
+
+/* Panel-level controls sit in the header, never floating over content. */
+.panel__body { flex: 1 1 auto; min-height: 0; min-width: 0; position: relative; }
+.panel__body--pad { padding: var(--panel-pad); }
+.panel__body--flex { display: flex; flex-direction: column; }
+/* The footer is a fixed-height strip of readouts. Items clip rather than
+   wrap — a footer that grows a second line steals height from the chart it
+   is describing. */
+.panel__foot {
+  flex: none; display: flex; align-items: center; gap: var(--sp-4);
+  height: 22px; padding: 0 var(--panel-pad);
+  border-top: 1px solid var(--line); background: var(--s-raised);
+  font-family: var(--font-mono); font-size: var(--t-micro); color: var(--ink-4);
+  letter-spacing: 0.04em; overflow: hidden;
+}
+.panel__foot > * { white-space: nowrap; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+/* --- States -------------------------------------------------------------
+   A panel is never an empty rectangle: it is loading, empty, broken, or full,
+   and it says which. */
+.state {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--sp-3); padding: var(--sp-6);
+  text-align: center; background: var(--s-panel); z-index: 3;
+}
+.state__icon { color: var(--ink-4); opacity: 0.7; }
+.state__title { font-size: var(--t-body); color: var(--ink-2); font-weight: 600; }
+.state__msg { font-size: var(--t-meta); color: var(--ink-4); max-width: 42ch; line-height: 1.5; }
+.state--error .state__icon { color: var(--down); opacity: 1; }
+.state--error .state__title { color: var(--down); }
+
+.sk-stack { position: absolute; inset: 0; padding: var(--panel-pad); display: flex; flex-direction: column; gap: 7px; }
+.sk-row { height: var(--row-h); flex: none; }
+.sk-chart { flex: 1 1 auto; min-height: 60px; }
+
+/* --- KPI cluster --------------------------------------------------------- */
+.kpis { display: grid; gap: 1px; background: var(--line-hair); }
+.kpi { padding: var(--sp-3) var(--panel-pad); background: var(--s-panel); min-width: 0; }
+.kpi__label {
+  display: flex; align-items: center; gap: 5px;
+  font-family: var(--font-mono); font-size: var(--t-micro); letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--ink-3); margin-bottom: 3px;
+}
+.kpi-val { font-size: var(--t-stat); line-height: 1.1; color: var(--ink-1); letter-spacing: -0.01em; }
+.kpi-val--hero { font-size: var(--t-hero); }
+.kpi-val--sm { font-size: var(--t-lead); }
+.kpi__sub { font-size: var(--t-micro); color: var(--ink-4); margin-top: 3px; line-height: 1.35; }
+.kpi__bar { margin-top: 6px; }
+
+/* Definition list — the standard "field: value" readout inside panels. */
+.dl { display: grid; grid-template-columns: 1fr auto; gap: 0; }
+.dl > dt, .dl > dd {
+  padding: 4px 0; min-width: 0;
+  border-bottom: 1px solid var(--line-hair);
+}
+.dl > dt { font-size: var(--t-meta); color: var(--ink-3); }
+.dl > dd {
+  margin: 0; text-align: right; color: var(--ink-1);
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: var(--t-body);
+}
+.dl > dt:last-of-type, .dl > dd:last-of-type { border-bottom: 0; }
+
+/* Section head inside a scrolling panel body. */
+.sub {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding-bottom: 5px; margin-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--line);
+}
+.sub + * { margin-top: 0; }
+.sub__t {
+  font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.sub__r { margin-left: auto; }
+.stack { display: flex; flex-direction: column; gap: var(--sp-5); }
+.stack--tight { gap: var(--sp-4); }
+.row { display: flex; align-items: center; gap: var(--sp-2); }
+.row--wrap { flex-wrap: wrap; }
+.row--end { justify-content: flex-end; }
+.grow { flex: 1 1 auto; min-width: 0; }
+
+/* Note block — methodology, caveats, "why this is blank". */
+.note {
+  display: flex; gap: var(--sp-3);
+  padding: var(--sp-3); border-radius: var(--r-2);
+  background: var(--s-input); border: 1px solid var(--line);
+  border-left: 2px solid var(--gold-line);
+  font-size: var(--t-meta); color: var(--ink-3); line-height: 1.5;
+}
+.note--info { border-left-color: var(--info-line); }
+.note strong { color: var(--ink-2); }
+.note code {
+  font-family: var(--font-mono); font-size: 0.92em;
+  background: var(--s-void); padding: 0 4px; border-radius: var(--r-1); color: var(--gold-fg);
+}
+
+/* --- Rail list — the selector pattern used by every module --------------- */
+.rlist { padding: var(--sp-1) 0; }
+.rlist__item {
+  display: grid; grid-template-columns: 1fr auto; align-items: center;
+  gap: 2px var(--sp-3);
+  width: 100%; padding: 5px var(--sp-4);
+  border-left: 2px solid transparent;
+  text-align: left; color: var(--ink-2);
+  transition: background var(--d-1) var(--ease);
+}
+.rlist__item:hover { background: var(--s-hover); }
+.rlist__item[aria-selected='true'] {
+  background: var(--brand-wash); border-left-color: var(--brand); color: var(--ink-1);
+}
+.rlist__name {
+  font-size: var(--t-body); font-weight: 500;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.rlist__val {
+  font-family: var(--font-mono); font-size: var(--t-meta);
+  font-variant-numeric: tabular-nums; color: var(--ink-2);
+}
+.rlist__sub {
+  grid-column: 1 / -1;
+  font-family: var(--font-mono); font-size: var(--t-micro); color: var(--ink-4);
+  display: flex; align-items: center; gap: 6px;
+}
+.rlist__rank {
+  font-family: var(--font-mono); font-size: var(--t-micro); color: var(--ink-4);
+  min-width: 15px; display: inline-block;
+}
+.rlist__sep {
+  padding: var(--sp-4) var(--sp-4) var(--sp-1);
+  font-family: var(--font-mono); font-size: var(--t-micro);
+  letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-4);
+}

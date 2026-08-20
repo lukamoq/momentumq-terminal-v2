@@ -1,0 +1,180 @@
+/* ==========================================================================
+   Base — reset, typography primitives, shared atoms
+   ========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  /* The shell owns every scroll. The document itself never moves. */
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+  background: var(--s-void);
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, p, figure, ul, ol { margin: 0; padding: 0; }
+ul, ol { list-style: none; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { background: none; border: 0; cursor: pointer; }
+a { color: var(--brand-fg); text-decoration: none; }
+a:hover { text-decoration: underline; }
+svg { display: block; }
+
+/* Numbers never reflow as they tick. */
+.num, .mono, table.tbl td, .kpi-val, .tape-val {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'zero' 1;
+}
+
+/* --- Focus -------------------------------------------------------------
+   Keyboard focus is always visible; pointer focus never draws a ring. */
+:focus { outline: none; }
+:focus-visible { box-shadow: var(--focus-ring); border-radius: var(--r-2); }
+
+/* --- Scrollbars: thin, self-coloured, present only where content scrolls */
+.scroll { overflow: auto; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+.scroll::-webkit-scrollbar { width: 9px; height: 9px; }
+.scroll::-webkit-scrollbar-track { background: transparent; }
+.scroll::-webkit-scrollbar-thumb {
+  background: var(--line-strong); border-radius: 99px;
+  border: 2px solid transparent; background-clip: content-box;
+}
+.scroll::-webkit-scrollbar-thumb:hover { background: var(--ink-4); background-clip: content-box; }
+.scroll::-webkit-scrollbar-corner { background: transparent; }
+
+/* --- Text atoms --------------------------------------------------------- */
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--t-label);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.meta { font-size: var(--t-meta); color: var(--ink-3); line-height: 1.45; }
+.dim  { color: var(--ink-4); }
+.trunc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+.up   { color: var(--up); }
+.down { color: var(--down); }
+.flat { color: var(--flat); }
+.na   { color: var(--void-ink); }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* --- Chip / badge ------------------------------------------------------- */
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 1px 6px; border-radius: var(--r-1);
+  font-family: var(--font-mono); font-size: var(--t-micro);
+  letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap;
+  background: var(--s-raised); color: var(--ink-3);
+  border: 1px solid var(--line);
+  /* A long label truncates inside the chip rather than pushing it out of the
+     panel — chips carry taxonomy strings of unpredictable length. */
+  max-width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+}
+.chip--up   { background: var(--up-wash);   color: var(--up);   border-color: var(--up-line); }
+.chip--down { background: var(--down-wash); color: var(--down); border-color: var(--down-line); }
+.chip--flat { background: var(--flat-wash); color: var(--flat); border-color: var(--flat-line); }
+.chip--info { background: var(--info-wash); color: var(--info); border-color: var(--info-line); }
+.chip--gold { background: var(--gold-wash); color: var(--gold-fg); border-color: var(--gold-line); }
+.chip--brand{ background: var(--brand-wash);color: var(--brand-fg);border-color: var(--brand-line); }
+.chip--na   { background: rgba(107,119,148,0.12); color: var(--void-ink); border-color: rgba(107,119,148,0.3); }
+
+/* --- Buttons ------------------------------------------------------------ */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 26px; padding: 0 9px;
+  border: 1px solid var(--line); border-radius: var(--r-2);
+  background: var(--s-raised); color: var(--ink-2);
+  font-size: var(--t-meta); white-space: nowrap;
+  transition: background var(--d-1) var(--ease), border-color var(--d-1) var(--ease),
+              color var(--d-1) var(--ease);
+}
+.btn:hover { background: var(--s-hover); border-color: var(--line-strong); color: var(--ink-1); }
+.btn:active { background: var(--s-active); }
+.btn[aria-pressed='true'], .btn.is-on {
+  background: var(--brand-wash); border-color: var(--brand-line); color: var(--brand-fg);
+}
+.btn--ghost { background: transparent; border-color: transparent; }
+.btn--ghost:hover { background: var(--s-hover); border-color: var(--line); }
+.btn--icon { width: 26px; padding: 0; justify-content: center; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Segmented control — the default way a panel offers exclusive choices. */
+.seg {
+  display: inline-flex; padding: 2px; gap: 2px;
+  background: var(--s-input); border: 1px solid var(--line); border-radius: var(--r-2);
+}
+.seg > button {
+  height: 21px; padding: 0 8px; border-radius: var(--r-1);
+  font-family: var(--font-mono); font-size: var(--t-label);
+  letter-spacing: 0.04em; color: var(--ink-3); white-space: nowrap;
+  transition: background var(--d-1) var(--ease), color var(--d-1) var(--ease);
+}
+.seg > button:hover { color: var(--ink-1); background: var(--s-hover); }
+.seg > button[aria-selected='true'] { background: var(--brand); color: #fff; }
+html[data-theme='amber'] .seg > button[aria-selected='true'],
+html[data-theme='phosphor'] .seg > button[aria-selected='true'] { color: #0b0e17; }
+
+/* --- Inputs ------------------------------------------------------------- */
+.input {
+  height: 26px; padding: 0 8px; width: 100%;
+  background: var(--s-input); color: var(--ink-1);
+  border: 1px solid var(--line); border-radius: var(--r-2);
+  font-size: var(--t-body);
+  transition: border-color var(--d-1) var(--ease);
+}
+.input::placeholder { color: var(--ink-4); }
+.input:focus { border-color: var(--brand-line); box-shadow: var(--focus-ring); }
+
+/* --- Keycap ------------------------------------------------------------- */
+kbd {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 17px; height: 17px; padding: 0 4px;
+  background: var(--s-input); border: 1px solid var(--line-strong);
+  border-bottom-width: 2px; border-radius: var(--r-1);
+  font-family: var(--font-mono); font-size: 10px; line-height: 1; color: var(--ink-3);
+}
+
+/* --- Meter: the inline magnitude cue used across tables and KPI stacks ----
+   Named .meter, not .bar: the command bar in shell.css owns .bar, and a
+   3px-tall `overflow: hidden` rule landing on the shell chrome clips the whole
+   navigation out of existence. */
+.meter { position: relative; height: 3px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.meter > i { position: absolute; inset: 0 auto 0 0; border-radius: 99px; background: var(--brand-fg); }
+
+/* --- Skeleton ----------------------------------------------------------- */
+.sk { background: var(--s-raised); border-radius: var(--r-1); position: relative; overflow: hidden; }
+.sk::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+  animation: sk-slide 1.25s infinite;
+}
+@keyframes sk-slide { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

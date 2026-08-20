@@ -1,0 +1,104 @@
+/* ==========================================================================
+   Charts — inline SVG. Every chart is measured by its container, redrawn on
+   resize, and never depends on a fixed pixel size.
+   ========================================================================== */
+
+.chart { position: absolute; inset: 0; }
+/* Clip to the box. A chart that paints outside its panel lands on whatever
+   is next to it — long axis labels did exactly that. */
+.chart svg { width: 100%; height: 100%; display: block; overflow: hidden; }
+
+.ax-line { stroke: var(--line); stroke-width: 1; shape-rendering: crispEdges; }
+.ax-grid { stroke: var(--line-hair); stroke-width: 1; shape-rendering: crispEdges; }
+.ax-grid--zero { stroke: var(--line-strong); stroke-width: 1; }
+.ax-txt {
+  fill: var(--ink-4); font-family: var(--font-mono); font-size: 10px;
+  font-variant-numeric: tabular-nums; letter-spacing: 0.03em;
+}
+.ax-txt--em { fill: var(--ink-3); }
+
+.serie { fill: none; stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+.serie--thin { stroke-width: 1; }
+.serie--thick { stroke-width: 2.25; }
+.serie--ghost { stroke-width: 1; opacity: 0.22; }
+.serie--dash { stroke-dasharray: 3 3; }
+.serie--proj { stroke-dasharray: 5 4; opacity: 0.9; }
+.area { stroke: none; }
+
+.mark { stroke: var(--s-panel); stroke-width: 1; }
+.mark--flip { stroke-width: 1.25; }
+
+.crosshair { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 2 3; pointer-events: none; }
+.hitarea { fill: transparent; cursor: crosshair; }
+
+.band { opacity: 0.09; }
+.refline { stroke-width: 1; stroke-dasharray: 4 3; }
+.reflabel {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.05em;
+  text-transform: uppercase;
+  /* Reference lines pass behind their own labels; the halo keeps the text
+     legible without opening a hole in the grid. */
+  paint-order: stroke;
+  stroke: var(--s-panel); stroke-width: 3px; stroke-linejoin: round;
+}
+
+/* Legend — always adjacent to the chart, never floating on top of data. */
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 12px; }
+.legend__i {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: var(--t-micro); font-family: var(--font-mono);
+  letter-spacing: 0.04em; color: var(--ink-3);
+  padding: 1px 3px; border-radius: var(--r-1);
+  transition: color var(--d-1) var(--ease), background var(--d-1) var(--ease);
+}
+.legend__i.is-toggle { cursor: pointer; }
+.legend__i.is-toggle:hover { color: var(--ink-1); background: var(--s-hover); }
+.legend__i.is-off { opacity: 0.35; }
+.legend__sw { width: 9px; height: 3px; border-radius: 99px; flex: none; }
+.legend__sw--box { height: 9px; border-radius: 2px; }
+
+/* Tooltip — one instance, moved and re-filled. Never blocks the cursor. */
+.tip {
+  position: fixed; z-index: 200; pointer-events: none;
+  min-width: 118px; max-width: 300px;
+  padding: 7px 9px;
+  background: var(--s-raised); border: 1px solid var(--line-strong);
+  border-radius: var(--r-2); box-shadow: var(--sh-3);
+  font-size: var(--t-meta); color: var(--ink-2);
+  opacity: 0; transform: translateY(3px);
+  transition: opacity var(--d-1) var(--ease), transform var(--d-1) var(--ease);
+}
+.tip.is-on { opacity: 1; transform: none; }
+.tip__h {
+  font-family: var(--font-mono); font-size: var(--t-micro);
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-4);
+  padding-bottom: 4px; margin-bottom: 5px; border-bottom: 1px solid var(--line);
+}
+.tip__r { display: flex; align-items: center; justify-content: space-between; gap: 14px; line-height: 1.55; }
+.tip__k { display: flex; align-items: center; gap: 5px; color: var(--ink-3); font-size: var(--t-micro); }
+.tip__v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--ink-1); font-size: var(--t-meta); }
+
+/* Gauge — the composite-score dial used by Fear & Greed and crypto sentiment. */
+.gauge__val {
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  font-size: 30px; fill: var(--ink-1);
+}
+.gauge__lbl {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Sparkline in a table cell or rail row. */
+.spark { display: block; width: 100%; height: 100%; }
+.sparkbox { width: 54px; height: 15px; }
+
+/* Quadrant scatter (sector rotation). */
+.quad-bg { opacity: 0.05; }
+.quad-lbl {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em;
+  text-transform: uppercase; fill: var(--ink-4);
+}
+.pt-lbl {
+  font-family: var(--font-mono); font-size: 10px; fill: var(--ink-2);
+  paint-order: stroke; stroke: var(--s-panel); stroke-width: 3px; stroke-linejoin: round;
+}

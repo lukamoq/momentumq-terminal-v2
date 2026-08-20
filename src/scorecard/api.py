@@ -910,6 +910,25 @@ def get_crypto_history(ticker: str = "BTC", lookback: int = 365) -> Response:
     return _cached_json_response(cache_key, lambda: compute_crypto_historical_series(get_connection(), ticker, lookback))
 
 
+@app.middleware("http")
+async def _revalidate_web_assets(request, call_next):
+    """Make the terminal's own assets revalidate instead of sitting in cache.
+
+    The web app ships as unversioned ES modules and stylesheets, so a browser
+    that keeps them in its memory cache will happily run last week's terminal
+    against this week's API. `no-cache` still allows a 304 — it only forbids
+    using a copy without asking — which costs one conditional request per file
+    and removes a whole class of "why is my screen stale" bug reports.
+    """
+    response = await call_next(request)
+    path = request.url.path
+    if path.startswith("/api/"):
+        return response
+    if path.endswith((".js", ".css", ".html")) or path in ("/", ""):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
 if WEB_DIR.exists():
     app.mount("/", StaticFiles(directory=str(WEB_DIR), html=True), name="web")
 

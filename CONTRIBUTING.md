@@ -44,7 +44,8 @@ python -m scorecard check
 ```bash
 python -m scorecard serve --port 8000
 ```
-Open [http://localhost:8000](http://localhost:8000) or [http://localhost:8000/seasonality.html](http://localhost:8000/seasonality.html) in your browser.
+Open [http://localhost:8000](http://localhost:8000). The terminal is a single page;
+modules are hash routes (`#/forecasts`, `#/options`, …) and <kbd>?</kbd> lists every shortcut.
 
 ---
 
@@ -55,7 +56,8 @@ Open [http://localhost:8000](http://localhost:8000) or [http://localhost:8000/se
 3. **Run the Full Test Suite**:
    ```bash
    pytest -v
-   node -c web/app.js && node -c web/mag7.js && node -c web/seasonality.js
+   # The front end is ES modules, so syntax-check it as modules:
+   for f in $(find web/app -name '*.js'); do node --input-type=module --check < "$f" || echo "FAIL $f"; done
    ```
 4. **Submit PR**: Open a Pull Request against `main` detailing the mathematical rationale, benchmark comparison, and test results.
 

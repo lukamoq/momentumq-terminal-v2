@@ -4,7 +4,7 @@
 [![Python: 3.11+](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)](https://fastapi.tiangolo.com)
 [![Tests: 143 Passed](https://img.shields.io/badge/tests-143%20passed-success.svg)](https://pytest.org)
-[![Architecture: Swiss Dark Blotter](https://img.shields.io/badge/Design-Swiss%20Industrial%20Dark-gold.svg)](web/styles.css)
+[![UI: Keyboard-first workspace](https://img.shields.io/badge/UI-Keyboard--first%20workspace-gold.svg)](web/app/main.js)
 
 An institutional-grade, open-source quantitative research platform and analytics terminal evaluating Wall Street sell-side research calls (2021–2026), multi-asset seasonality, cross-asset macro regimes, Black-Scholes-Merton (BSM) options Greeks & dealer GEX positioning computed from observed option chains, Fear & Greed Index 2.0, and a model-free implied volatility term structure.
 
@@ -12,20 +12,20 @@ An institutional-grade, open-source quantitative research platform and analytics
 
 ## Key Modules & Analytics
 
-### 1. Sell-Side Direction Scorecard (`/index.html`)
+### 1. Sell-Side Direction Scorecard (`#/forecasts`)
 - **Rigorous Direction Classifier**: Evaluates price targets against realized market prices using a strict $\pm 2.0\%$ indifference band. No subjective overrides.
 - **Consensus Free-Rider Problem**: Measures empirical alpha against naive always-bullish baselines rather than unearned nominal win rates.
 - **Anti-Failure Display**: Strategy desks with no discriminating bearish/neutral calls render `NO DISCRIMINATING CALLS` rather than inflated 100% scores.
 - **Relative Allocation Benchmark**: Overweight/Underweight calls are scored against global equity benchmarks (`ACWI`) rather than nominal zero.
 - **Interactive Price Chart**: Displays Wall Street bank price targets vertically aligned with historical price action.
 
-### 2. Magnificent 7 Big Tech Stock Breakdown (`/mag7.html`)
+### 2. Magnificent 7 Big Tech Stock Breakdown (`#/mag7`)
 - **Constituents**: `NVDA`, `AAPL`, `MSFT`, `AMZN`, `GOOGL`, `META`, `TSLA` + Equal-Weight `MAG7` Basket.
 - **Split-Adjusted Target Normalization**: Reconciles historical published targets with retroactive stock splits.
 - **Ticker Lineage Reassembly**: Reconstructs continuous corporate history (e.g. `FB` $\rightarrow$ `META` continuous boundary).
 - **Thematic Dossiers**: Quantitatively cross-checks editorial claims against verified broker records.
 
-### 3. Cross-Asset Seasonality & Cumulative Path Curves (`/seasonality.html`)
+### 3. Cross-Asset Seasonality & Cumulative Path Curves (`#/seasonality`)
 - **27-Year Daily Cycle Curves**: Forward-fills completed years to 252 trading days, eliminating calendar misalignment.
 - **Dynamic Cycle Span Filtering**: Filter curves by `ALL (27Y)`, `20Y`, `10Y`, `5Y`, `POST_COVID`, `ELECTION`, `DECADE_2020S`, `DECADE_2010S`, `DECADE_2000S`.
 - **Monthly Return Heatmaps**: Historical month-by-month return matrix and distribution statistics for `SPY`, `QQQ`, `IWM`, and major sectors.
@@ -38,7 +38,7 @@ An institutional-grade, open-source quantitative research platform and analytics
   year's final close — the same base January uses — so the twelve monthly
   returns multiply out to the annual figure.
 
-### 4. Options Volatility Surface & Multi-Horizon BSM Greeks (`/seasonality.html#secOptionsAnalysis`)
+### 4. Options Volatility Surface & Multi-Horizon BSM Greeks (`#/options`)
 
 Every figure on this page is computed from the **observed option chain** — real
 strikes, real settle prices, real exchange-reported open interest — stored in
@@ -118,14 +118,16 @@ research/
 │   ├── curated/        # Verified calls.yaml, institutions.yaml, events.yaml, mag7_calls.yaml
 │   ├── cache/massive/  # Vendor payload cache (bars, options/, reference/)
 │   └── scorecard.db    # SQLite database (auto-built via CLI)
-├── web/
-│   ├── index.html      # S&P 500 Direction Scorecard UI (Dark blotter)
-│   ├── mag7.html       # Magnificent 7 Scorecard UI
-│   ├── seasonality.html# Cross-Asset Seasonality & Quant Analytics Terminal
-│   ├── styles.css      # Swiss industrial dark blotter design (IBM Plex)
-│   ├── app.js          # S&P 500 interactive timeline & blotter
-│   ├── mag7.js         # Mag 7 normalized return charts & audit blotter
-│   └── seasonality.js  # Seasonality, Options Skew, Fear & Greed, VIX UI
+├── web/                # Terminal front end — vanilla ES modules, no build step
+│   ├── index.html      # The only page: shell + hash router for all 7 modules
+│   ├── styles/         # tokens, base, shell, panel, table, chart, overlay, module
+│   ├── app/
+│   │   ├── main.js     # Shell: tape, tabs, rail, panel grid, keymap, lifecycle
+│   │   ├── core/       # dom, fmt, api (cache + prefetch), store, keys, router, bus
+│   │   ├── ui/         # panel, table, palette, overlays, tape, shared bits
+│   │   ├── charts/     # scales, axes, LTTB downsampling, line/bar/profile/gauge
+│   │   └── modules/    # forecasts, mag7, seasonality, options, macro, agents, crypto
+│   └── _legacy/        # The previous multi-page UI, kept for reference only
 └── tests/
     ├── test_scorecard.py   # Direction scoring & the 8 acceptance criteria
     ├── test_mag7.py        # Mag 7 breakdown, split adjustment, thematic dossiers
@@ -249,10 +251,43 @@ and advances the as-of date to the newest bar in the database.
 ```bash
 python -m scorecard serve --host 127.0.0.1 --port 8000
 ```
-Open your browser to:
-- **S&P 500 Scorecard**: [http://localhost:8000](http://localhost:8000)
-- **Mag 7 Tech Scorecard**: [http://localhost:8000/mag7.html](http://localhost:8000/mag7.html)
-- **Seasonality & Options Terminal**: [http://localhost:8000/seasonality.html](http://localhost:8000/seasonality.html)
+Open [http://localhost:8000](http://localhost:8000). The terminal is a single
+page; every module is a route on it, and the URL carries the full view state so
+a screen can be shared by copying the address bar.
+
+| Route | Module | Key |
+|-------|--------|-----|
+| `#/forecasts` | Sell-side direction audit | <kbd>1</kbd> |
+| `#/mag7` | Magnificent 7 call audit | <kbd>2</kbd> |
+| `#/seasonality` | Calendar record & day-of-year paths | <kbd>3</kbd> |
+| `#/options` | Greeks, skew, dealer gamma | <kbd>4</kbd> |
+| `#/macro` | Regime, fear & greed, rotation | <kbd>5</kbd> |
+| `#/agents` | News wire, alpha signals, agent desk | <kbd>6</kbd> |
+| `#/crypto` | Spot, flows, halving cycle | <kbd>7</kbd> |
+
+Deep links carry module state: `#/options?u=QQQ&h=1_month`,
+`#/forecasts?desk=MS&view=lanes&range=audit`, `#/seasonality?t=XLK&span=10y`.
+
+### The terminal itself
+
+The front end is a fixed-viewport workspace rather than a set of scrolling
+pages. Nothing scrolls at the document level; each panel scrolls its own body,
+so the answer is always on screen and navigation never loses your place.
+
+- <kbd>⌘K</kbd> / <kbd>Ctrl K</kbd> — command palette. Every module, instrument,
+  desk, report and view is reachable from it.
+- <kbd>1</kbd>–<kbd>7</kbd> or <kbd>F3</kbd>–<kbd>F9</kbd> — switch module.
+  Hovering a tab prefetches everything that module needs, so the switch is a
+  render rather than a round trip.
+- <kbd>F</kbd> maximise the panel under the cursor, <kbd>Esc</kbd> restore.
+- <kbd>J</kbd>/<kbd>K</kbd> move through a blotter, <kbd>↵</kbd> opens the row in
+  the inspector, <kbd>⌘F</kbd> focuses the panel filter.
+- <kbd>D</kbd> density, <kbd>T</kbd> theme (obsidian / amber / phosphor),
+  <kbd>\</kbd> side rail, <kbd>R</kbd> refresh, <kbd>?</kbd> every shortcut.
+
+Preferences, per-module selections and the chosen theme persist locally. There
+is no build step and no JavaScript dependency: the browser loads ES modules
+directly from `web/app/`.
 
 ---
 

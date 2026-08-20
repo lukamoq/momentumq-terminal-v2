@@ -1,0 +1,150 @@
+/* ==========================================================================
+   MomentumQ Terminal — Design Tokens
+   Art direction: MomentumQ Blueprint, evolved for workspace density.
+   Every value here is a decision; modules never hardcode a colour or a size.
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* --- Surfaces -----------------------------------------------------------
+     Five steps only. Depth is carried by the hairline + the top edge light,
+     not by piling on shades. */
+  --s-void:      #070910;   /* behind everything, the gutter between panels */
+  --s-canvas:    #0b0e17;   /* workspace ground */
+  --s-panel:     #111624;   /* panel body */
+  --s-raised:    #171d2f;   /* panel header, sticky table head, inputs */
+  --s-hover:     #1e2639;   /* row / control hover */
+  --s-active:    #26304a;   /* row / control pressed + selected */
+  --s-input:     #0a0d15;
+
+  /* --- Lines --------------------------------------------------------------
+     A terminal is a grid of rules. Three weights, no more. */
+  --line-hair:   rgba(255, 255, 255, 0.055);  /* inside a panel: row rules */
+  --line:        #212a3e;                     /* panel edge, control edge */
+  --line-strong: #33405c;                     /* emphasised edge, dividers */
+
+  /* --- Ink ----------------------------------------------------------------
+     4.5:1+ against --s-panel for -1 and up; --ink-4 is decorative only. */
+  --ink-1: #f2f5fb;   /* primary values, headings */
+  --ink-2: #c8d0e2;   /* secondary text */
+  --ink-3: #8e9ab5;   /* labels, column heads */
+  --ink-4: #5f6b86;   /* disabled, watermarks, axis ticks */
+
+  /* --- Brand --------------------------------------------------------------
+     Cobalt is interaction. Gold is "this is the answer". Never swap them. */
+  --brand:        #3b5bff;
+  --brand-fg:     #8aaaff;
+  --brand-bright: #5a76ff;
+  --brand-wash:   rgba(59, 91, 255, 0.14);
+  --brand-line:   rgba(59, 91, 255, 0.42);
+
+  --gold:      #f5b942;
+  --gold-fg:   #ffd479;
+  --gold-wash: rgba(245, 185, 66, 0.13);
+  --gold-line: rgba(245, 185, 66, 0.38);
+
+  /* --- Semantic status (Okabe-Ito derived, safe for deuteranopia) --------- */
+  --up:        #34d399;
+  --up-wash:   rgba(52, 211, 153, 0.14);
+  --up-line:   rgba(52, 211, 153, 0.34);
+  --down:      #f87171;
+  --down-wash: rgba(248, 113, 113, 0.14);
+  --down-line: rgba(248, 113, 113, 0.34);
+  --flat:      #fbbf24;
+  --flat-wash: rgba(251, 191, 36, 0.14);
+  --flat-line: rgba(251, 191, 36, 0.34);
+  --info:      #38bdf8;
+  --info-wash: rgba(56, 189, 248, 0.13);
+  --info-line: rgba(56, 189, 248, 0.34);
+  --void-ink:  #6b7794;   /* "not measured" / too-early — deliberately grey */
+
+  /* --- Categorical series ramp -------------------------------------------
+     Ordered for maximum adjacent separation; charts read them in sequence. */
+  --c1: #8aaaff; --c2: #f5b942; --c3: #34d399; --c4: #f87171;
+  --c5: #c084fc; --c6: #38bdf8; --c7: #fb923c; --c8: #94a3b8;
+
+  /* --- Type ---------------------------------------------------------------
+     Sans for prose and chrome. Mono for every number, always tabular. */
+  --font-sans: 'Figtree', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --t-micro: 10px;   /* tape chips, badges */
+  --t-label: 11px;   /* column heads, kickers, keycaps */
+  --t-meta:  12px;   /* panel meta, captions */
+  --t-body:  13px;   /* table cells, controls, prose */
+  --t-lead:  15px;   /* panel titles, emphasised prose */
+  --t-stat:  21px;   /* KPI values */
+  --t-hero:  30px;   /* the one number a panel exists to show */
+
+  --lh-tight: 1.15;
+  --lh-body:  1.5;
+
+  /* --- Space: 4pt base ---------------------------------------------------- */
+  --sp-0: 0;    --sp-1: 4px;  --sp-2: 6px;  --sp-3: 8px;
+  --sp-4: 12px; --sp-5: 16px; --sp-6: 20px; --sp-7: 28px; --sp-8: 40px;
+
+  /* --- Radius: small. A dense terminal reads as engineered, not soft. ----- */
+  --r-1: 3px; --r-2: 5px; --r-3: 7px; --r-4: 10px;
+
+  /* --- Chrome heights. The shell math reads these; nothing is hardcoded. -- */
+  --h-tape:   26px;
+  --h-bar:    42px;
+  --h-status: 24px;
+  --w-rail:   232px;
+  --w-rail-collapsed: 0px;
+
+  /* --- Density. `[data-density]` on <html> rewrites these three. ---------- */
+  --row-h:    26px;
+  --cell-pad: 8px;
+  --panel-pad: 12px;
+
+  /* --- Motion. State changes animate; decoration does not. ---------------- */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --d-1: 90ms;    /* press / hover */
+  --d-2: 150ms;   /* state change */
+  --d-3: 240ms;   /* enter / exit */
+
+  /* --- Elevation. One light source, overhead. ----------------------------- */
+  --edge: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  --sh-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --sh-2: 0 2px 4px rgba(0, 0, 0, 0.32), 0 8px 16px -6px rgba(0, 0, 0, 0.42);
+  --sh-3: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -8px rgba(0, 0, 0, 0.55),
+          0 32px 64px -24px rgba(0, 0, 0, 0.6);
+  --sh-pop: 0 0 0 1px var(--line-strong), 0 16px 40px -12px rgba(0, 0, 0, 0.75);
+
+  --focus-ring: 0 0 0 1px var(--s-canvas), 0 0 0 3px var(--brand-line);
+}
+
+/* Compact: the operator view. Fits ~40% more rows per panel. */
+html[data-density='compact'] {
+  --row-h: 22px;
+  --cell-pad: 6px;
+  --panel-pad: 9px;
+  --t-body: 12px;
+  --t-meta: 11px;
+}
+
+/* --- Themes -------------------------------------------------------------
+   Two CRT alternates, kept honest: they retune surfaces and the brand hue,
+   they never change what a status colour means. */
+html[data-theme='amber'] {
+  --s-void: #0b0703; --s-canvas: #120c04; --s-panel: #1a1207;
+  --s-raised: #22180a; --s-hover: #2c2010; --s-active: #3a2b16;
+  --s-input: #0f0a03;
+  --line-hair: rgba(255, 190, 90, 0.08); --line: #3a2a12; --line-strong: #5a4020;
+  --ink-1: #ffe0a8; --ink-2: #e2bd7c; --ink-3: #b08c56; --ink-4: #7d6238;
+  --brand: #f59e0b; --brand-fg: #fbbf24; --brand-bright: #fcd34d;
+  --brand-wash: rgba(245, 158, 11, 0.16); --brand-line: rgba(245, 158, 11, 0.45);
+}
+html[data-theme='phosphor'] {
+  --s-void: #030907; --s-canvas: #04120c; --s-panel: #071a12;
+  --s-raised: #0a2318; --s-hover: #0f2f21; --s-active: #16412d;
+  --s-input: #030f0a;
+  --line-hair: rgba(120, 255, 190, 0.08); --line: #123a29; --line-strong: #1d5c41;
+  --ink-1: #c8ffe4; --ink-2: #86e9bb; --ink-3: #59b189; --ink-4: #3d7b5f;
+  --brand: #10b981; --brand-fg: #34d399; --brand-bright: #6ee7b7;
+  --brand-wash: rgba(16, 185, 129, 0.16); --brand-line: rgba(16, 185, 129, 0.45);
+  --gold: #a3e635; --gold-fg: #bef264;
+}
