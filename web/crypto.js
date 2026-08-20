@@ -884,33 +884,36 @@
       <path d="${path4Proj}" fill="none" stroke="#34d399" stroke-width="2.2" stroke-dasharray="4,3" opacity="0.85"/>
 
       <!-- Golden Breakout Marker at Day 165 -->
-      <line x1="${getX(165)}" y1="${padT}" x2="${getX(165)}" y2="${padT + plotH}" stroke="#34d399" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.7"/>
-      <circle cx="${getX(165)}" cy="${getY(1.44)}" r="4" fill="#34d399" stroke="#0f172a" stroke-width="1.5"/>
-      <text x="${getX(165) + 6}" y="${getY(1.44) - 6}" fill="#34d399" font-family="var(--font-mono)" font-size="8.5">Breakout (Day 165)</text>
+      <line x1="${getX(165)}" y1="${padT}" x2="${getX(165)}" y2="${padT + plotH}" stroke="#34d399" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.6"/>
+      <circle cx="${getX(165)}" cy="${getY(1.44)}" r="3.5" fill="#34d399" stroke="#0f172a" stroke-width="1.5"/>
+      <text x="${getX(165) + 6}" y="${getY(1.44) - 6}" fill="#34d399" font-family="var(--font-mono)" font-size="8">Breakout (Day 165)</text>
+
+      <!-- Precision Target on Cycle 4 Line (Day 853) - Unobstructed -->
+      <line x1="${xNow}" y1="${padT + 26}" x2="${xNow}" y2="${padT + plotH}" stroke="#fbbf24" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.65"/>
+      <circle cx="${xNow}" cy="${yNow}" r="8" fill="url(#beaconPulse)"/>
+      <circle cx="${xNow}" cy="${yNow}" r="4" fill="#fbbf24" stroke="#0f172a" stroke-width="2"/>
+      <text x="${xNow + 7}" y="${yNow + 3}" fill="#fbbf24" font-family="var(--font-mono)" font-size="8.5" font-weight="700">${currentMult.toFixed(2)}x</text>
+
+      <!-- YOU ARE HERE Sleek Top Pill (In Open Sky Zone, Above All Curves) -->
+      <g transform="translate(${xNow}, ${padT + 6})">
+        <rect x="-85" y="0" width="170" height="20" fill="rgba(15, 23, 42, 0.92)" stroke="#fbbf24" stroke-width="1.4" rx="4"/>
+        <text x="0" y="13" fill="#fbbf24" font-family="var(--font-mono)" font-size="8.5" font-weight="800" text-anchor="middle">&#9660; YOU ARE HERE // DAY ${daysElapsed} ($${fmtNum(currentSpot, 0)})</text>
+      </g>
 
       <!-- WHEN IT RISES AGAIN Marker at Day 1090 (Spring 2027) -->
-      <line x1="${xRise}" y1="${padT}" x2="${xRise}" y2="${padT + plotH}" stroke="#38bdf8" stroke-width="1.6" stroke-dasharray="3,3"/>
-      <circle cx="${xRise}" cy="${yRise}" r="5" fill="#38bdf8" stroke="#0f172a" stroke-width="2"/>
-      <rect x="${xRise - 85}" y="${padT + 18}" width="170" height="18" fill="rgba(56, 189, 248, 0.2)" stroke="#38bdf8" rx="3"/>
-      <text x="${xRise}" y="${padT + 30}" fill="#38bdf8" font-family="var(--font-mono)" font-size="8.5" font-weight="700" text-anchor="middle">&#9650; WHEN IT RISES AGAIN (SPRING 2027)</text>
+      <line x1="${xRise}" y1="${padT + 44}" x2="${xRise}" y2="${padT + plotH}" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.7"/>
+      <circle cx="${xRise}" cy="${yRise}" r="4" fill="#38bdf8" stroke="#0f172a" stroke-width="1.5"/>
+      <g transform="translate(${xRise}, ${padT + 30})">
+        <rect x="-85" y="0" width="170" height="18" fill="rgba(15, 23, 42, 0.9)" stroke="#38bdf8" stroke-width="1.2" rx="3"/>
+        <text x="0" y="12" fill="#38bdf8" font-family="var(--font-mono)" font-size="8" font-weight="700" text-anchor="middle">&#9650; WHEN IT RISES AGAIN (SPRING 2027)</text>
+      </g>
 
       <!-- NEXT HALVING #5 Marker at Day 1460 (April 17, 2028) -->
-      <line x1="${xH5}" y1="${padT}" x2="${xH5}" y2="${padT + plotH}" stroke="#c084fc" stroke-width="1.8" stroke-dasharray="4,2"/>
-      <circle cx="${xH5}" cy="${yH5}" r="5" fill="#c084fc" stroke="#0f172a" stroke-width="2"/>
-      <rect x="${xH5 - 80}" y="${padT + 42}" width="120" height="18" fill="rgba(192, 132, 252, 0.2)" stroke="#c084fc" rx="3"/>
-      <text x="${xH5 - 20}" y="${padT + 54}" fill="#c084fc" font-family="var(--font-mono)" font-size="8.5" font-weight="700" text-anchor="middle">&#9889; HALVING #5 (APR 2028)</text>
-
-      <!-- YOU ARE HERE (Day 853) Current Position Marker -->
-      <line x1="${xNow}" y1="${padT}" x2="${xNow}" y2="${padT + plotH}" stroke="#fbbf24" stroke-width="2.2" stroke-dasharray="4,2"/>
-      <circle cx="${xNow}" cy="${yNow}" r="12" fill="url(#beaconPulse)"/>
-      <circle cx="${xNow}" cy="${yNow}" r="5.5" fill="#fbbf24" stroke="#0f172a" stroke-width="2.5" filter="url(#glowGold)"/>
-      
-      <!-- YOU ARE HERE Floating Badge -->
-      <g transform="translate(${xNow}, ${yNow - 28})">
-        <rect x="-85" y="-14" width="170" height="24" fill="#0f172a" stroke="#fbbf24" stroke-width="1.8" rx="4"/>
-        <polygon points="0,10 -5,14 5,14" fill="#fbbf24"/>
-        <text x="0" y="1" fill="#fbbf24" font-family="var(--font-mono)" font-size="9" font-weight="800" text-anchor="middle">&#9660; YOU ARE HERE (DAY ${daysElapsed})</text>
-        <text x="0" y="8" fill="#e2e8f0" font-family="var(--font-mono)" font-size="7.5" text-anchor="middle">$${fmtNum(currentSpot, 0)} (${currentMult.toFixed(2)}x Halving)</text>
+      <line x1="${xH5}" y1="${padT + 66}" x2="${xH5}" y2="${padT + plotH}" stroke="#c084fc" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.7"/>
+      <circle cx="${xH5}" cy="${yH5}" r="4" fill="#c084fc" stroke="#0f172a" stroke-width="1.5"/>
+      <g transform="translate(${xH5 - 55}, ${padT + 52})">
+        <rect x="-55" y="0" width="110" height="18" fill="rgba(15, 23, 42, 0.9)" stroke="#c084fc" stroke-width="1.2" rx="3"/>
+        <text x="0" y="12" fill="#c084fc" font-family="var(--font-mono)" font-size="8" font-weight="700" text-anchor="middle">&#9889; HALVING #5 (2028)</text>
       </g>
     `;
   }
