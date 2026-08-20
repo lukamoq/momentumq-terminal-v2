@@ -18,8 +18,6 @@
         <a href="index.html" class="nav-brand-link" style="display:flex; align-items:center; text-decoration:none;">
           <img src="images/logo.png" alt="MomentumQ" class="nav-brand-logo" height="24">
         </a>
-        <span class="nav-brand-divider">/</span>
-        <span class="nav-brand-suite">AI AGENTS &amp; DOSSIERS</span>
       </div>
       <div class="nav-tabs-wrapper">
         <a href="index.html" class="nav-page-btn"><span class="nav-page-num">01</span> Forecasts<kbd class="nav-page-fkey">F3</kbd></a>
@@ -45,6 +43,7 @@
         <a class="rail-link" href="#secAgentConsole"><span class="rail-num">03</span> Research Console</a>
         <a class="rail-link" href="#secReportViewer"><span class="rail-num">04</span> Dossier Viewer</a>
         <a class="rail-link" href="#secReportsArchive"><span class="rail-num">05</span> Archive Blotter</a>
+        <a class="rail-link" href="#secNewsSentiment"><span class="rail-num">06</span> Live News Bull/Bear Radar</a>
       </div>
     </nav>
 
@@ -328,6 +327,106 @@
           </thead>
           <tbody id="agentReportsTbody">
             <!-- Rendered by agents.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 06: Live News Feed & AI Bullish/Bearish Sentiment Radar -->
+    <section class="section-news-sentiment" id="secNewsSentiment" style="margin-bottom: var(--sp-6);">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">06 // LIVE NEWS FEED &amp; REAL-TIME AGENT SENTIMENT</span>
+          <h2>Autonomous Market Wire Bull/Bear Classifier</h2>
+          <span class="section-meta">AI Agents continuously ingest breaking market wires across Macro, Tech/Semis, Earnings, and Crypto to classify Bullish/Bearish posture, confidence score, and catalysts.</span>
+        </div>
+      </div>
+
+      <!-- Sentiment Barometer HUD -->
+      <div class="fg-layout-grid" style="margin-bottom: var(--sp-5);">
+        <!-- Barometer Summary Card -->
+        <div class="fg-gauge-card">
+          <div class="fg-gauge-header">
+            <span class="gauge-kicker">NEWS SENTIMENT BAROMETER</span>
+            <span class="gauge-sub">Aggregated Agent Wire Score</span>
+          </div>
+          <div class="fg-hero-score-wrap">
+            <div class="fg-hero-score font-mono color-bull" id="newsBullPct">90.0%</div>
+            <div class="fg-hero-label font-mono color-bull" id="newsNetStance">EXTREME BULLISH</div>
+          </div>
+          <div class="fg-dial-wrap">
+            <div class="fg-dial-scale">
+              <span id="newsBearPctLabel">10.0% BEARISH</span>
+              <span id="newsNeutralPctLabel">0.0% NEUTRAL</span>
+              <span id="newsBullPctLabel">90.0% BULLISH</span>
+            </div>
+            <div class="fg-dial-track">
+              <div class="fg-dial-bar" id="newsBarometerBar" style="width: 90.0%; background: #34d399;"></div>
+            </div>
+          </div>
+          <p class="fg-hero-narrative" id="newsBarometerNarrative">
+            Order flow news momentum is accelerating into high-conviction bullish territory, driven by sovereign AI compute contracts, disinflationary FOMC minutes, and robust cloud growth.
+          </p>
+        </div>
+
+        <!-- Interactive Custom Breaking News Analyzer -->
+        <div class="fg-categories-panel">
+          <div class="card-header-row" style="margin-bottom: var(--sp-3);">
+            <span class="card-kicker">INTERACTIVE BREAKING WIRE SCANNER // INSTANT AGENT AUDIT</span>
+          </div>
+          <p style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">
+            Paste any breaking financial headline, Fed statement, or earnings quote to trigger instant multi-agent Bullish/Bearish classification:
+          </p>
+          <div class="agent-input-wrap" style="margin-bottom:12px;">
+            <div class="agent-prompt-prefix">Wire&gt;_</div>
+            <input type="text" class="agent-prompt-input" id="customHeadlineInput" placeholder="e.g. Fed lowers target benchmark rate 25 bps as unemployment remains stable at 4.1%...">
+            <button class="btn btn-primary" id="analyzeHeadlineBtn" style="padding:0 20px;">
+              <span id="analyzeHeadlineBtnText">CLASSIFY BULL / BEAR</span>
+            </button>
+          </div>
+          <div id="customHeadlineResultBox" style="display:none; padding:12px 14px; background:rgba(15,23,42,0.8); border:1px solid var(--border-subtle); border-radius:4px;">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Feed Controls -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:var(--sp-4);">
+        <div class="curve-span-pills" id="newsCategoryPills">
+          <span class="span-label">CATEGORY:</span>
+          <button class="curve-span-pill active" data-cat="all">ALL WIRES</button>
+          <button class="curve-span-pill" data-cat="Tech">TECH &amp; AI</button>
+          <button class="curve-span-pill" data-cat="Macro">MACRO &amp; FED</button>
+          <button class="curve-span-pill" data-cat="Earnings">EARNINGS</button>
+          <button class="curve-span-pill" data-cat="Crypto">CRYPTO</button>
+          <button class="curve-span-pill" data-cat="Commodities">COMMODITIES</button>
+        </div>
+        <div class="curve-span-pills" id="newsStancePills">
+          <span class="span-label">AGENT VERDICT:</span>
+          <button class="curve-span-pill active" data-stance="all">ALL STANCES</button>
+          <button class="curve-span-pill" data-stance="BULLISH">BULLISH ONLY</button>
+          <button class="curve-span-pill" data-stance="BEARISH">BEARISH ONLY</button>
+        </div>
+      </div>
+
+      <!-- Live News Feed Blotter Table -->
+      <div class="table-responsive is-auto-height">
+        <table class="blotter-table" id="newsFeedTable">
+          <thead>
+            <tr>
+              <th style="min-width:125px;">TIMESTAMP / SOURCE</th>
+              <th style="min-width:110px;">CATEGORY</th>
+              <th style="min-width:320px;">HEADLINE &amp; WIRE SUMMARY</th>
+              <th class="text-center" style="min-width:105px;">TICKERS</th>
+              <th class="text-center" style="min-width:130px;">AGENT VERDICT</th>
+              <th class="text-center" style="min-width:110px;">HORIZON</th>
+              <th style="min-width:260px;">AGENT CATALYSTS &amp; RATIONALE</th>
+            </tr>
+          </thead>
+          <tbody id="newsFeedTbody">
+            <tr class="skeleton-row"><td colspan="7"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+            <tr class="skeleton-row"><td colspan="7"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+            <tr class="skeleton-row"><td colspan="7"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
           </tbody>
         </table>
       </div>

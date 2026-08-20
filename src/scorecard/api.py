@@ -680,6 +680,33 @@ def post_agents_chat(req: AgentReportRequest) -> Response:
     return Response(content=json.dumps(result), media_type="application/json")
 
 
+# ==============================================================================
+# Live News Feed & AI Bullish/Bearish Sentiment Endpoints
+# ==============================================================================
+
+class NewsAnalyzeRequest(BaseModel):
+    headline: str
+    summary: Optional[str] = ""
+    api_key: Optional[str] = None
+
+
+@app.get("/api/news/feed")
+def get_news_feed(category: Optional[str] = None, ticker: Optional[str] = None, api_key: Optional[str] = None) -> Response:
+    """Return live market news feed with AI Agent Bullish/Bearish classifications and barometer."""
+    from scorecard.news import get_live_news_feed_analytics
+    data = get_live_news_feed_analytics(get_connection(), category=category, ticker=ticker, api_key=api_key)
+    return Response(content=json.dumps(data), media_type="application/json")
+
+
+@app.post("/api/news/analyze")
+def post_news_analyze(req: NewsAnalyzeRequest) -> Response:
+    """Classify a custom news headline/article as Bullish/Bearish using AI Agent."""
+    from scorecard.news import analyze_custom_news_text
+    data = analyze_custom_news_text(headline=req.headline, summary=req.summary or "", api_key=req.api_key)
+    return Response(content=json.dumps(data), media_type="application/json")
+
+
+
 @app.get("/api/macro/regime")
 def get_macro_regime() -> Response:
     """Return macro market regime classification, VIX volatility, and breadth factors."""

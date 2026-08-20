@@ -359,6 +359,47 @@
       URL.revokeObjectURL(url);
     });
 
+    // News Sentiment Category Pills
+    const newsCatPills = document.getElementById('newsCategoryPills');
+    if (newsCatPills) {
+      newsCatPills.addEventListener('click', (e) => {
+        const btn = e.target.closest('.curve-span-pill');
+        if (!btn) return;
+        newsCatPills.querySelectorAll('.curve-span-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        newsState.categoryFilter = btn.dataset.cat || 'all';
+        fetchNewsFeed();
+      });
+    }
+
+    // News Sentiment Stance Pills
+    const newsStancePills = document.getElementById('newsStancePills');
+    if (newsStancePills) {
+      newsStancePills.addEventListener('click', (e) => {
+        const btn = e.target.closest('.curve-span-pill');
+        if (!btn) return;
+        newsStancePills.querySelectorAll('.curve-span-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        newsState.stanceFilter = btn.dataset.stance || 'all';
+        renderNewsFeedTable();
+      });
+    }
+
+    // Custom Headline Analyzer
+    const analyzeBtn = document.getElementById('analyzeHeadlineBtn');
+    const headlineInput = document.getElementById('customHeadlineInput');
+    if (analyzeBtn && headlineInput) {
+      analyzeBtn.addEventListener('click', () => {
+        analyzeCustomHeadline();
+      });
+      headlineInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          analyzeCustomHeadline();
+        }
+      });
+    }
+
     // API Key Modal
     const apiKeyModal = document.getElementById('apiKeyModal');
     const apiKeyInput = document.getElementById('modalApiKeyInput');
@@ -395,6 +436,200 @@
   }
 
   /* ==========================================================================
+     Section 06: Live News Feed & Bull/Bear Classifier Logic
+     ========================================================================== */
+
+  const newsState = {
+    feed: [],
+    barometer: null,
+    categoryFilter: 'all',
+    stanceFilter: 'all',
+  };
+
+  async function fetchNewsFeed() {
+    const tbody = document.getElementById('newsFeedTbody');
+    if (!tbody) return;
+
+    try {
+      const url = `/api/news/feed?category=${encodeURIComponent(newsState.categoryFilter)}`;
+      const data = await safeFetchJson(url);
+      if (!data) return;
+
+      newsState.feed = data.feed || [];
+      newsState.barometer = data.barometer || {};
+
+      renderNewsBarometer();
+      renderNewsFeedTable();
+    } catch (err) {
+      console.error('Failed to load news feed:', err);
+    }
+  }
+
+  function renderNewsBarometer() {
+    const b = newsState.barometer;
+    if (!b) return;
+
+    const bullEl = document.getElementById('newsBullPct');
+    const stanceEl = document.getElementById('newsNetStance');
+    const barEl = document.getElementById('newsBarometerBar');
+    const bearLabel = document.getElementById('newsBearPctLabel');
+    const neutLabel = document.getElementById('newsNeutralPctLabel');
+    const bullLabel = document.getElementById('newsBullPctLabel');
+    const narrative = document.getElementById('newsBarometerNarrative');
+
+    if (bullEl) bullEl.textContent = `${b.bullish_pct}%`;
+    if (stanceEl) {
+      stanceEl.textContent = b.net_stance || 'BULLISH';
+      stanceEl.className = `fg-hero-label font-mono ${b.net_score >= 0.2 ? 'color-bull' : (b.net_score <= -0.2 ? 'color-bear' : 'highlight-gold')}`;
+    }
+    if (barEl) {
+      barEl.style.width = `${b.bullish_pct}%`;
+      barEl.style.background = b.net_score >= 0.2 ? '#34d399' : (b.net_score <= -0.2 ? '#f87171' : '#fbbf24');
+    }
+    if (bearLabel) bearLabel.textContent = `${b.bearish_pct}% BEARISH`;
+    if (neutLabel) neutLabel.textContent = `${b.neutral_pct}% NEUTRAL`;
+    if (bullLabel) bullLabel.textContent = `${b.bullish_pct}% BULLISH`;
+
+    if (narrative) {
+      narrative.textContent = `Aggregated multi-agent order flow score: ${b.net_score >= 0 ? '+' : ''}${b.net_score} (${b.net_stance}). Monitored ${b.total_items_analyzed} breaking market wire events with velocity status: ${b.velocity}.`;
+    }
+  }
+
+  function renderNewsFeedTable() {
+    const tbody = document.getElementById('newsFeedTbody');
+    if (!tbody) return;
+
+    let items = newsState.feed;
+    if (newsState.stanceFilter !== 'all') {
+      items = items.filter(i => i.sentiment === newsState.stanceFilter);
+    }
+
+    if (items.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted font-mono" style="padding:24px;">No breaking news items found for selected filter criteria.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = items.map(item => {
+      let badgeClass = 'verdict-pill hit';
+      let badgeColor = 'color-bull';
+      if (item.sentiment === 'BEARISH') {
+        badgeClass = 'verdict-pill miss';
+        badgeColor = 'color-bear';
+      } else if (item.sentiment === 'NEUTRAL') {
+        badgeClass = 'verdict-pill too_early';
+        badgeColor = 'text-muted';
+      }
+
+      const tickerPills = (item.tickers || []).map(t => `<span class="ticker-pill font-mono" style="font-size:10px; margin-right:3px;">${t}</span>`).join('');
+      const timeStr = item.timestamp ? item.timestamp.replace('T', ' ').substring(5, 16) : '\u2014';
+
+      return `
+        <tr class="interactive-call-row">
+          <td>
+            <div class="font-mono font-bold" style="font-size:11px;">${timeStr} UTC</div>
+            <div style="font-size:10px; color:var(--text-muted);">${escapeHtml(item.source)}</div>
+          </td>
+          <td>
+            <span class="badge-stance neutral" style="font-size:10px;">${escapeHtml(item.category)}</span>
+          </td>
+          <td>
+            <strong style="color:var(--text-primary); font-size:12.5px; display:block; margin-bottom:3px;">${escapeHtml(item.headline)}</strong>
+            <span style="font-size:11px; color:var(--text-muted); line-height:1.4; display:block;">${escapeHtml(item.summary)}</span>
+          </td>
+          <td class="text-center">${tickerPills || '<span class="text-muted">\u2014</span>'}</td>
+          <td class="text-center">
+            <span class="${badgeClass}" style="font-size:11px; padding:3px 8px; font-weight:700;">
+              ${item.sentiment}
+            </span>
+            <div class="font-mono ${badgeColor}" style="font-size:10px; margin-top:2px;">${item.confidence_pct}% CONF</div>
+          </td>
+          <td class="text-center font-mono" style="font-size:10.5px; color:var(--text-secondary);">
+            ${item.impact_horizon.replace('_', ' ')}
+          </td>
+          <td>
+            <div style="font-size:11px; color:var(--text-secondary); line-height:1.4;">
+              ${escapeHtml(item.agent_thesis || item.catalysts[0] || 'Quantitative flow analysis')}
+            </div>
+            <div style="font-size:9.5px; color:var(--text-dim); margin-top:2px; font-family:var(--font-mono);">
+              EVALUATED BY: ${escapeHtml(item.evaluated_by)}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function analyzeCustomHeadline() {
+    const input = document.getElementById('customHeadlineInput');
+    const resultBox = document.getElementById('customHeadlineResultBox');
+    const btnText = document.getElementById('analyzeHeadlineBtnText');
+    if (!input || !resultBox) return;
+
+    const headline = input.value.trim();
+    if (!headline) return;
+
+    if (btnText) btnText.textContent = 'AGENT REASONING...';
+
+    try {
+      const res = await fetch('/api/news/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          headline: headline,
+          summary: headline,
+          api_key: agentState.apiKey || undefined
+        })
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      let badgeClass = 'verdict-pill hit';
+      let badgeColor = '#34d399';
+      if (data.sentiment === 'BEARISH') {
+        badgeClass = 'verdict-pill miss';
+        badgeColor = '#f87171';
+      } else if (data.sentiment === 'NEUTRAL') {
+        badgeClass = 'verdict-pill too_early';
+        badgeColor = '#fbbf24';
+      }
+
+      resultBox.style.display = 'block';
+      resultBox.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+          <div>
+            <span class="card-kicker font-mono" style="color:${badgeColor};">AI AGENT CLASSIFICATION VERDICT</span>
+            <div style="font-size:14px; font-weight:700; color:var(--text-primary); margin-top:2px;">
+              ${escapeHtml(data.headline)}
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <span class="${badgeClass}" style="font-size:12px; font-weight:800; padding:4px 10px;">
+              ${data.sentiment}
+            </span>
+            <div class="font-mono font-bold" style="font-size:11px; color:${badgeColor}; margin-top:2px;">
+              ${data.confidence_pct}% CONFIDENCE
+            </div>
+          </div>
+        </div>
+        <p style="font-size:12px; color:var(--text-secondary); margin-bottom:6px; line-height:1.4;">
+          <strong>Thesis:</strong> ${escapeHtml(data.agent_thesis)}
+        </p>
+        <div style="display:flex; gap:12px; font-family:var(--font-mono); font-size:10.5px; color:var(--text-muted);">
+          <span>Impact: <strong>${data.impact_horizon.replace('_', ' ')}</strong></span>
+          <span>Assets: <strong>${(data.tickers || []).join(', ') || 'SPY'}</strong></span>
+          <span>Engine: <strong>${escapeHtml(data.evaluated_by)}</strong></span>
+        </div>
+      `;
+    } catch (err) {
+      resultBox.style.display = 'block';
+      resultBox.innerHTML = `<span style="color:#f87171; font-size:11px;">Failed to analyze custom headline: ${escapeHtml(err.message)}</span>`;
+    } finally {
+      if (btnText) btnText.textContent = 'CLASSIFY BULL / BEAR';
+    }
+  }
+
+  /* ==========================================================================
      Initialization
      ========================================================================== */
 
@@ -402,6 +637,7 @@
     setupAgentEventListeners();
     refreshAgentStatus();
     renderReportsArchiveTable();
+    fetchNewsFeed();
     if (agentState.reportsArchive.length === 0) {
       generateReport('eow_dossier');
     } else {
@@ -418,3 +654,4 @@
   }
 
 })();
+
