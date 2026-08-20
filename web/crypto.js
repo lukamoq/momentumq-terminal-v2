@@ -439,14 +439,209 @@
                 <strong class="color-bull">${isActive ? `${c.current_multiple}x` : `${c.peak_multiple}x`}</strong>
               </div>
               <div style="display:flex; justify-content:space-between;">
-                <span class="text-muted">${isActive ? 'Days Post Halving:' : 'Peak Timing:'}</span>
-                <span>${isActive ? `${c.days_post_halving} Days` : `Day ${c.peak_days_post}`}</span>
+                <span class="text-muted">${isActive ? 'Days Elapsed:' : 'Peak Timing:'}</span>
+                <span>${isActive ? `${c.days_post_halving} Days Post` : `Day ${c.peak_days_post} Post`}</span>
               </div>
+              ${!isActive && c.drawdown_pct ? `
+                <div style="display:flex; justify-content:space-between; border-top:1px solid rgba(255,255,255,0.06); padding-top:4px; margin-top:2px;">
+                  <span class="text-muted">Bear Trough:</span>
+                  <span class="color-bear">${c.drawdown_pct}% (Day ${c.trough_days_post})</span>
+                </div>
+              ` : ''}
             </div>
           </div>
         </div>
       `;
     }).join('');
+
+    renderHalvingRoadmap();
+    renderHalvingPhases();
+    renderHalvingTrajectoryChart();
+  }
+
+  function renderHalvingRoadmap() {
+    const grid = document.getElementById('halvingRoadmapGrid');
+    if (!grid || !cryptoState.halving) return;
+
+    const rm = cryptoState.halving.timing_roadmap || {};
+    const cards = [
+      {
+        kicker: "STAGE 1 // BREAKOUT INFLECTION",
+        title: "When BTC Ignites Post-Halving",
+        metric: "DAYS 150 – 180",
+        sub: "Median 165 Days Post-Halving",
+        desc: "Initial miner sell-off exhausts. The daily -450 BTC issuance reduction starves exchange books, triggering the vertical bull run.",
+        color: "highlight-cyan",
+      },
+      {
+        kicker: "STAGE 2 // MACRO CYCLE PEAK",
+        title: "When BTC Hits Cycle Top",
+        metric: "DAYS 480 – 550",
+        sub: "Median 526 Days Post-Halving",
+        desc: "Euphoric retail frenzy, extreme funding rates (+50% to +100% APR), and heavy long-term holder distribution into blow-off volume.",
+        color: "highlight-gold",
+      },
+      {
+        kicker: "STAGE 3 // CYCLICAL TROUGH",
+        title: "When BTC Hits Bear Bottom",
+        metric: "DAYS 800 – 900",
+        sub: "12–14 Months After Cycle Peak",
+        desc: "Deep -75% to -84% valuation compression. Long-term accumulation resumes as realized price forms macro cyclical floor.",
+        color: "color-bear",
+      },
+      {
+        kicker: "STAGE 4 // NEXT SECULAR RAMP",
+        title: "When BTC Rises for Next Cycle",
+        metric: "DAYS 1,050+",
+        sub: "~12 Mo. Before 2028 Halving",
+        desc: "Pre-halving accumulation rally begins ahead of the 5th block reward halving, establishing the foundation for the next secular multi-year expansion.",
+        color: "color-bull",
+      },
+    ];
+
+    grid.innerHTML = cards.map(c => `
+      <div style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:4px; padding:12px; display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <div class="font-mono text-muted" style="font-size:10px; margin-bottom:4px;">${c.kicker}</div>
+          <div style="font-weight:700; font-size:12.5px; margin-bottom:6px; color:var(--text-primary);">${c.title}</div>
+          <div class="font-mono ${c.color}" style="font-size:16px; font-weight:800; margin-bottom:2px;">${c.metric}</div>
+          <div class="font-mono text-muted" style="font-size:10px; margin-bottom:8px;">${c.sub}</div>
+        </div>
+        <p style="font-size:11px; color:var(--text-secondary); line-height:1.45; margin:0;">${c.desc}</p>
+      </div>
+    `).join('');
+  }
+
+  function renderHalvingPhases() {
+    const grid = document.getElementById('halvingPhasesGrid');
+    if (!grid || !cryptoState.halving) return;
+
+    const phases = cryptoState.halving.phases || [];
+    grid.innerHTML = phases.map(p => {
+      let badgeClass = 'verdict-pill too_early';
+      if (p.status.includes('ACTIVE')) badgeClass = 'verdict-pill hit';
+      else if (p.status.includes('COMPLETED')) badgeClass = 'status-badge live';
+
+      return `
+        <div style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:4px; padding:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div>
+              <div class="font-mono text-muted" style="font-size:10px;">${p.day_range}</div>
+              <div style="font-weight:700; font-size:13px; color:var(--text-primary);">${escapeHtml(p.phase_name)}</div>
+            </div>
+            <span class="${badgeClass}" style="font-size:10px; padding:3px 8px; font-family:var(--font-mono);">${p.status}</span>
+          </div>
+          <div style="font-size:11.5px; font-family:var(--font-mono); color:#fbbf24; margin-bottom:8px;">
+            <strong>Historical Behavior:</strong> ${p.historical_behavior}
+          </div>
+          <p style="font-size:11.5px; color:var(--text-secondary); line-height:1.5; margin-bottom:8px;">
+            ${p.market_mechanics}
+          </p>
+          <div style="background:rgba(0,0,0,0.25); border-left:2px solid #38bdf8; padding:6px 10px; font-size:11px; font-family:var(--font-mono); color:var(--text-primary);">
+            <strong>Inflection &amp; Timing:</strong> ${p.inflection_point}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderHalvingTrajectoryChart() {
+    const svg = document.getElementById('halvingTrajectorySvg');
+    if (!svg || !cryptoState.halving) return;
+
+    const curves = cryptoState.halving.cycle_curves || [];
+    if (curves.length === 0) return;
+
+    const W = 1000;
+    const H = 260;
+    const padL = 50;
+    const padR = 40;
+    const padT = 20;
+    const padB = 35;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+
+    const maxDay = 800;
+    const maxMult = 40; // visual cap with log-style scaling
+
+    const getX = (d) => padL + (d / maxDay) * plotW;
+    const getY = (m) => {
+      if (m === null || m === undefined) return null;
+      // Log scale mapping from 1.0 to 100.0
+      const logVal = Math.log10(Math.max(0.8, m));
+      const logMax = Math.log10(100.0);
+      const ratio = logVal / logMax;
+      return padT + plotH - (ratio * plotH);
+    };
+
+    // Phase bands
+    const x0 = getX(0);
+    const x150 = getX(150);
+    const x480 = getX(480);
+    const x550 = getX(550);
+    const x800 = getX(800);
+
+    // Build curve paths
+    const buildPath = (key) => {
+      let d = '';
+      let started = false;
+      for (let pt of curves) {
+        const y = getY(pt[key]);
+        if (y !== null) {
+          const x = getX(pt.day);
+          if (!started) {
+            d += `M ${x.toFixed(1)} ${y.toFixed(1)}`;
+            started = true;
+          } else {
+            d += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+          }
+        }
+      }
+      return d;
+    };
+
+    const path1 = buildPath('cycle1');
+    const path2 = buildPath('cycle2');
+    const path3 = buildPath('cycle3');
+    const path4 = buildPath('cycle4');
+
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.innerHTML = `
+      <!-- Phase Background Bands -->
+      <rect x="${x0}" y="${padT}" width="${x150 - x0}" height="${plotH}" fill="rgba(239, 68, 68, 0.05)"/>
+      <rect x="${x150}" y="${padT}" width="${x480 - x150}" height="${plotH}" fill="rgba(16, 185, 129, 0.08)"/>
+      <rect x="${x480}" y="${padT}" width="${x550 - x480}" height="${plotH}" fill="rgba(251, 191, 36, 0.08)"/>
+      <rect x="${x550}" y="${padT}" width="${x800 - x550}" height="${plotH}" fill="rgba(59, 130, 246, 0.05)"/>
+
+      <!-- Phase Labels Top -->
+      <text x="${(x0 + x150) / 2}" y="${padT + 12}" fill="#94a3b8" font-family="var(--font-mono)" font-size="9.5" text-anchor="middle">1. MINER CHOP (0-150d)</text>
+      <text x="${(x150 + x480) / 2}" y="${padT + 12}" fill="#34d399" font-family="var(--font-mono)" font-size="9.5" font-weight="700" text-anchor="middle">2. PARABOLIC EXPANSION (150-480d)</text>
+      <text x="${(x480 + x550) / 2}" y="${padT + 12}" fill="#fbbf24" font-family="var(--font-mono)" font-size="9.5" text-anchor="middle">3. PEAK</text>
+      <text x="${(x550 + x800) / 2}" y="${padT + 12}" fill="#60a5fa" font-family="var(--font-mono)" font-size="9.5" text-anchor="middle">4. TROUGH & RE-ACCUMULATION (550-800d)</text>
+
+      <!-- Y Axis Grid -->
+      ${[1, 2, 5, 10, 25, 50, 100].map(val => `
+        <line x1="${padL}" y1="${getY(val)}" x2="${W - padR}" y2="${getY(val)}" stroke="#1e293b" stroke-width="1" stroke-dasharray="2,3"/>
+        <text x="${padL - 6}" y="${getY(val) + 3}" fill="#64748b" font-family="var(--font-mono)" font-size="9.5" text-anchor="end">${val}x</text>
+      `).join('')}
+
+      <!-- X Axis Days -->
+      ${[0, 100, 150, 200, 300, 400, 500, 600, 700, 800].map(d => `
+        <line x1="${getX(d)}" y1="${padT + plotH}" x2="${getX(d)}" y2="${padT + plotH + 4}" stroke="#334155" stroke-width="1"/>
+        <text x="${getX(d)}" y="${padT + plotH + 16}" fill="#94a3b8" font-family="var(--font-mono)" font-size="9.5" text-anchor="middle">Day ${d}</text>
+      `).join('')}
+
+      <!-- Curves -->
+      <path d="${path1}" fill="none" stroke="#ef4444" stroke-width="1.6" stroke-dasharray="4,2" opacity="0.75"/>
+      <path d="${path2}" fill="none" stroke="#f59e0b" stroke-width="1.8" opacity="0.85"/>
+      <path d="${path3}" fill="none" stroke="#3b82f6" stroke-width="2.0" opacity="0.9"/>
+      <path d="${path4}" fill="none" stroke="#10b981" stroke-width="3.2" stroke-linecap="round"/>
+
+      <!-- Golden Breakout Marker at Day 165 -->
+      <line x1="${getX(165)}" y1="${padT}" x2="${getX(165)}" y2="${padT + plotH}" stroke="#34d399" stroke-width="1.5" stroke-dasharray="3,3"/>
+      <circle cx="${getX(165)}" cy="${getY(1.35)}" r="4.5" fill="#34d399" stroke="#0f172a" stroke-width="2"/>
+      <text x="${getX(165) + 6}" y="${getY(1.35) - 8}" fill="#34d399" font-family="var(--font-mono)" font-size="9.5" font-weight="700">HISTORICAL BREAKOUT POINT (DAY ~165)</text>
+    `;
   }
 
   /* ==========================================================================
