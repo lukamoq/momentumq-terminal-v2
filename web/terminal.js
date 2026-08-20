@@ -1,11 +1,11 @@
 /**
  * MomentumQ Terminal Controller (terminal.js)
- * Institutional Bloomberg & Classic Financial Terminal Engine
+ * Institutional Classic Financial Terminal Engine
  *
  * Provides:
  * 1. Global Macro Ticker Tape with live pulses
- * 2. Bloomberg-Style Omnibar / Command Runner (Cmd+K / Ctrl+K / F2 / TICKER <GO>)
- * 3. Terminal CRT Themes (Obsidian Dark / Bloomberg Amber / Phosphor Green)
+ * 2. Institutional Omnibar / Command Runner (Cmd+K / Ctrl+K / F2 / TICKER <GO>)
+ * 3. Terminal CRT Themes (Obsidian Dark / Amber CRT / Phosphor Green)
  * 4. Web Audio Synthesized Sound Effects Engine (subtle clicks / terminal chimes)
  * 5. Quick Ticker Snapshot Inspector Drawer (SPY, NVDA, AAPL, MSFT, etc.)
  * 6. Function Keys Ribbon ([F1 HELP] [F2 CMD] [F3 SCORE] [F4 MAG7] [F5 SEAS] [F6 GEX] [F7 SYNC] [F8 EXPORT] [F9 CRT])
@@ -83,10 +83,15 @@
       { cmd: 'VIX <GO>', desc: 'Jump to Implied Volatility Term Structure & Slope', action: () => navigateTo('macro.html#secVixTerm') },
       { cmd: 'SECTORS <GO>', desc: 'Jump to 11-Sector Rotation Breadth Table', action: () => navigateTo('macro.html#secSectorRotation') },
       { cmd: 'CORR <GO>', desc: 'Jump to Cross-Asset Correlation Matrix', action: () => navigateTo('macro.html#secCorrelation') },
+      { cmd: 'COMMODITIES <GO>', desc: 'Jump to Section 06 Commodities & Energy Benchmarks', action: () => navigateTo('macro.html#secCommodities') },
+      { cmd: 'AGENTS <GO>', desc: 'Jump to 06 Gemini 3.7 Flash Autonomous AI Agents & Dossiers', action: () => navigateTo('agents.html') },
+      { cmd: 'EOW <GO>', desc: 'Generate End-of-Week Executive Intelligence Dossier', action: () => navigateTo('agents.html') },
+      { cmd: 'REPORT <GO>', desc: 'Generate on-demand multi-agent quantitative report', action: () => navigateTo('agents.html') },
+      { cmd: 'DOSSIER <GO>', desc: 'Open synthesized quantitative intelligence archive', action: () => navigateTo('agents.html#secReportsArchive') },
       { cmd: 'SYNC <GO>', desc: 'Trigger live quantitative recalculation & sync', action: () => triggerLiveSync() },
       { cmd: 'EXPORT <GO>', desc: 'Export active page dataset as CSV', action: () => triggerActiveExport() },
       { cmd: 'THEME OBSIDIAN <GO>', desc: 'Switch terminal CRT theme to Obsidian Dark Slate', action: () => setTerminalTheme('obsidian') },
-      { cmd: 'THEME AMBER <GO>', desc: 'Switch terminal CRT theme to Bloomberg Amber', action: () => setTerminalTheme('amber') },
+      { cmd: 'THEME AMBER <GO>', desc: 'Switch terminal CRT theme to Amber CRT', action: () => setTerminalTheme('amber') },
       { cmd: 'THEME GREEN <GO>', desc: 'Switch terminal CRT theme to Matrix Phosphor Green', action: () => setTerminalTheme('green') },
       { cmd: 'SOUND ON <GO>', desc: 'Enable retro terminal mechanical audio synthesis', action: () => setSoundEnabled(true) },
       { cmd: 'SOUND OFF <GO>', desc: 'Mute retro terminal audio synthesis', action: () => setSoundEnabled(false) },
@@ -281,7 +286,7 @@
 
     tape.innerHTML = `
       <div class="tape-track-wrapper">
-        <div class="tape-label font-mono"><span class="live-dot-green"></span> BLOOMBERG FEED // LIVE MACRO TAPE:</div>
+        <div class="tape-label font-mono"><span class="live-dot-green"></span> MOMENTUMQ FEED // LIVE MACRO TAPE:</div>
         <div class="tape-marquee">
           <div class="tape-content">${itemsHtml}</div>
           <div class="tape-content" aria-hidden="true">${itemsHtml}</div>
@@ -311,7 +316,7 @@
   }
 
   /* ==========================================================================
-     Bloomberg Function Keys Bar
+     Terminal Function Keys Bar
      ========================================================================== */
 
   function renderFunctionKeysBar() {
@@ -329,11 +334,12 @@
       <button class="func-key" data-action="seasonality"><span class="f-num">F5</span> <span class="f-label">03 SEAS</span></button>
       <button class="func-key" data-action="options"><span class="f-num">F6</span> <span class="f-label">04 OPTIONS / GEX</span></button>
       <button class="func-key" data-action="macro"><span class="f-num">F7</span> <span class="f-label">05 MACRO</span></button>
-      <button class="func-key" data-action="sync"><span class="f-num">F8</span> <span class="f-label">&#8635; SYNC</span></button>
-      <button class="func-key" data-action="theme"><span class="f-num">F9</span> <span class="f-label">CRT THEME</span></button>
+      <button class="func-key highlight-gold" data-action="agents"><span class="f-num">F8</span> <span class="f-label">06 AI AGENTS</span></button>
+      <button class="func-key" data-action="sync"><span class="f-num">F9</span> <span class="f-label">&#8635; SYNC</span></button>
+      <button class="func-key" data-action="theme"><span class="f-num">F10</span> <span class="f-label">CRT THEME</span></button>
     `;
 
-    const nav = document.querySelector('.app-global-nav');
+    const nav = document.querySelector('.app-global-nav') || document.querySelector('.header-inner');
     if (nav && nav.parentNode) {
       nav.parentNode.insertBefore(funcBar, nav.nextSibling);
     } else {
@@ -352,6 +358,7 @@
       else if (act === 'seasonality') navigateTo('seasonality.html');
       else if (act === 'options') navigateTo('options.html');
       else if (act === 'macro') navigateTo('macro.html');
+      else if (act === 'agents') navigateTo('agents.html');
       else if (act === 'sync') triggerLiveSync();
       else if (act === 'export') triggerActiveExport();
       else if (act === 'theme') {
@@ -638,7 +645,7 @@
     const mag7Btn = document.getElementById('snapMag7Btn');
     const seasBtn = document.getElementById('snapSeasBtn');
 
-    if (snapTitle) snapTitle.textContent = `${cleanSym} — BLOOMBERG QUANTITATIVE AUDIT`;
+    if (snapTitle) snapTitle.textContent = `${cleanSym} — MOMENTUMQ QUANTITATIVE AUDIT`;
     drawer.style.display = 'flex';
     document.body.classList.add('modal-open');
 
@@ -781,7 +788,7 @@
         <div class="terminal-help-dialog font-mono">
           <div class="modal-header">
             <div class="modal-title-box">
-              <span class="modal-tag">BLOOMBERG TERMINAL GUIDE</span>
+              <span class="modal-tag">MOMENTUMQ TERMINAL GUIDE</span>
               <h3>MOMENTUMQ TERMINAL // COMMAND DIRECTORY &amp; HOTKEYS</h3>
             </div>
             <button class="modal-close-btn" id="termHelpCloseBtn">&times;</button>
@@ -790,7 +797,7 @@
             <div class="help-section">
               <h4>GLOBAL KEYBOARD SHORTCUTS</h4>
               <div class="help-grid">
-                <div class="help-row"><kbd>Cmd + K</kbd> / <kbd>Ctrl + K</kbd> / <kbd>F2</kbd><span>Open Bloomberg Command Omnibar</span></div>
+                <div class="help-row"><kbd>Cmd + K</kbd> / <kbd>Ctrl + K</kbd> / <kbd>F2</kbd><span>Open Terminal Command Omnibar</span></div>
                 <div class="help-row"><kbd>/</kbd><span>Quick Focus Local Page Search</span></div>
                 <div class="help-row"><kbd>F1</kbd><span>Open this Help &amp; Command Guide</span></div>
                 <div class="help-row"><kbd>F3</kbd><span>Jump to Page 01 (Direction Scorecard)</span></div>
@@ -809,13 +816,15 @@
               <div class="help-grid">
                 <div class="help-row"><code>NVDA &lt;GO&gt;</code><span>Open NVIDIA quantitative audit snapshot</span></div>
                 <div class="help-row"><code>SPY &lt;GO&gt;</code><span>Open S&amp;P 500 ETF Greeks &amp; dealer GEX</span></div>
+                <div class="help-row"><code>GLD &lt;GO&gt;</code><span>Open Gold spot, real rate correlation &amp; ratios</span></div>
+                <div class="help-row"><code>BRENT &lt;GO&gt;</code><span>Open Crude Oil / Brent energy analytics</span></div>
                 <div class="help-row"><code>SCORE &lt;GO&gt;</code><span>Open 01 Sell-Side Forecasts Scorecard</span></div>
                 <div class="help-row"><code>MAG7 &lt;GO&gt;</code><span>Navigate to 02 Magnificent 7 Big Tech</span></div>
                 <div class="help-row"><code>SEAS &lt;GO&gt;</code><span>Open 03 27-Year Cross-Asset Seasonality</span></div>
                 <div class="help-row"><code>OPT &lt;GO&gt; / GEX &lt;GO&gt;</code><span>Open 04 Options Volatility Surface &amp; GEX</span></div>
                 <div class="help-row"><code>MACRO &lt;GO&gt; / FG &lt;GO&gt;</code><span>Open 05 Macro Regime &amp; Fear/Greed</span></div>
-                <div class="help-row"><code>VIX &lt;GO&gt;</code><span>Open Implied Volatility Term Structure</span></div>
-                <div class="help-row"><code>THEME AMBER &lt;GO&gt;</code><span>Switch CRT to Bloomberg Phosphor Amber</span></div>
+                <div class="help-row"><code>COMMODITIES &lt;GO&gt;</code><span>Open 06 Commodities &amp; Energy Benchmarks</span></div>
+                <div class="help-row"><code>THEME AMBER &lt;GO&gt;</code><span>Switch CRT to Classic Phosphor Amber</span></div>
                 <div class="help-row"><code>THEME GREEN &lt;GO&gt;</code><span>Switch CRT to Matrix Phosphor Green</span></div>
                 <div class="help-row"><code>SOUND ON/OFF &lt;GO&gt;</code><span>Toggle retro mechanical synthesizer audio</span></div>
                 <div class="help-row"><code>SYNC &lt;GO&gt;</code><span>Re-ingest &amp; recalculate all quantitative models</span></div>
@@ -913,10 +922,15 @@
       }
       if (e.key === 'F8') {
         e.preventDefault();
-        triggerLiveSync();
+        navigateTo('agents.html');
         return;
       }
       if (e.key === 'F9') {
+        e.preventDefault();
+        triggerLiveSync();
+        return;
+      }
+      if (e.key === 'F10') {
         e.preventDefault();
         const themes = ['obsidian', 'amber', 'green'];
         const nextTheme = themes[(themes.indexOf(terminalState.theme) + 1) % themes.length];

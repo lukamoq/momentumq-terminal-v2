@@ -4952,7 +4952,7 @@ body.modal-open {
 }
 
 /* ==========================================================================
-   Bloomberg & Classic Financial Terminal Engine Styles
+   MomentumQ Classic Financial Terminal Engine Styles
    ========================================================================== */
 
 /* 1. Top Live Macro Ticker Tape Ribbon */
@@ -5100,7 +5100,7 @@ body.modal-open {
   font-weight: 700;
 }
 
-/* 2. Bloomberg Function Keys Bar */
+/* 2. Terminal Function Keys Bar */
 .terminal-func-bar {
   display: flex;
   align-items: center;
@@ -5694,10 +5694,10 @@ body.modal-open {
 }
 
 /* ==========================================================================
-   7. CRT Theme Mode Overrides: Bloomberg Amber & Phosphor Green
+   7. CRT Theme Mode Overrides: Classic Amber & Phosphor Green
    ========================================================================== */
 
-/* Bloomberg Amber CRT Theme */
+/* Classic Amber CRT Theme */
 body.theme-amber {
   --bg-canvas: #100b03;
   --bg-surface: #181005;

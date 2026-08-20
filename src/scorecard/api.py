@@ -621,6 +621,63 @@ from scorecard.commodities import compute_commodities_analytics
 from scorecard.vix import compute_vix_structure
 from scorecard.fear_greed import compute_fear_greed_index, compute_fear_greed_history
 from scorecard.options import compute_options_analytics, compute_options_trio_comparison
+from scorecard.agent_engine import generate_agent_report, get_gemini_api_key
+from pydantic import BaseModel
+
+
+class AgentReportRequest(BaseModel):
+    report_type: str = "eow_dossier"
+    user_query: Optional[str] = None
+    api_key: Optional[str] = None
+
+
+@app.get("/api/agents/status")
+def get_agents_status() -> Response:
+    """Return Gemini 3.7 Flash binding status, agent roster, and capabilities."""
+    has_key = bool(get_gemini_api_key())
+    data = {
+        "model": "gemini-3.7-flash",
+        "api_bound": has_key,
+        "agents": [
+            {"id": "macro_regime", "name": "Macro Regime Specialist", "role": "5-State Macro & Rates", "status": "ONLINE"},
+            {"id": "options_gex", "name": "Options Surface & Dealer GEX Specialist", "role": "BSM Greeks & Gamma Walls", "status": "ONLINE"},
+            {"id": "commodities", "name": "Commodities & Energy Specialist", "role": "Gold, Brent & Dollar Hedging", "status": "ONLINE"},
+            {"id": "sell_side_audit", "name": "Sell-Side Forecaster Auditor", "role": "Consensus Edge & Mag 7", "status": "ONLINE"},
+            {"id": "cio_synthesis", "name": "Chief Investment Officer (CIO)", "role": "Executive Dossier Synthesis", "status": "ONLINE"},
+        ],
+        "capabilities": [
+            "End-of-Week Executive Dossiers",
+            "Daily Market Open Strategic Memos",
+            "Dealer Gamma Wall & Expected Move Notes",
+            "Commodity Real-Rate Sensitivity Reports",
+            "Multi-Agent Interactive Data Chat",
+        ],
+    }
+    return Response(content=json.dumps(data), media_type="application/json")
+
+
+@app.post("/api/agents/generate-report")
+def post_agents_generate_report(req: AgentReportRequest) -> Response:
+    """Generate on-demand quantitative intelligence report with Gemini 3.7 Flash or synthesized engine."""
+    result = generate_agent_report(
+        get_connection(),
+        report_type=req.report_type,
+        user_query=req.user_query,
+        api_key=req.api_key,
+    )
+    return Response(content=json.dumps(result), media_type="application/json")
+
+
+@app.post("/api/agents/chat")
+def post_agents_chat(req: AgentReportRequest) -> Response:
+    """Interactive multi-agent chat query."""
+    result = generate_agent_report(
+        get_connection(),
+        report_type="chat_query",
+        user_query=req.user_query or "Analyze current market posture",
+        api_key=req.api_key,
+    )
+    return Response(content=json.dumps(result), media_type="application/json")
 
 
 @app.get("/api/macro/regime")
