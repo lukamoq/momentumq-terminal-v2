@@ -12,6 +12,7 @@
     activeType: 'eow_dossier',
     activeReport: null,
     reportsArchive: JSON.parse(localStorage.getItem('mq_agent_reports') || '[]'),
+    viewMode: 'rendered', // 'rendered' | 'raw'
     isLoading: false,
   };
 
@@ -36,6 +37,70 @@
       .replace(/'/g, '&#039;');
   }
 
+  function parseInlineFormatting(str) {
+    let s = escapeHtml(str);
+    s = s.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    s = s.replace(/`([^`]+)`/g, '<code class="font-mono">$1</code>');
+    return s;
+  }
+
+  function renderMarkdownHtml(md) {
+    if (!md) return '';
+    const lines = md.split('\n');
+    const html = [];
+    let inList = false;
+
+    for (let rawLine of lines) {
+      const line = rawLine.trimEnd();
+
+      if (line.startsWith('# ')) {
+        if (inList) { html.push('</ul>'); inList = false; }
+        html.push(`<h1>${escapeHtml(line.substring(2))}</h1>`);
+      } else if (line.startsWith('## ')) {
+        if (inList) { html.push('</ul>'); inList = false; }
+        html.push(`<h2>${escapeHtml(line.substring(3))}</h2>`);
+      } else if (line.startsWith('### ')) {
+        if (inList) { html.push('</ul>'); inList = false; }
+        html.push(`<h3>${escapeHtml(line.substring(4))}</h3>`);
+      } else if (line.startsWith('#### ')) {
+        if (inList) { html.push('</ul>'); inList = false; }
+        html.push(`<h4>${escapeHtml(line.substring(5))}</h4>`);
+      } else if (line.startsWith('---')) {
+        if (inList) { html.push('</ul>'); inList = false; }
+        html.push('<hr>');
+      } else if (line.startsWith('- ') || line.startsWith('* ')) {
+        if (!inList) { html.push('<ul>'); inList = true; }
+        html.push(`<li>${parseInlineFormatting(line.substring(2))}</li>`);
+      } else if (line.startsWith('> ')) {
+        if (inList) { html.push('</ul>'); inList = false; }
+        html.push(`<blockquote>${parseInlineFormatting(line.substring(2))}</blockquote>`);
+      } else if (line.trim() === '') {
+        if (inList) { html.push('</ul>'); inList = false; }
+      } else {
+        if (inList) { html.push('</ul>'); inList = false; }
+        html.push(`<p>${parseInlineFormatting(line)}</p>`);
+      }
+    }
+    if (inList) html.push('</ul>');
+    return html.join('\n');
+  }
+
+  function updateDossierDisplay(content, title, timestamp, model, mode) {
+    const renderedEl = document.getElementById('agentRenderedContainer');
+    const rawEl = document.getElementById('agentRawContainer');
+    const titleEl = document.getElementById('viewerReportTitle');
+    const metaEl = document.getElementById('viewerReportMeta');
+
+    if (renderedEl) renderedEl.innerHTML = renderMarkdownHtml(content);
+    if (rawEl) rawEl.textContent = content;
+    if (titleEl) titleEl.textContent = title || 'Quantitative Intelligence Dossier';
+    if (metaEl) {
+      const timeStr = timestamp ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'LIVE';
+      metaEl.textContent = `GENERATED ${timeStr} // ${model ? model.toUpperCase() : 'GEMINI 3.7 FLASH'} // ${mode ? mode.toUpperCase() : 'OBSERVED TAPE'}`;
+    }
+  }
+
   /* ==========================================================================
      Agent Status & Key Binding
      ========================================================================== */
@@ -47,6 +112,7 @@
     const statusBadge = document.getElementById('agentStatusBadge');
     const tickerEngineMode = document.getElementById('tickerEngineMode');
     const tickerAgentModel = document.getElementById('tickerAgentModel');
+    const hudEngineModel = document.getElementById('hudEngineModel');
 
     const isBound = Boolean(agentState.apiKey || (statusData && statusData.api_bound));
 
@@ -68,6 +134,10 @@
       tickerAgentModel.textContent = isBound ? 'GEMINI 3.7 FLASH' : 'GEMINI 3.7 (SYNTH)';
     }
 
+    if (hudEngineModel) {
+      hudEngineModel.textContent = isBound ? 'GEMINI 3.7 FLASH' : 'GEMINI 3.7 (SYNTH)';
+    }
+
     if (statusBadge) {
       statusBadge.textContent = isBound
         ? 'Engine: Gemini 3.7 Flash (Live Active)'
@@ -85,15 +155,13 @@
 
     const submitBtn = document.getElementById('agentSubmitBtn');
     const submitBtnText = document.getElementById('agentSubmitBtnText');
-    const topEowBtn = document.getElementById('generateEowTopBtn');
-    const contentEl = document.getElementById('agentReportContent');
-    const titleEl = document.getElementById('viewerReportTitle');
-    const metaEl = document.getElementById('viewerReportMeta');
+    const renderedEl = document.getElementById('agentRenderedContainer');
+    const rawEl = document.getElementById('agentRawContainer');
 
     if (submitBtn) submitBtn.classList.add('spinning');
-    if (topEowBtn) topEowBtn.classList.add('spinning');
     if (submitBtnText) submitBtnText.textContent = 'SYNTHESIZING...';
-    if (contentEl) contentEl.textContent = 'Ingesting observed SQLite market bars, macro regimes, and options GEX surfaces...\nSynthesizing multi-agent quantitative brief with Gemini 3.7 Flash...';
+    if (renderedEl) renderedEl.innerHTML = '<div style="color:var(--text-muted); font-family:var(--font-mono); padding:20px 0;"><span class="sync-dot pulsing"></span> Ingesting observed SQLite market bars, macro regimes, and options GEX surfaces...<br>Synthesizing multi-agent quantitative brief with Gemini 3.7 Flash...</div>';
+    if (rawEl) rawEl.textContent = 'Synthesizing quantitative brief with Gemini 3.7 Flash...';
 
     try {
       const res = await safeFetchJson('/api/agents/generate-report', {
@@ -111,13 +179,7 @@
       }
 
       agentState.activeReport = res;
-
-      if (contentEl) contentEl.textContent = res.content;
-      if (titleEl) titleEl.textContent = res.report_title || 'Quantitative Intelligence Dossier';
-      if (metaEl) {
-        const genTime = new Date(res.generated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        metaEl.textContent = `GENERATED AT ${genTime} // ENGINE: ${res.model.toUpperCase()} // ${res.mode.toUpperCase()}`;
-      }
+      updateDossierDisplay(res.content, res.report_title, res.generated_at, res.model, res.mode);
 
       // Add to local archive
       agentState.reportsArchive.unshift({
@@ -129,18 +191,16 @@
         content: res.content,
       });
 
-      // Keep last 25 reports
       agentState.reportsArchive = agentState.reportsArchive.slice(0, 25);
       localStorage.setItem('mq_agent_reports', JSON.stringify(agentState.reportsArchive));
 
       renderReportsArchiveTable();
     } catch (err) {
       console.error('Agent synthesis failed:', err);
-      if (contentEl) contentEl.textContent = `Error generating report: ${err.message}`;
+      if (renderedEl) renderedEl.innerHTML = `<div style="color:var(--color-bear); padding:20px 0;">Error generating report: ${escapeHtml(err.message)}</div>`;
     } finally {
       agentState.isLoading = false;
       if (submitBtn) submitBtn.classList.remove('spinning');
-      if (topEowBtn) topEowBtn.classList.remove('spinning');
       if (submitBtnText) submitBtnText.textContent = 'RUN AGENT SYNTHESIS';
     }
   }
@@ -183,12 +243,7 @@
         const rep = agentState.reportsArchive[idx];
         if (rep) {
           agentState.activeReport = rep;
-          const contentEl = document.getElementById('agentReportContent');
-          const titleEl = document.getElementById('viewerReportTitle');
-          const metaEl = document.getElementById('viewerReportMeta');
-          if (contentEl) contentEl.textContent = rep.content;
-          if (titleEl) titleEl.textContent = rep.title;
-          if (metaEl) metaEl.textContent = `ARCHIVED DOSSIER // GENERATED ${rep.timestamp}`;
+          updateDossierDisplay(rep.content, rep.title, rep.timestamp, 'gemini-3.7-flash', rep.mode);
           document.getElementById('secReportViewer')?.scrollIntoView({ behavior: 'smooth' });
         }
       });
@@ -200,6 +255,28 @@
      ========================================================================== */
 
   function setupAgentEventListeners() {
+    // View mode toggle (Rendered vs Raw)
+    const viewRenderedBtn = document.getElementById('viewModeRenderedBtn');
+    const viewRawBtn = document.getElementById('viewModeRawBtn');
+    const renderedContainer = document.getElementById('agentRenderedContainer');
+    const rawContainer = document.getElementById('agentRawContainer');
+
+    viewRenderedBtn?.addEventListener('click', () => {
+      viewRenderedBtn.classList.add('active');
+      viewRawBtn?.classList.remove('active');
+      if (renderedContainer) renderedContainer.style.display = 'block';
+      if (rawContainer) rawContainer.style.display = 'none';
+      agentState.viewMode = 'rendered';
+    });
+
+    viewRawBtn?.addEventListener('click', () => {
+      viewRawBtn.classList.add('active');
+      viewRenderedBtn?.classList.remove('active');
+      if (renderedContainer) renderedContainer.style.display = 'none';
+      if (rawContainer) rawContainer.style.display = 'block';
+      agentState.viewMode = 'raw';
+    });
+
     // Quick report pills
     const pills = document.getElementById('reportTemplatePills');
     if (pills) {
@@ -213,15 +290,32 @@
       });
     }
 
-    // Top EOW button
-    document.getElementById('generateEowTopBtn')?.addEventListener('click', () => {
-      generateReport('eow_dossier');
+    // Node query buttons
+    document.querySelectorAll('.agent-query-node-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const q = btn.dataset.query;
+        const promptInput = document.getElementById('agentPromptInput');
+        if (promptInput && q) {
+          promptInput.value = q;
+          generateReport('custom_inquiry', q);
+        }
+      });
+    });
+
+    // Suggestion chips
+    const promptInput = document.getElementById('agentPromptInput');
+    document.querySelectorAll('.agent-chip-btn').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const q = chip.dataset.query;
+        if (promptInput && q) {
+          promptInput.value = q;
+          generateReport('custom_inquiry', q);
+        }
+      });
     });
 
     // Custom query submit
-    const promptInput = document.getElementById('agentPromptInput');
     const submitBtn = document.getElementById('agentSubmitBtn');
-
     const handleCustomQuery = () => {
       const q = (promptInput?.value || '').trim();
       if (!q) {
@@ -238,7 +332,7 @@
 
     // Copy report
     document.getElementById('copyReportBtn')?.addEventListener('click', () => {
-      const content = document.getElementById('agentReportContent')?.textContent || '';
+      const content = agentState.activeReport ? agentState.activeReport.content : (document.getElementById('agentRawContainer')?.textContent || '');
       if (!content) return;
       navigator.clipboard.writeText(content).then(() => {
         const btn = document.getElementById('copyReportBtn');
@@ -252,28 +346,17 @@
 
     // Export report (.md)
     document.getElementById('exportReportBtn')?.addEventListener('click', () => {
-      const content = document.getElementById('agentReportContent')?.textContent || '';
+      const content = agentState.activeReport ? agentState.activeReport.content : (document.getElementById('agentRawContainer')?.textContent || '');
       if (!content) return;
       const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `MomentumQ_Dossier_${new Date().toISOString().substring(0, 10)}.md`;
+      a.download = `MoQ_Dossier_${new Date().toISOString().substring(0, 10)}.md`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    });
-
-    // Suggestion chips
-    document.querySelectorAll('.agent-chip-btn').forEach(chip => {
-      chip.addEventListener('click', () => {
-        const q = chip.dataset.query;
-        if (promptInput && q) {
-          promptInput.value = q;
-          generateReport('custom_inquiry', q);
-        }
-      });
     });
 
     // API Key Modal
@@ -319,18 +402,12 @@
     setupAgentEventListeners();
     refreshAgentStatus();
     renderReportsArchiveTable();
-    // Auto-generate initial EOW report if none exists
     if (agentState.reportsArchive.length === 0) {
       generateReport('eow_dossier');
     } else {
       const latest = agentState.reportsArchive[0];
       agentState.activeReport = latest;
-      const contentEl = document.getElementById('agentReportContent');
-      const titleEl = document.getElementById('viewerReportTitle');
-      const metaEl = document.getElementById('viewerReportMeta');
-      if (contentEl) contentEl.textContent = latest.content;
-      if (titleEl) titleEl.textContent = latest.title;
-      if (metaEl) metaEl.textContent = `LATEST DOSSIER // GENERATED ${latest.timestamp}`;
+      updateDossierDisplay(latest.content, latest.title, latest.timestamp, 'gemini-3.7-flash', latest.mode);
     }
   }
 

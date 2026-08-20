@@ -84,6 +84,40 @@
       </div>
     </header>
 
+    <!-- 6-Card Real-Time Quantitative Signals HUD Strip -->
+    <div class="agent-stats-strip">
+      <div class="stat-card">
+        <span class="stat-label">LLM ENGINE</span>
+        <div class="stat-value font-mono highlight-gold" id="hudEngineModel">GEMINI 3.7 FLASH</div>
+        <span class="stat-sub">1.0M Token Memory</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">COMMITTEE STATUS</span>
+        <div class="stat-value font-mono color-bull" id="hudActiveNodes">5 / 5 ONLINE</div>
+        <span class="stat-sub">Autonomous Consensus</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">MACRO REGIME</span>
+        <div class="stat-value font-mono color-bull" id="hudMacroRegime">BULL EXUBERANT</div>
+        <span class="stat-sub">88.4% Conviction Score</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">NET DEALER GEX</span>
+        <div class="stat-value font-mono color-bull" id="hudDealerGex">+$420.5M</div>
+        <span class="stat-sub">Long Gamma Buffer</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">GOLD / OIL RATIO</span>
+        <div class="stat-value font-mono highlight-gold" id="hudGoldOilRatio">3.16x</div>
+        <span class="stat-sub">Real Yield Hedge</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">LATEST DOSSIER</span>
+        <div class="stat-value font-mono" id="hudDossierDate">AUG 19, 2026</div>
+        <span class="stat-sub">End-of-Week Executive</span>
+      </div>
+    </div>
+
     <!-- Section 01: Specialized Agent Nodes -->
     <section class="section-agent-roster" id="secAgentRoster" style="margin-bottom: var(--sp-5);">
       <div class="section-title-row">
@@ -104,10 +138,11 @@
             </div>
             <h3 class="agent-node-title">Macro &amp; Rates Strategist</h3>
             <p class="agent-node-desc">5-State Regime Classifier, Treasury Yield Curve Slope (+30 bps), and High-Yield Credit OAS Spreads.</p>
+            <div class="agent-node-signal">SIGNAL: RISK-ON CARRY (+30 BPS YIELD)</div>
           </div>
           <div class="agent-node-bottom">
-            <span>Specialization:</span>
-            <span class="agent-node-metric color-bull">Regime / Rates</span>
+            <span>Regime / Rates</span>
+            <button class="agent-query-node-btn" data-query="Analyze current 5-state macro regime, +30 bps yield curve slope, and high-yield credit spreads">QUERY NODE</button>
           </div>
         </div>
 
@@ -120,10 +155,11 @@
             </div>
             <h3 class="agent-node-title">Options &amp; GEX Specialist</h3>
             <p class="agent-node-desc">Closed-Form BSM Greeks, Dealer Gamma Exposure (+$420.5M), 25Δ Put/Call Skew, and Max Pain Pinning.</p>
+            <div class="agent-node-signal">SIGNAL: LONG GAMMA (+$420M BUFFER)</div>
           </div>
           <div class="agent-node-bottom">
-            <span>Specialization:</span>
-            <span class="agent-node-metric color-bull">Volatility / GEX</span>
+            <span>Volatility / GEX</span>
+            <button class="agent-query-node-btn" data-query="Evaluate dealer gamma exposure, max pain strike, and 25-delta skew">QUERY NODE</button>
           </div>
         </div>
 
@@ -136,10 +172,11 @@
             </div>
             <h3 class="agent-node-title">Commodities &amp; FX Desk</h3>
             <p class="agent-node-desc">Gold/Silver Ratio (6.90x), Gold/Oil Multiples (3.16x), Real Yield (TIPS) Beta, and US Dollar Headwind.</p>
+            <div class="agent-node-signal">SIGNAL: MONETARY BID (6.90x GLD/SLV)</div>
           </div>
           <div class="agent-node-bottom">
-            <span>Specialization:</span>
-            <span class="agent-node-metric color-bull">Gold / Energy</span>
+            <span>Gold / Energy</span>
+            <button class="agent-query-node-btn" data-query="Analyze Gold real-rate sensitivity, gold/silver ratio, and Crude Oil inflation beta">QUERY NODE</button>
           </div>
         </div>
 
@@ -152,10 +189,11 @@
             </div>
             <h3 class="agent-node-title">Sell-Side Consensus Auditor</h3>
             <p class="agent-node-desc">Strategist Reliability Ratings, Consensus Blind Spot Alerts, and Mag 7 Target Price Realization.</p>
+            <div class="agent-node-signal">SIGNAL: 15-BANK TARGET (+12.4% S&amp;P)</div>
           </div>
           <div class="agent-node-bottom">
-            <span>Specialization:</span>
-            <span class="agent-node-metric color-bull">Sell-Side Audit</span>
+            <span>Sell-Side Audit</span>
+            <button class="agent-query-node-btn" data-query="Audit bank strategist price target realization and consensus blind spots">QUERY NODE</button>
           </div>
         </div>
 
@@ -168,10 +206,11 @@
             </div>
             <h3 class="agent-node-title">Executive CIO &amp; Allocation</h3>
             <p class="agent-node-desc">Synthesizes multi-node inputs into unified End-of-Week Executive Dossiers, Daily Memos, and Asset Allocations.</p>
+            <div class="agent-node-signal" style="border-color:rgba(251, 191, 36, 0.4); color:var(--accent-gold);">SYNTHESIS: CONSTRUCTIVE CARRY</div>
           </div>
           <div class="agent-node-bottom">
-            <span>Synthesis Role:</span>
-            <span class="agent-node-metric highlight-gold">CIO Consensus</span>
+            <span class="highlight-gold">CIO Consensus</span>
+            <button class="agent-query-node-btn highlight-gold" style="border-color:var(--accent-gold); color:var(--accent-gold);" data-query="Generate full executive synthesis and cross-asset tactical allocation">QUERY CHAIR</button>
           </div>
         </div>
       </div>
@@ -216,6 +255,7 @@
         </div>
 
         <div class="agent-input-wrap">
+          <div class="agent-prompt-prefix">MoQ:Agents&gt;_</div>
           <input type="text" class="agent-prompt-input" id="agentPromptInput" placeholder="Ask the agent committee anything regarding macro regimes, dealer gamma, options skew, gold ratios, or bank forecasts...">
           <button class="btn btn-primary" id="agentSubmitBtn" style="padding:0 24px;">
             <span id="agentSubmitBtnText">RUN AGENT SYNTHESIS</span>
@@ -245,14 +285,21 @@
             <span class="agent-viewer-filename" id="viewerReportTitle">End-of-Week Macro &amp; Volatility Intelligence Dossier</span>
             <span class="agent-viewer-badge font-mono" id="viewerReportMeta">GEMINI 3.7 FLASH // OBSERVED TAPE</span>
           </div>
-          <div style="display:flex; gap:8px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="agent-view-mode-tabs">
+              <button class="agent-view-tab-btn active" id="viewModeRenderedBtn">RENDERED BRIEF</button>
+              <button class="agent-view-tab-btn" id="viewModeRawBtn">RAW MARKDOWN</button>
+            </div>
             <button class="btn btn-secondary" id="copyReportBtn" style="padding:6px 12px; font-size:11px;">COPY RAW MARKDOWN</button>
             <button class="btn btn-secondary" id="exportReportBtn" style="padding:6px 12px; font-size:11px;">EXPORT REPORT (.MD)</button>
           </div>
         </div>
 
         <div class="agent-viewer-body" id="agentReportContent">
-          <!-- Rendered by agents.js -->
+          <div class="agent-viewer-rendered" id="agentRenderedContainer">
+            <!-- Rendered Markdown Output -->
+          </div>
+          <pre class="agent-viewer-raw font-mono" id="agentRawContainer" style="display:none; margin:0; line-height:1.6; white-space:pre-wrap;"></pre>
         </div>
       </div>
     </section>
