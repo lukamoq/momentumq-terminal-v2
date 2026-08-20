@@ -156,35 +156,81 @@
         </div>
       </div>
 
-      <!-- Historical Stock Price & Fear & Greed Indicator Tracker -->
+      <!-- Comprehensive Historical Multi-Asset & Macro Intelligence Studio -->
       <div class="fg-history-panel" id="fgHistoryPanel">
         <div class="fg-history-header-row">
           <div class="section-heading">
-            <span class="section-kicker">HISTORICAL TIME-SERIES &amp; INDICATOR REGIMES</span>
-            <h3>S&amp;P 500 Stock Price vs. Fear &amp; Greed Indicator History</h3>
-            <span class="section-meta">Continuous daily backtested tracking showing market inflection points, extreme panic bottoms (&le;25), and extreme exuberance peaks (&ge;75).</span>
+            <span class="section-kicker">HISTORICAL TIME-SERIES &amp; MACRO INDICATOR SUITE</span>
+            <h3>S&amp;P 500 Historical Stock Price &amp; Macro Analytics Studio</h3>
+            <span class="section-meta">Multi-year daily backtested time-series tracking SPY price, 50D/125D/200D SMAs, Fear &amp; Greed sentiment, credit default risk, yield curve slope, and cross-asset relative spreads.</span>
           </div>
-          <div class="curve-span-pills" id="fgLookbackPills">
-            <span class="span-label">TIMEFRAME:</span>
-            <button class="curve-span-pill" data-days="30">1M (30D)</button>
-            <button class="curve-span-pill" data-days="90">3M (90D)</button>
-            <button class="curve-span-pill" data-days="180">6M (180D)</button>
-            <button class="curve-span-pill active" data-days="300">1Y (300D)</button>
-            <button class="curve-span-pill" data-days="500">ALL</button>
+          <div class="macro-studio-controls" style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+            <div class="curve-span-pills" id="macroMetricPills">
+              <span class="span-label">INDICATOR:</span>
+              <button class="curve-span-pill active" data-metric="fear_greed">FEAR &amp; GREED</button>
+              <button class="curve-span-pill" data-metric="smas">50D / 200D SMAs</button>
+              <button class="curve-span-pill" data-metric="credit">CREDIT SPREAD</button>
+              <button class="curve-span-pill" data-metric="yield">YIELD CURVE</button>
+              <button class="curve-span-pill" data-metric="gold">SPY vs GOLD</button>
+              <button class="curve-span-pill" data-metric="sectors">TECH vs UTILITIES</button>
+              <button class="curve-span-pill" data-metric="trio">INDEX TRIO (SPY/QQQ/IWM)</button>
+            </div>
+            <div class="curve-span-pills" id="fgLookbackPills">
+              <span class="span-label">TIMEFRAME:</span>
+              <button class="curve-span-pill" data-days="63">3M (63D)</button>
+              <button class="curve-span-pill" data-days="126">6M (126D)</button>
+              <button class="curve-span-pill active" data-days="252">1Y (252D)</button>
+              <button class="curve-span-pill" data-days="500">2Y (500D)</button>
+              <button class="curve-span-pill" data-days="1255">5Y (1255D / ALL)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Macro Summary Statistics Metrics Bar -->
+        <div class="macro-stats-strip" id="macroStatsStrip" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:10px; margin-bottom:var(--sp-4);">
+          <div class="stat-card" style="padding:10px 14px;">
+            <span class="stat-label">CURRENT SPOT</span>
+            <span class="stat-value highlight-gold font-mono" id="statSpotPrice">$769.06</span>
+            <span class="stat-sub font-mono" id="statSpotChg">SPY Price</span>
+          </div>
+          <div class="stat-card" style="padding:10px 14px;">
+            <span class="stat-label">52-WEEK HIGH / LOW</span>
+            <span class="stat-value font-mono" style="font-size:13px;" id="stat52wRange">$777.88 / $540.20</span>
+            <span class="stat-sub font-mono highlight-gold" id="statDistHigh">-1.13% from ATH</span>
+          </div>
+          <div class="stat-card" style="padding:10px 14px;">
+            <span class="stat-label">MAX DRAWDOWN</span>
+            <span class="stat-value color-bear font-mono" id="statMaxDd">-19.4%</span>
+            <span class="stat-sub font-mono">5-Year Peak-to-Trough</span>
+          </div>
+          <div class="stat-card" style="padding:10px 14px;">
+            <span class="stat-label">5-YEAR CAGR</span>
+            <span class="stat-value color-bull font-mono" id="statCagr">+14.8% p.a.</span>
+            <span class="stat-sub font-mono">Compounded Growth</span>
+          </div>
+          <div class="stat-card" style="padding:10px 14px;">
+            <span class="stat-label">REALIZED SHARPE</span>
+            <span class="stat-value color-bull font-mono" id="statSharpe">0.82</span>
+            <span class="stat-sub font-mono">Rf = 4.0% Baseline</span>
+          </div>
+          <div class="stat-card" style="padding:10px 14px;">
+            <span class="stat-label">21D REALIZED VOL</span>
+            <span class="stat-value font-mono" id="statRvol">13.3%</span>
+            <span class="stat-sub font-mono">Annualized Sigma</span>
           </div>
         </div>
 
         <!-- Dual Chart Visualizer Container -->
         <div class="fg-chart-card">
           <div class="fg-chart-header">
-            <div class="fg-chart-legend">
+            <div class="fg-chart-legend" id="fgChartLegend">
               <span class="legend-item"><span class="legend-dot" style="background:#ffaa00;"></span> S&amp;P 500 Stock Price ($)</span>
-              <span class="legend-item"><span class="legend-dot" style="background:#38bdf8;"></span> Fear &amp; Greed Score (0-100)</span>
-              <span class="legend-item"><span class="legend-dot" style="background:#ef4444;"></span> Panic Zone (&le;25)</span>
-              <span class="legend-item"><span class="legend-dot" style="background:#10b981;"></span> Exuberance Zone (&ge;75)</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#38bdf8;"></span> Active Macro Indicator</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#34d399;"></span> 50-Day SMA</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#f472b6;"></span> 200-Day SMA</span>
             </div>
             <div class="fg-chart-hover-readout font-mono" id="fgChartHoverReadout">
-              Hover over chart to inspect daily values
+              Hover over chart to inspect daily historical values
             </div>
           </div>
           
@@ -196,24 +242,27 @@
         <!-- Historical Values Daily Blotter Table -->
         <div class="table-responsive is-auto-height" style="margin-top: var(--sp-4);">
           <div class="card-header-row" style="padding: 10px 14px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-bottom: none; border-radius: 6px 6px 0 0;">
-            <span class="card-kicker font-mono">HISTORICAL DAILY INDICATOR VALUES &amp; PRICE RECORD</span>
-            <span class="font-mono" style="font-size:11px; color:var(--text-muted);" id="fgHistoryRecordCount">Showing 300 Trading Sessions</span>
+            <span class="card-kicker font-mono">HISTORICAL DAILY INDICATOR VALUES &amp; MACRO RECORD</span>
+            <span class="font-mono" style="font-size:11px; color:var(--text-muted);" id="fgHistoryRecordCount">Showing 252 Trading Sessions</span>
           </div>
           <table class="blotter-table compact-table" id="fgHistoryTable">
             <thead>
               <tr>
-                <th style="min-width:105px;">DATE</th>
-                <th class="text-right" style="min-width:110px;">SPY STOCK PRICE</th>
-                <th class="text-right" style="min-width:90px;">DAY CHG</th>
-                <th class="text-center" style="min-width:130px;">FEAR &amp; GREED VALUE</th>
-                <th class="text-center" style="min-width:120px;">SENTIMENT REGIME</th>
+                <th style="min-width:100px;">DATE</th>
+                <th class="text-right" style="min-width:105px;">SPY PRICE</th>
+                <th class="text-right" style="min-width:85px;">DAY CHG</th>
+                <th class="text-right" style="min-width:95px;">50D SMA</th>
+                <th class="text-right" style="min-width:95px;">200D SMA</th>
+                <th class="text-center" style="min-width:125px;">FEAR &amp; GREED</th>
+                <th class="text-center" style="min-width:110px;">CREDIT SPREAD</th>
+                <th class="text-center" style="min-width:110px;">10Y-2Y SLOPE</th>
+                <th class="text-center" style="min-width:110px;">SPY vs GOLD</th>
                 <th class="text-center" style="min-width:90px;">14D RSI</th>
-                <th class="text-center" style="min-width:100px;">21D REALIZED VOL</th>
-                <th style="min-width:160px;">MARKET INFLECTION SIGNAL</th>
+                <th class="text-center" style="min-width:130px;">REGIME CLASSIFIER</th>
               </tr>
             </thead>
             <tbody id="fgHistoryTbody">
-              <tr class="skeleton-row"><td colspan="8"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+              <tr class="skeleton-row"><td colspan="11"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
             </tbody>
           </table>
         </div>

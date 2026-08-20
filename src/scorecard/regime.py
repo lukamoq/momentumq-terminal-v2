@@ -445,3 +445,218 @@ def compute_sector_rotation(conn: sqlite3.Connection) -> Dict[str, Any]:
         },
         "sectors": sector_results
     }
+
+
+def compute_macro_history(
+    conn: sqlite3.Connection, lookback_days: int = 1255
+) -> Dict[str, Any]:
+    """
+    Compute rich historical macro time series, technical trend filters,
+    moving averages, drawdowns, and cross-asset relative spreads.
+    """
+    def _fetch_series_dict(ticker: str, limit: int = lookback_days + 220) -> Dict[str, float]:
+        rows = conn.execute(
+            "SELECT date, close FROM market_observation WHERE ticker = ? ORDER BY date DESC LIMIT ?",
+            (ticker.upper(), limit),
+        ).fetchall()
+        return {str(r[0]): float(r[1]) for r in rows}
+
+    spy_rows = conn.execute(
+        "SELECT date, close FROM market_observation WHERE ticker = 'SPY' ORDER BY date DESC LIMIT ?",
+        (lookback_days + 220,),
+    ).fetchall()
+    if not spy_rows or len(spy_rows) < 50:
+        return {"dates": [], "spy": {}, "indicators": {}, "index_trio": {}, "summary_stats": {}}
+
+    spy_bars = [{"date": str(r[0]), "close": float(r[1])} for r in reversed(spy_rows)]
+    qqq_dict = _fetch_series_dict("QQQ")
+    iwm_dict = _fetch_series_dict("IWM")
+    gld_dict = _fetch_series_dict("GLD")
+    hyg_dict = _fetch_series_dict("HYG")
+    ief_dict = _fetch_series_dict("IEF")
+    shy_dict = _fetch_series_dict("SHY")
+    xlk_dict = _fetch_series_dict("XLK")
+    xlu_dict = _fetch_series_dict("XLU")
+
+    start_idx = max(200, len(spy_bars) - lookback_days)
+
+    dates: List[str] = []
+    spy_closes: List[float] = []
+    spy_pct_changes: List[float] = []
+    sma_50: List[Optional[float]] = []
+    sma_125: List[Optional[float]] = []
+    sma_200: List[Optional[float]] = []
+    drawdowns: List[float] = []
+    rsi_list: List[float] = []
+    rvol_list: List[float] = []
+
+    fear_greed_list: List[float] = []
+    credit_spread_list: List[float] = []
+    yield_slope_list: List[float] = []
+    gold_spread_list: List[float] = []
+    tech_vs_utility_list: List[float] = []
+    regimes_list: List[str] = []
+
+    spy_rebased: List[float] = []
+    qqq_rebased: List[float] = []
+    iwm_rebased: List[float] = []
+
+    base_spy = spy_bars[start_idx]["close"]
+    base_date = spy_bars[start_idx]["date"]
+    base_qqq = qqq_dict.get(base_date, base_spy)
+    base_iwm = iwm_dict.get(base_date, base_spy)
+
+    running_peak = 0.0
+    all_closes = [b["close"] for b in spy_bars]
+
+    for i in range(start_idx, len(spy_bars)):
+        d = spy_bars[i]["date"]
+        c = spy_bars[i]["close"]
+        prev_c = spy_bars[i - 1]["close"]
+        pct_chg = ((c / prev_c) - 1.0) * 100.0 if prev_c > 0 else 0.0
+
+        dates.append(d)
+        spy_closes.append(round(c, 2))
+        spy_pct_changes.append(round(pct_chg, 2))
+
+        running_peak = max(running_peak, c)
+        dd = ((c / running_peak) - 1.0) * 100.0
+        drawdowns.append(round(dd, 2))
+
+        sub_closes = all_closes[: i + 1]
+        m50 = sum(sub_closes[-50:]) / 50.0 if len(sub_closes) >= 50 else None
+        m125 = sum(sub_closes[-125:]) / 125.0 if len(sub_closes) >= 125 else None
+        m200 = sum(sub_closes[-200:]) / 200.0 if len(sub_closes) >= 200 else None
+
+        sma_50.append(round(m50, 2) if m50 else None)
+        sma_125.append(round(m125, 2) if m125 else None)
+        sma_200.append(round(m200, 2) if m200 else None)
+
+        if len(sub_closes) >= 22:
+            rets = [math.log(sub_closes[j] / sub_closes[j - 1]) for j in range(-21, 0)]
+            mean_r = sum(rets) / len(rets)
+            var_r = sum((r - mean_r) ** 2 for r in rets) / (len(rets) - 1)
+            ann_vol = math.sqrt(var_r * 252.0) * 100.0
+        else:
+            ann_vol = 15.0
+        rvol_list.append(round(ann_vol, 1))
+
+        if len(sub_closes) >= 15:
+            deltas = [sub_closes[j] - sub_closes[j - 1] for j in range(-14, 0)]
+            gains = [max(0.0, x) for x in deltas]
+            losses = [max(0.0, -x) for x in deltas]
+            avg_g = sum(gains) / 14.0
+            avg_l = sum(losses) / 14.0
+            rs = (avg_g / avg_l) if avg_l > 0 else 100.0
+            rsi = 100.0 - (100.0 / (1.0 + rs))
+        else:
+            rsi = 50.0
+        rsi_list.append(round(rsi, 1))
+
+        spy_rebased.append(round((c / base_spy) * 100.0, 2))
+        q_val = qqq_dict.get(d, c)
+        qqq_rebased.append(round((q_val / base_qqq) * 100.0, 2))
+        iwm_val = iwm_dict.get(d, c)
+        iwm_rebased.append(round((iwm_val / base_iwm) * 100.0, 2))
+
+        trend_score = max(0.0, min(100.0, (((c / (m125 or c)) - 1.0) * 100.0 + 6.0) / 12.0 * 100.0))
+        vol_score = max(0.0, min(100.0, 100.0 - ((ann_vol - 10.0) / 25.0 * 100.0)))
+        fg_score = round(trend_score * 0.35 + rsi * 0.35 + vol_score * 0.30, 1)
+        fear_greed_list.append(fg_score)
+
+        p_21_date = spy_bars[max(0, i - 21)]["date"]
+        if d in hyg_dict and p_21_date in hyg_dict and d in ief_dict and p_21_date in ief_dict:
+            hyg_r = (hyg_dict[d] / hyg_dict[p_21_date]) - 1.0
+            ief_r = (ief_dict[d] / ief_dict[p_21_date]) - 1.0
+            cred_spread = (hyg_r - ief_r) * 100.0
+        else:
+            cred_spread = 0.0
+        credit_spread_list.append(round(cred_spread, 2))
+
+        if d in ief_dict and p_21_date in ief_dict and d in shy_dict and p_21_date in shy_dict:
+            ief_21r = (ief_dict[d] / ief_dict[p_21_date]) - 1.0
+            shy_21r = (shy_dict[d] / shy_dict[p_21_date]) - 1.0
+            slope_proxy = (ief_21r - shy_21r) * 1000.0
+        else:
+            slope_proxy = 30.0
+        yield_slope_list.append(round(slope_proxy, 1))
+
+        if d in gld_dict and p_21_date in gld_dict:
+            spy_21r = (c / spy_bars[max(0, i - 21)]["close"]) - 1.0
+            gld_21r = (gld_dict[d] / gld_dict[p_21_date]) - 1.0
+            gold_sp = (spy_21r - gld_21r) * 100.0
+        else:
+            gold_sp = 0.0
+        gold_spread_list.append(round(gold_sp, 2))
+
+        if d in xlk_dict and p_21_date in xlk_dict and d in xlu_dict and p_21_date in xlu_dict:
+            xlk_21r = (xlk_dict[d] / xlk_dict[p_21_date]) - 1.0
+            xlu_21r = (xlu_dict[d] / xlu_dict[p_21_date]) - 1.0
+            tech_ut = (xlk_21r - xlu_21r) * 100.0
+        else:
+            tech_ut = 0.0
+        tech_vs_utility_list.append(round(tech_ut, 2))
+
+        if m50 and m200:
+            if c > m50 and m50 > m200 and ann_vol < 18.0 and fg_score > 65:
+                regime = "BULL_EXUBERANT"
+            elif c > m200 and m50 > m200:
+                regime = "BULL_TRENDING"
+            elif c < m50 and c > m200 and ann_vol >= 18.0:
+                regime = "VOLATILE_CORRECTION"
+            elif c < m200 and m50 < m200:
+                regime = "BEAR_CONTRACTION"
+            else:
+                regime = "RANGEBOUND"
+        else:
+            regime = "BULL_TRENDING"
+        regimes_list.append(regime)
+
+    last_p = spy_closes[-1]
+    high_52w = max(spy_closes[-252:]) if len(spy_closes) >= 252 else max(spy_closes)
+    low_52w = min(spy_closes[-252:]) if len(spy_closes) >= 252 else min(spy_closes)
+    max_dd = min(drawdowns)
+
+    years = len(spy_closes) / 252.0
+    cagr = ((last_p / spy_closes[0]) ** (1.0 / max(0.1, years)) - 1.0) * 100.0 if years > 0 else 0.0
+    mean_ann_vol = sum(rvol_list) / len(rvol_list) if rvol_list else 15.0
+    sharpe = (cagr - 4.0) / mean_ann_vol if mean_ann_vol > 0 else 0.0
+
+    return {
+        "dates": dates,
+        "spy": {
+            "close": spy_closes,
+            "pct_change": spy_pct_changes,
+            "sma_50": sma_50,
+            "sma_125": sma_125,
+            "sma_200": sma_200,
+            "drawdown": drawdowns,
+            "rsi_14": rsi_list,
+            "realized_vol_21d": rvol_list,
+        },
+        "indicators": {
+            "fear_greed": fear_greed_list,
+            "credit_spread": credit_spread_list,
+            "yield_slope": yield_slope_list,
+            "gold_spread": gold_spread_list,
+            "tech_vs_utility": tech_vs_utility_list,
+            "regimes": regimes_list,
+        },
+        "index_trio": {
+            "spy_rebased": spy_rebased,
+            "qqq_rebased": qqq_rebased,
+            "iwm_rebased": iwm_rebased,
+        },
+        "summary_stats": {
+            "current_price": last_p,
+            "high_52w": round(high_52w, 2),
+            "low_52w": round(low_52w, 2),
+            "pct_from_52w_high": round(((last_p / high_52w) - 1.0) * 100.0, 2),
+            "pct_from_52w_low": round(((last_p / low_52w) - 1.0) * 100.0, 2),
+            "max_drawdown": round(max_dd, 2),
+            "cagr": round(cagr, 2),
+            "annualized_vol": round(mean_ann_vol, 2),
+            "sharpe_ratio": round(sharpe, 2),
+            "total_bars": len(dates),
+        },
+    }

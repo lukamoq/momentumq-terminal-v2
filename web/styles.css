@@ -6193,3 +6193,22 @@ body.theme-green .macro-factor-box {
   height: auto;
   overflow: visible;
 }
+
+@media (max-width: 1100px) {
+  .macro-stats-strip {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .macro-studio-controls {
+    align-items: flex-start !important;
+    margin-top: 12px;
+  }
+}
+
+@media (max-width: 680px) {
+  .macro-stats-strip {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .curve-span-pills {
+    flex-wrap: wrap;
+  }
+}

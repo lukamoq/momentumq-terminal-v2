@@ -143,3 +143,30 @@ def test_credit_signal_appears_as_a_reported_signal(conn):
     regime = compute_macro_regime(conn)
     names = {s["name"] for s in regime["signals"]}
     assert "Credit Risk Appetite" in names
+
+
+def test_compute_macro_history(conn):
+    from scorecard.regime import compute_macro_history
+
+    hist = compute_macro_history(conn, lookback_days=252)
+    assert "dates" in hist
+    assert len(hist["dates"]) >= 200
+    assert "spy" in hist
+    assert len(hist["spy"]["close"]) == len(hist["dates"])
+    assert "indicators" in hist
+    assert "credit_spread" in hist["indicators"]
+    assert "yield_slope" in hist["indicators"]
+    assert "gold_spread" in hist["indicators"]
+    assert "summary_stats" in hist
+    assert hist["summary_stats"]["current_price"] > 0
+    assert hist["summary_stats"]["cagr"] is not None
+
+
+def test_api_macro_history_endpoint(client):
+    res = client.get("/api/macro/history?lookback=252")
+    assert res.status_code == 200
+    data = res.json()
+    assert "dates" in data
+    assert "spy" in data
+    assert "indicators" in data
+    assert "summary_stats" in data
