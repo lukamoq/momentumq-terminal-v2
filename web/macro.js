@@ -709,18 +709,32 @@
     const tbody = document.getElementById('sectorRotationTbody');
     if (!tbody) return;
 
+    const SECTOR_DRIVERS = {
+      'XLK': 'NVDA, AAPL, MSFT, AVGO',
+      'XLV': 'LLY, UNH, JNJ, ABBV',
+      'XLF': 'JPM, BAC, GS, MS, WFC',
+      'XLI': 'GE, CAT, UNP, HON, RTX',
+      'XLY': 'AMZN, TSLA, HD, MCD',
+      'XLC': 'META, GOOGL, NFLX, DIS',
+      'XLE': 'XOM, CVX, COP, EOG',
+      'XLP': 'PG, COST, PEP, KO, WMT',
+      'XLB': 'LIN, APD, SHW, ECL',
+      'XLU': 'NEE, SO, DUK, CEG',
+      'XLRE': 'PLD, AMT, EQIX, CCI'
+    };
+
     const defaultSectors = [
-      { ticker: 'XLK', name: 'Technology Select Sector SPDR', ytd: 0.184, m1: 0.032, alpha: 0.060, quadrant: 'LEADING', momentum: 88, drivers: 'NVDA, AAPL, MSFT' },
-      { ticker: 'XLC', name: 'Communication Services SPDR', ytd: 0.162, m1: 0.028, alpha: 0.038, quadrant: 'LEADING', momentum: 82, drivers: 'META, GOOGL, NFLX' },
-      { ticker: 'XLF', name: 'Financial Select Sector SPDR', ytd: 0.145, m1: 0.021, alpha: 0.021, quadrant: 'IMPROVING', momentum: 76, drivers: 'JPM, BAC, GS, MS' },
-      { ticker: 'XLI', name: 'Industrial Select Sector SPDR', ytd: 0.128, m1: 0.018, alpha: 0.004, quadrant: 'IMPROVING', momentum: 68, drivers: 'GE, CAT, UNP' },
-      { ticker: 'XLY', name: 'Consumer Discretionary SPDR', ytd: 0.114, m1: 0.015, alpha: -0.010, quadrant: 'WEAKENING', momentum: 58, drivers: 'AMZN, TSLA, HD' },
-      { ticker: 'XLV', name: 'Health Care Select Sector SPDR', ytd: 0.082, m1: 0.008, alpha: -0.042, quadrant: 'LAGGING', momentum: 45, drivers: 'LLY, UNH, JNJ' },
-      { ticker: 'XLE', name: 'Energy Select Sector SPDR', ytd: 0.071, m1: -0.005, alpha: -0.053, quadrant: 'LAGGING', momentum: 42, drivers: 'XOM, CVX, COP' },
-      { ticker: 'XLP', name: 'Consumer Staples Select Sector SPDR', ytd: 0.064, m1: 0.004, alpha: -0.060, quadrant: 'LAGGING', momentum: 38, drivers: 'PG, COST, PEP' },
-      { ticker: 'XLB', name: 'Materials Select Sector SPDR', ytd: 0.058, m1: -0.002, alpha: -0.066, quadrant: 'LAGGING', momentum: 35, drivers: 'LIN, APD, SHW' },
-      { ticker: 'XLU', name: 'Utilities Select Sector SPDR', ytd: 0.092, m1: 0.012, alpha: -0.032, quadrant: 'WEAKENING', momentum: 52, drivers: 'NEE, SO, DUK' },
-      { ticker: 'XLRE', name: 'Real Estate Select Sector SPDR', ytd: 0.045, m1: -0.008, alpha: -0.079, quadrant: 'LAGGING', momentum: 30, drivers: 'PLD, AMT, EQIX' }
+      { ticker: 'XLK', name: 'Technology Select Sector SPDR', return_1y: 0.379, return_1m: 0.016, alpha_3m: 0.012, quadrant: 'LEADING', momentum: 88 },
+      { ticker: 'XLC', name: 'Communication Services SPDR', return_1y: 0.005, return_1m: 0.012, alpha_3m: -0.087, quadrant: 'LAGGING', momentum: 42 },
+      { ticker: 'XLF', name: 'Financial Select Sector SPDR', return_1y: 0.095, return_1m: 0.024, alpha_3m: 0.077, quadrant: 'IMPROVING', momentum: 76 },
+      { ticker: 'XLI', name: 'Industrial Select Sector SPDR', return_1y: 0.205, return_1m: 0.018, alpha_3m: 0.030, quadrant: 'WEAKENING', momentum: 68 },
+      { ticker: 'XLY', name: 'Consumer Discretionary SPDR', return_1y: 0.031, return_1m: 0.032, alpha_3m: -0.017, quadrant: 'IMPROVING', momentum: 58 },
+      { ticker: 'XLV', name: 'Health Care Select Sector SPDR', return_1y: 0.293, return_1m: 0.096, alpha_3m: 0.144, quadrant: 'LEADING', momentum: 94 },
+      { ticker: 'XLE', name: 'Energy Select Sector SPDR', return_1y: 0.495, return_1m: 0.087, alpha_3m: -0.011, quadrant: 'IMPROVING', momentum: 82 },
+      { ticker: 'XLP', name: 'Consumer Staples Select Sector SPDR', return_1y: 0.057, return_1m: 0.030, alpha_3m: -0.043, quadrant: 'IMPROVING', momentum: 48 },
+      { ticker: 'XLB', name: 'Materials Select Sector SPDR', return_1y: 0.174, return_1m: 0.048, alpha_3m: 0.023, quadrant: 'LEADING', momentum: 72 },
+      { ticker: 'XLU', name: 'Utilities Select Sector SPDR', return_1y: 0.033, return_1m: -0.020, alpha_3m: -0.055, quadrant: 'LAGGING', momentum: 36 },
+      { ticker: 'XLRE', name: 'Real Estate Select Sector SPDR', return_1y: 0.099, return_1m: -0.005, alpha_3m: -0.024, quadrant: 'LAGGING', momentum: 40 }
     ];
 
     const list = (macroState.sectors && macroState.sectors.sectors && macroState.sectors.sectors.length > 0)
@@ -728,11 +742,28 @@
       : defaultSectors;
 
     tbody.innerHTML = list.map(s => {
-      const alphaClass = (s.alpha || 0) >= 0 ? 'color-bull font-bold' : 'color-bear font-bold';
+      const ytdVal = s.return_1y ?? s.ytd ?? 0;
+      const m1Val = s.return_1m ?? s.m1 ?? 0;
+      const alphaVal = s.alpha_3m ?? s.alpha_1m ?? s.alpha ?? 0;
+
+      const alphaClass = alphaVal >= 0 ? 'color-bull font-bold' : 'color-bear font-bold';
       let quadBadgeClass = 'verdict-pill too_early';
       if (s.quadrant === 'LEADING') quadBadgeClass = 'verdict-pill hit';
       else if (s.quadrant === 'LAGGING') quadBadgeClass = 'verdict-pill miss';
       else if (s.quadrant === 'IMPROVING') quadBadgeClass = 'badge-stance bullish';
+      else if (s.quadrant === 'WEAKENING') quadBadgeClass = 'badge-stance bearish';
+
+      let momentumScore = s.momentum;
+      if (momentumScore === undefined || momentumScore === null || isNaN(momentumScore)) {
+        const a3 = s.alpha_3m ?? 0;
+        const a1 = s.alpha_1m ?? 0;
+        const r1y = s.return_1y ?? 0;
+        const rawScore = 50 + (a3 * 220) + (a1 * 180) + (r1y * 35);
+        momentumScore = Math.round(Math.max(12, Math.min(98, rawScore)));
+      }
+
+      const scoreColor = momentumScore >= 70 ? 'var(--color-bull)' : (momentumScore <= 45 ? 'var(--color-bear)' : 'var(--accent-gold)');
+      const driversText = s.drivers || SECTOR_DRIVERS[s.ticker] || 'Equities Basket';
 
       return `
         <tr>
@@ -740,12 +771,14 @@
             <span class="ticker-pill font-mono">${s.ticker}</span>
             <strong style="margin-left:6px;">${escapeHtml(s.name)}</strong>
           </td>
-          <td class="text-right font-mono font-bold">${fmtPct(s.ytd)}</td>
-          <td class="text-right font-mono">${fmtPct(s.m1)}</td>
-          <td class="text-right font-mono ${alphaClass}">${fmtPct(s.alpha)}</td>
-          <td class="text-center"><span class="${quadBadgeClass}">${s.quadrant}</span></td>
-          <td class="text-center font-mono font-bold highlight-gold">${s.momentum} / 100</td>
-          <td style="font-size:11px; color:var(--text-secondary);">${escapeHtml(s.drivers || '')}</td>
+          <td class="text-right font-mono font-bold">${fmtPct(ytdVal)}</td>
+          <td class="text-right font-mono">${fmtPct(m1Val)}</td>
+          <td class="text-right font-mono ${alphaClass}">${fmtPct(alphaVal)}</td>
+          <td class="text-center"><span class="${quadBadgeClass}">${s.quadrant || 'NEUTRAL'}</span></td>
+          <td class="text-center font-mono font-bold" style="color:${scoreColor};">
+            ${momentumScore} / 100
+          </td>
+          <td style="font-size:11px; color:var(--text-secondary); font-family:var(--font-mono);">${escapeHtml(driversText)}</td>
         </tr>
       `;
     }).join('');
