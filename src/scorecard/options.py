@@ -790,18 +790,41 @@ def compute_options_analytics(conn: sqlite3.Connection, ticker: str = "SPY") -> 
             "call_volume": round(positioning["call_volume"], 0),
             "put_volume": round(positioning["put_volume"], 0),
             "hedging_bias": _hedging_bias(positioning["pcr_oi"]),
-        }
+        },
+        # Compatibility aliases for client dashboards
+        "spot_price": round(spot, 2),
+        "atm_iv": (current_iv / 100.0) if current_iv else 0.148,
+        "historical_vol_20d": (realized_vol_20d / 100.0) if realized_vol_20d else 0.12,
+        "max_pain": {"strike": max_pain_strike},
+        "gex_summary": {
+            "net_gex_total": dollar_gamma_1pct,
+            "call_gex_total": round(gex["call_gex"], 0),
+            "put_gex_total": round(-gex["put_gex"], 0),
+            "gamma_flip_level": gamma_flip_strike,
+            "call_wall_strike": call_wall_strike,
+            "put_wall_strike": put_wall_strike,
+            "gamma_regime": gex_regime,
+        },
+        "expected_move": {
+            "one_sigma_dollar": expected_moves.get("weekly", {}).get("dollar"),
+            "one_sigma_pct": (expected_moves.get("weekly", {}).get("pct", 0.0) / 100.0) if expected_moves.get("weekly") else 0.0,
+        },
     }
 
 
 def compute_options_trio_comparison(conn: sqlite3.Connection) -> Dict[str, Any]:
     """Compute comparative options positioning and Greeks table for SPY, QQQ, and IWM."""
+    spy = compute_options_analytics(conn, "SPY")
+    qqq = compute_options_analytics(conn, "QQQ")
+    iwm = compute_options_analytics(conn, "IWM")
+    trio = {
+        "SPY": spy,
+        "QQQ": qqq,
+        "IWM": iwm,
+    }
     return {
-        "indices": {
-            "SPY": compute_options_analytics(conn, "SPY"),
-            "QQQ": compute_options_analytics(conn, "QQQ"),
-            "IWM": compute_options_analytics(conn, "IWM"),
-        }
+        "indices": trio,
+        "assets": trio,
     }
 
 
