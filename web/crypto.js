@@ -527,19 +527,19 @@
           </td>
           <td>
             <div class="font-mono highlight-cyan">${m.breakout_date}</div>
-            <span class="text-muted font-mono" style="font-size:10.5px;">Day ${m.breakout_days} (${typeof m.breakout_price === 'number' ? `$${fmtNum(m.breakout_price, 2)}` : m.breakout_price})</span>
+            <span class="text-muted font-mono" style="font-size:10.5px;">Day ${m.breakout_days} (${m.breakout_months}) • ${typeof m.breakout_price === 'number' ? `$${fmtNum(m.breakout_price, 2)}` : m.breakout_price}</span>
           </td>
           <td>
             <div class="font-mono highlight-gold">${m.peak_date}</div>
-            <span class="text-muted font-mono" style="font-size:10.5px;">${m.peak_multiple}</span>
+            <span class="text-muted font-mono" style="font-size:10.5px;">Day ${m.peak_days} (${m.peak_months}) • ${m.peak_multiple}</span>
           </td>
           <td>
             <div class="font-mono color-bear">${m.bottom_date}</div>
-            <span class="text-muted font-mono" style="font-size:10.5px;">${m.drawdown}</span>
+            <span class="text-muted font-mono" style="font-size:10.5px;">Day ${m.bottom_days} (${m.bottom_months}) • ${m.drawdown}</span>
           </td>
           <td>
             <div class="font-mono color-bull" style="font-weight:700;">${m.rise_again_date}</div>
-            <span class="text-muted font-mono" style="font-size:10.5px;">${m.rise_again_lead} (Day ${m.rise_again_days})</span>
+            <span class="text-muted font-mono" style="font-size:10.5px;">${m.rise_again_lead} (Day ${m.rise_again_days} / ${m.rise_again_months})</span>
           </td>
           <td>
             <span class="font-mono ${isActive || isProj ? 'highlight-gold' : 'color-bull'}" style="font-size:11px;">${m.pre_halving_rally}</span>
@@ -576,11 +576,11 @@
             </div>
           </div>
 
-          <!-- 8-Stage Chronological Flow Cards -->
+          <!-- 8-Stage Chronological Flow Cards (with Months & Dates) -->
           <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:8px;">
             <!-- Stage 1: Halving Event -->
             <div style="background:rgba(0,0,0,0.3); border-left:3px solid #38bdf8; border-radius:3px; padding:8px 10px;">
-              <div class="font-mono text-muted" style="font-size:9.5px;">1. HALVING EVENT (DAY 0)</div>
+              <div class="font-mono text-muted" style="font-size:9.5px;">1. HALVING EVENT (${cf.start_halving.month_label || 'MONTH 0'})</div>
               <div class="font-mono highlight-cyan" style="font-size:12.5px; font-weight:700;">${cf.start_halving.date}</div>
               <div class="font-mono" style="font-size:11.5px; font-weight:700; color:#fff;">${cf.start_halving.price}</div>
               <div class="text-muted" style="font-size:10px;">${cf.start_halving.cut}</div>
@@ -596,7 +596,7 @@
 
             <!-- Stage 3: Breakout Inflection -->
             <div style="background:rgba(0,0,0,0.3); border-left:3px solid #34d399; border-radius:3px; padding:8px 10px;">
-              <div class="font-mono text-muted" style="font-size:9.5px;">3. BREAKOUT (DAY ${cf.breakout.day})</div>
+              <div class="font-mono text-muted" style="font-size:9.5px;">3. BREAKOUT (${cf.breakout.month_label || `DAY ${cf.breakout.day}`})</div>
               <div class="font-mono color-bull" style="font-size:12.5px; font-weight:700;">${cf.breakout.date}</div>
               <div class="font-mono" style="font-size:11.5px; font-weight:700; color:#fff;">${cf.breakout.price}</div>
               <div class="text-muted" style="font-size:9.5px; line-height:1.3;">${cf.breakout.desc}</div>
@@ -604,7 +604,7 @@
 
             <!-- Stage 4: Macro Peak -->
             <div style="background:rgba(0,0,0,0.3); border-left:3px solid #fbbf24; border-radius:3px; padding:8px 10px;">
-              <div class="font-mono text-muted" style="font-size:9.5px;">4. MACRO PEAK (DAY ${cf.macro_peak.day})</div>
+              <div class="font-mono text-muted" style="font-size:9.5px;">4. MACRO PEAK (${cf.macro_peak.month_label || `DAY ${cf.macro_peak.day}`})</div>
               <div class="font-mono highlight-gold" style="font-size:12.5px; font-weight:700;">${cf.macro_peak.date}</div>
               <div class="font-mono" style="font-size:11.5px; font-weight:700; color:#fbbf24;">${typeof cf.macro_peak.price === 'number' ? `$${fmtNum(cf.macro_peak.price, 2)}` : cf.macro_peak.price}</div>
               <div class="font-mono color-bull" style="font-size:10px;">${cf.macro_peak.gain}</div>
@@ -614,7 +614,7 @@
           <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px;">
             <!-- Stage 5: Bear Trough -->
             <div style="background:rgba(0,0,0,0.3); border-left:3px solid #ef4444; border-radius:3px; padding:8px 10px;">
-              <div class="font-mono text-muted" style="font-size:9.5px;">5. BEAR TROUGH (DAY ${cf.bear_trough.day})</div>
+              <div class="font-mono text-muted" style="font-size:9.5px;">5. BEAR TROUGH (${cf.bear_trough.month_label || `DAY ${cf.bear_trough.day}`})</div>
               <div class="font-mono color-bear" style="font-size:12.5px; font-weight:700;">${cf.bear_trough.date}</div>
               <div class="font-mono" style="font-size:11.5px; font-weight:700; color:#ef4444;">${typeof cf.bear_trough.price === 'number' ? `$${fmtNum(cf.bear_trough.price, 2)}` : cf.bear_trough.price}</div>
               <div class="font-mono color-bear" style="font-size:10px;">${cf.bear_trough.drawdown}</div>
@@ -630,7 +630,7 @@
 
             <!-- Stage 7: When It Rises Again -->
             <div style="background:rgba(0,0,0,0.3); border-left:3px solid #10b981; border-radius:3px; padding:8px 10px;">
-              <div class="font-mono text-muted" style="font-size:9.5px;">7. RISES AGAIN (DAY ${cf.rises_again.day})</div>
+              <div class="font-mono text-muted" style="font-size:9.5px;">7. RISES AGAIN (${cf.rises_again.month_label || `DAY ${cf.rises_again.day}`})</div>
               <div class="font-mono color-bull" style="font-size:12.5px; font-weight:700;">${cf.rises_again.date}</div>
               <div class="font-mono" style="font-size:11.5px; font-weight:700; color:#34d399;">${cf.rises_again.price}</div>
               <div class="font-mono highlight-gold" style="font-size:10px;">${cf.rises_again.lead}</div>
@@ -638,7 +638,7 @@
 
             <!-- Stage 8: Next Halving -->
             <div style="background:rgba(0,0,0,0.3); border-left:3px solid #c084fc; border-radius:3px; padding:8px 10px;">
-              <div class="font-mono text-muted" style="font-size:9.5px;">8. NEXT HALVING (DAY ${cf.next_halving.day})</div>
+              <div class="font-mono text-muted" style="font-size:9.5px;">8. NEXT HALVING (${cf.next_halving.month_label || `DAY ${cf.next_halving.day}`})</div>
               <div class="font-mono" style="font-size:12.5px; font-weight:700; color:#c084fc;">${cf.next_halving.date}</div>
               <div class="font-mono" style="font-size:11.5px; font-weight:700; color:#fff;">${cf.next_halving.price}</div>
               <div class="font-mono color-bull" style="font-size:10px;">${cf.next_halving.gain_from_rise} from Rise</div>
@@ -679,37 +679,36 @@
     const grid = document.getElementById('halvingRoadmapGrid');
     if (!grid || !cryptoState.halving) return;
 
-    const rm = cryptoState.halving.timing_roadmap || {};
     const cards = [
       {
         kicker: "STAGE 1 // BREAKOUT INFLECTION",
-        title: "When BTC Ignites Post-Halving",
-        metric: "DAYS 150 – 180",
-        sub: "Median 165 Days Post-Halving",
-        desc: "Initial miner sell-off exhausts. The daily -450 BTC issuance reduction starves exchange books, triggering the vertical bull run.",
-        color: "highlight-cyan",
+        title: "When Chop Ends & Bull Starts",
+        metric: "DAYS 150 – 180 (MONTH 5.5)",
+        sub: "Oct 2024 in Cycle 4 (Completed)",
+        desc: "Post-halving miner capitulation exhaustion. Cumulative structural supply shock overcomes daily exchange liquidity, igniting the primary parabolic markup window.",
+        color: "color-bull",
       },
       {
         kicker: "STAGE 2 // MACRO CYCLE PEAK",
-        title: "When BTC Hits Cycle Top",
-        metric: "DAYS 480 – 550",
-        sub: "Median 526 Days Post-Halving",
-        desc: "Euphoric retail frenzy, extreme funding rates (+50% to +100% APR), and heavy long-term holder distribution into blow-off volume.",
+        title: "When BTC Reaches Cycle Top",
+        metric: "DAYS 480 – 550 (MONTH 17–18)",
+        sub: "Sep – Oct 2025 in Cycle 4",
+        desc: "Parabolic blow-off top resolving in Q4 of post-halving year. Retail leverage mania peaks as institutional distribution into terminal liquidity completes.",
         color: "highlight-gold",
       },
       {
         kicker: "STAGE 3 // CYCLICAL TROUGH",
         title: "When BTC Hits Bear Bottom",
-        metric: "DAYS 800 – 900",
-        sub: "12–14 Months After Cycle Peak",
+        metric: "DAYS 800 – 900 (MONTH 26–30)",
+        sub: "12–14 Months After Peak (Fall 2026)",
         desc: "Deep -75% to -84% valuation compression. Long-term accumulation resumes as realized price forms macro cyclical floor.",
         color: "color-bear",
       },
       {
         kicker: "STAGE 4 // NEXT SECULAR RAMP",
         title: "When BTC Rises for Next Cycle",
-        metric: "DAYS 1,050+",
-        sub: "~12 Mo. Before 2028 Halving",
+        metric: "DAYS 1,050+ (MONTH 36 / YEAR 3)",
+        sub: "~12 Mo. Before 2028 Halving (Apr 2027)",
         desc: "Pre-halving accumulation rally begins ahead of the 5th block reward halving, establishing the foundation for the next secular multi-year expansion.",
         color: "color-bull",
       },
@@ -720,7 +719,7 @@
         <div>
           <div class="font-mono text-muted" style="font-size:10px; margin-bottom:4px;">${c.kicker}</div>
           <div style="font-weight:700; font-size:12.5px; margin-bottom:6px; color:var(--text-primary);">${c.title}</div>
-          <div class="font-mono ${c.color}" style="font-size:16px; font-weight:800; margin-bottom:2px;">${c.metric}</div>
+          <div class="font-mono ${c.color}" style="font-size:15px; font-weight:800; margin-bottom:2px;">${c.metric}</div>
           <div class="font-mono text-muted" style="font-size:10px; margin-bottom:8px;">${c.sub}</div>
         </div>
         <p style="font-size:11px; color:var(--text-secondary); line-height:1.45; margin:0;">${c.desc}</p>
@@ -769,11 +768,11 @@
     if (curves.length === 0) return;
 
     const W = 1000;
-    const H = 290;
+    const H = 310;
     const padL = 50;
     const padR = 40;
     const padT = 32;
-    const padB = 42;
+    const padB = 52;
     const plotW = W - padL - padR;
     const plotH = H - padT - padB;
 
@@ -825,6 +824,7 @@
     // Current Cycle 4 spot data
     const activeHud = cryptoState.halving.active_cycle_hud || {};
     const daysElapsed = activeHud.days_elapsed || 853;
+    const monthsElapsed = (daysElapsed / 30.4375).toFixed(1);
     const currentSpot = cryptoState.overview?.spot || 69297.78;
     const currentMult = currentSpot / 63800.0;
     const xNow = getX(daysElapsed);
@@ -834,6 +834,20 @@
     const yRise = getY(10.67);
     const xH5 = getX(1460);
     const yH5 = getY(10.33);
+
+    // Explicit Month/Day X-axis milestones
+    const xMilestones = [
+      { day: 0, month: "M0", date: "Apr 2024" },
+      { day: 165, month: "M5.5", date: "Oct 2024" },
+      { day: 371, month: "M12.2", date: "Apr 2025" },
+      { day: 526, month: "M17.5", date: "Sep 2025" },
+      { day: 750, month: "M24.6", date: "May 2026" },
+      { day: 853, month: "M28.0", date: "Aug 2026" },
+      { day: 950, month: "M31.2", date: "Nov 2026" },
+      { day: 1090, month: "M35.8", date: "Apr 2027" },
+      { day: 1250, month: "M41.1", date: "Sep 2027" },
+      { day: 1460, month: "M48.0", date: "Apr 2028" },
+    ];
 
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     svg.innerHTML = `
@@ -857,12 +871,12 @@
       <rect x="${x950}" y="${padT}" width="${x1090 - x950}" height="${plotH}" fill="rgba(148, 163, 184, 0.06)"/>
       <rect x="${x1090}" y="${padT}" width="${x1460 - x1090}" height="${plotH}" fill="rgba(192, 132, 252, 0.08)"/>
 
-      <!-- Phase Labels Top -->
-      <text x="${(x0 + x165) / 2}" y="${padT - 12}" fill="#94a3b8" font-family="var(--font-mono)" font-size="8" text-anchor="middle">1. CHOP (0-165d)</text>
-      <text x="${(x165 + x550) / 2}" y="${padT - 12}" fill="#34d399" font-family="var(--font-mono)" font-size="8" font-weight="700" text-anchor="middle">2. BULL RUN &amp; PEAK (165-550d)</text>
-      <text x="${(x550 + x950) / 2}" y="${padT - 12}" fill="#60a5fa" font-family="var(--font-mono)" font-size="8" text-anchor="middle">3. BEAR CRASH &amp; BOTTOM (550-950d)</text>
-      <text x="${(x950 + x1090) / 2}" y="${padT - 12}" fill="#cbd5e1" font-family="var(--font-mono)" font-size="8" text-anchor="middle">4. WINTER BASE</text>
-      <text x="${(x1090 + x1460) / 2}" y="${padT - 12}" fill="#c084fc" font-family="var(--font-mono)" font-size="8" font-weight="700" text-anchor="middle">5. PRE-HALVING RAMP (1090-1460d)</text>
+      <!-- Phase Labels Top (with Months) -->
+      <text x="${(x0 + x165) / 2}" y="${padT - 12}" fill="#94a3b8" font-family="var(--font-mono)" font-size="8" text-anchor="middle">1. CHOP (M 0-5.5)</text>
+      <text x="${(x165 + x550) / 2}" y="${padT - 12}" fill="#34d399" font-family="var(--font-mono)" font-size="8" font-weight="700" text-anchor="middle">2. BULL RUN &amp; PEAK (M 5.5-18.0)</text>
+      <text x="${(x550 + x950) / 2}" y="${padT - 12}" fill="#60a5fa" font-family="var(--font-mono)" font-size="8" text-anchor="middle">3. BEAR CRASH &amp; BOTTOM (M 18-31)</text>
+      <text x="${(x950 + x1090) / 2}" y="${padT - 12}" fill="#cbd5e1" font-family="var(--font-mono)" font-size="8" text-anchor="middle">4. WINTER BASE (M 31-36)</text>
+      <text x="${(x1090 + x1460) / 2}" y="${padT - 12}" fill="#c084fc" font-family="var(--font-mono)" font-size="8" font-weight="700" text-anchor="middle">5. PRE-HALVING RAMP (M 36-48)</text>
 
       <!-- Y Axis Grid & Labels -->
       ${[1, 2, 5, 10, 25, 50, 100].map(val => `
@@ -870,10 +884,11 @@
         <text x="${padL - 6}" y="${getY(val) + 3}" fill="#64748b" font-family="var(--font-mono)" font-size="9" text-anchor="end">${val}x</text>
       `).join('')}
 
-      <!-- X Axis Days Across Full 4-Year Cycle -->
-      ${[0, 165, 371, 526, 750, 853, 950, 1090, 1250, 1460].map(d => `
-        <line x1="${getX(d)}" y1="${padT + plotH}" x2="${getX(d)}" y2="${padT + plotH + 4}" stroke="#334155" stroke-width="1"/>
-        <text x="${getX(d)}" y="${padT + plotH + 16}" fill="#94a3b8" font-family="var(--font-mono)" font-size="8.5" text-anchor="middle">Day ${d}</text>
+      <!-- X Axis Days & Months Dual Labels Across Full 4-Year Cycle -->
+      ${xMilestones.map(m => `
+        <line x1="${getX(m.day)}" y1="${padT + plotH}" x2="${getX(m.day)}" y2="${padT + plotH + 4}" stroke="#334155" stroke-width="1"/>
+        <text x="${getX(m.day)}" y="${padT + plotH + 15}" fill="#94a3b8" font-family="var(--font-mono)" font-size="8" text-anchor="middle">Day ${m.day}</text>
+        <text x="${getX(m.day)}" y="${padT + plotH + 26}" fill="${m.day === 853 ? '#fbbf24' : (m.day === 1090 ? '#38bdf8' : (m.day === 1460 ? '#c084fc' : '#64748b'))}" font-family="var(--font-mono)" font-size="7.5" font-weight="${m.day === 853 || m.day === 1090 || m.day === 1460 ? '700' : '400'}" text-anchor="middle">${m.month} (${m.date})</text>
       `).join('')}
 
       <!-- Curves (Full Cycles 1, 2, 3, Active 4, and Projected 4 to Halving #5) -->
@@ -883,12 +898,12 @@
       <path d="${path4}" fill="none" stroke="#10b981" stroke-width="3.8" stroke-linecap="round"/>
       <path d="${path4Proj}" fill="none" stroke="#34d399" stroke-width="2.2" stroke-dasharray="4,3" opacity="0.85"/>
 
-      <!-- Golden Breakout Marker at Day 165 -->
+      <!-- Golden Breakout Marker at Day 165 (Month 5.5 / Oct 2024) -->
       <line x1="${getX(165)}" y1="${padT}" x2="${getX(165)}" y2="${padT + plotH}" stroke="#34d399" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.6"/>
       <circle cx="${getX(165)}" cy="${getY(1.44)}" r="3.5" fill="#34d399" stroke="#0f172a" stroke-width="1.5"/>
-      <text x="${getX(165) + 6}" y="${getY(1.44) - 6}" fill="#34d399" font-family="var(--font-mono)" font-size="8">Breakout (Day 165)</text>
+      <text x="${getX(165) + 6}" y="${getY(1.44) - 6}" fill="#34d399" font-family="var(--font-mono)" font-size="8">Breakout (M 5.5 / Oct 2024)</text>
 
-      <!-- Precision Target on Cycle 4 Line (Day 853) - Unobstructed -->
+      <!-- Precision Target on Cycle 4 Line (Day 853 / Month 28.0) - Unobstructed -->
       <line x1="${xNow}" y1="${padT + 26}" x2="${xNow}" y2="${padT + plotH}" stroke="#fbbf24" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.65"/>
       <circle cx="${xNow}" cy="${yNow}" r="8" fill="url(#beaconPulse)"/>
       <circle cx="${xNow}" cy="${yNow}" r="4" fill="#fbbf24" stroke="#0f172a" stroke-width="2"/>
@@ -896,24 +911,24 @@
 
       <!-- YOU ARE HERE Sleek Top Pill (In Open Sky Zone, Above All Curves) -->
       <g transform="translate(${xNow}, ${padT + 6})">
-        <rect x="-85" y="0" width="170" height="20" fill="rgba(15, 23, 42, 0.92)" stroke="#fbbf24" stroke-width="1.4" rx="4"/>
-        <text x="0" y="13" fill="#fbbf24" font-family="var(--font-mono)" font-size="8.5" font-weight="800" text-anchor="middle">&#9660; YOU ARE HERE // DAY ${daysElapsed} ($${fmtNum(currentSpot, 0)})</text>
+        <rect x="-95" y="0" width="190" height="20" fill="rgba(15, 23, 42, 0.92)" stroke="#fbbf24" stroke-width="1.4" rx="4"/>
+        <text x="0" y="13" fill="#fbbf24" font-family="var(--font-mono)" font-size="8" font-weight="800" text-anchor="middle">&#9660; YOU ARE HERE // MONTH ${monthsElapsed} (AUG 2026 / $${fmtNum(currentSpot, 0)})</text>
       </g>
 
-      <!-- WHEN IT RISES AGAIN Marker at Day 1090 (Spring 2027) -->
+      <!-- WHEN IT RISES AGAIN Marker at Day 1090 (Month 35.8 / Spring 2027) -->
       <line x1="${xRise}" y1="${padT + 44}" x2="${xRise}" y2="${padT + plotH}" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.7"/>
       <circle cx="${xRise}" cy="${yRise}" r="4" fill="#38bdf8" stroke="#0f172a" stroke-width="1.5"/>
       <g transform="translate(${xRise}, ${padT + 30})">
-        <rect x="-85" y="0" width="170" height="18" fill="rgba(15, 23, 42, 0.9)" stroke="#38bdf8" stroke-width="1.2" rx="3"/>
-        <text x="0" y="12" fill="#38bdf8" font-family="var(--font-mono)" font-size="8" font-weight="700" text-anchor="middle">&#9650; WHEN IT RISES AGAIN (SPRING 2027)</text>
+        <rect x="-95" y="0" width="190" height="18" fill="rgba(15, 23, 42, 0.9)" stroke="#38bdf8" stroke-width="1.2" rx="3"/>
+        <text x="0" y="12" fill="#38bdf8" font-family="var(--font-mono)" font-size="7.5" font-weight="700" text-anchor="middle">&#9650; WHEN IT RISES AGAIN (MONTH 36 / APR 2027)</text>
       </g>
 
-      <!-- NEXT HALVING #5 Marker at Day 1460 (April 17, 2028) -->
+      <!-- NEXT HALVING #5 Marker at Day 1460 (Month 48.0 / April 17, 2028) -->
       <line x1="${xH5}" y1="${padT + 66}" x2="${xH5}" y2="${padT + plotH}" stroke="#c084fc" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.7"/>
       <circle cx="${xH5}" cy="${yH5}" r="4" fill="#c084fc" stroke="#0f172a" stroke-width="1.5"/>
-      <g transform="translate(${xH5 - 55}, ${padT + 52})">
-        <rect x="-55" y="0" width="110" height="18" fill="rgba(15, 23, 42, 0.9)" stroke="#c084fc" stroke-width="1.2" rx="3"/>
-        <text x="0" y="12" fill="#c084fc" font-family="var(--font-mono)" font-size="8" font-weight="700" text-anchor="middle">&#9889; HALVING #5 (2028)</text>
+      <g transform="translate(${xH5 - 65}, ${padT + 52})">
+        <rect x="-65" y="0" width="130" height="18" fill="rgba(15, 23, 42, 0.9)" stroke="#c084fc" stroke-width="1.2" rx="3"/>
+        <text x="0" y="12" fill="#c084fc" font-family="var(--font-mono)" font-size="7.5" font-weight="700" text-anchor="middle">&#9889; HALVING #5 (M48 / APR 2028)</text>
       </g>
     `;
   }
