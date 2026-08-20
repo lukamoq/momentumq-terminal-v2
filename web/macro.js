@@ -12,7 +12,9 @@
     vixStructure: null,
     sectors: null,
     correlation: null,
-    corrLookback: 60
+    corrLookback: 60,
+    fgHistory: null,
+    fgHistoryDays: 300
   };
 
   async function safeFetchJson(url, fallback) {
@@ -56,12 +58,13 @@
     if (syncBtn && !silent) syncBtn.classList.add('spinning');
 
     try {
-      const [regimeRes, fgRes, vixRes, sectorsRes, corrRes] = await Promise.all([
+      const [regimeRes, fgRes, vixRes, sectorsRes, corrRes, fgHistRes] = await Promise.all([
         safeFetchJson('/api/macro/regime', { regime: 'BULL_EXUBERANT', confidence_pct: 88, factors: [] }),
         safeFetchJson('/api/macro/fear-greed', { score: 68, label: 'GREED', categories: [] }),
         safeFetchJson('/api/macro/vix-structure', { state: 'CONTANGO', contango_ratio: 1.09, vix_9d: 13.4, vix_30d: 14.82, vix_90d: 16.15 }),
         safeFetchJson('/api/analytics/sectors', { sectors: [] }),
-        safeFetchJson(`/api/analytics/correlation?lookback=${macroState.corrLookback}`, { matrix: {}, tickers: [] })
+        safeFetchJson(`/api/analytics/correlation?lookback=${macroState.corrLookback}`, { matrix: {}, tickers: [] }),
+        safeFetchJson('/api/macro/fear-greed/history?lookback=500', [])
       ]);
 
       macroState.regime = regimeRes;
@@ -69,10 +72,13 @@
       macroState.vixStructure = vixRes;
       macroState.sectors = sectorsRes;
       macroState.correlation = corrRes;
+      macroState.fgHistory = (fgHistRes && fgHistRes.length > 0) ? fgHistRes : (fgRes.history || []);
 
       updateMacroHeaderStats();
       renderMacroRegimeSection();
       renderFearGreedSection();
+      renderFearGreedHistoryChart();
+      renderFearGreedHistoryTable();
       renderVixStructureSection();
       renderSectorRotationTable();
       renderCorrelationMatrix();
@@ -226,6 +232,260 @@
           </div>
           <span style="font-size:10.5px; color:var(--text-muted);">${escapeHtml(c.desc || c.explanation || '')}</span>
         </div>
+      `;
+    }).join('');
+  }
+
+  /* ==========================================================================
+     Fear & Greed Historical Dual Chart & Table
+     ========================================================================== */
+
+  function renderFearGreedHistoryChart() {
+    const container = document.getElementById('fgSvgChartContainer');
+    if (!container) return;
+
+    const rawData = macroState.fgHistory;
+    if (!rawData || rawData.length === 0) {
+      container.innerHTML = `<div style="padding:40px; color:var(--text-muted); font-family:var(--font-mono); font-size:12px;">Loading historical price and sentiment time-series...</div>`;
+      return;
+    }
+
+    const data = rawData.slice(-macroState.fgHistoryDays);
+    if (data.length < 2) {
+      container.innerHTML = `<div style="padding:40px; color:var(--text-muted); font-family:var(--font-mono); font-size:12px;">Insufficient data points for chosen timeframe.</div>`;
+      return;
+    }
+
+    const W = 1000;
+    const H = 340;
+    const padL = 55;
+    const padR = 60;
+    const plotW = W - padL - padR;
+
+    // Pane 1: SPY Price (Y: 25 to 175)
+    const pTop = 25;
+    const pBottom = 175;
+    const pH = pBottom - pTop;
+
+    // Pane 2: Fear & Greed (Y: 210 to 310)
+    const fgTop = 210;
+    const fgBottom = 310;
+    const fgH = fgBottom - fgTop;
+
+    const prices = data.map(d => d.spy_close);
+    const minP = Math.min(...prices) * 0.985;
+    const maxP = Math.max(...prices) * 1.015;
+
+    const getX = (i) => padL + (i / (data.length - 1)) * plotW;
+    const getYPrice = (p) => pTop + (1.0 - (p - minP) / (maxP - minP)) * pH;
+    const getYFG = (s) => fgTop + (1.0 - s / 100.0) * fgH;
+
+    // Price line and area path
+    let priceLineD = `M ${getX(0)} ${getYPrice(data[0].spy_close)}`;
+    let priceAreaD = `M ${getX(0)} ${pBottom} L ${getX(0)} ${getYPrice(data[0].spy_close)}`;
+
+    // FG line path
+    let fgLineD = `M ${getX(0)} ${getYFG(data[0].score)}`;
+
+    for (let i = 1; i < data.length; i++) {
+      const x = getX(i);
+      const yP = getYPrice(data[i].spy_close);
+      const yF = getYFG(data[i].score);
+      priceLineD += ` L ${x.toFixed(1)} ${yP.toFixed(1)}`;
+      priceAreaD += ` L ${x.toFixed(1)} ${yP.toFixed(1)}`;
+      fgLineD += ` L ${x.toFixed(1)} ${yF.toFixed(1)}`;
+    }
+    priceAreaD += ` L ${getX(data.length - 1)} ${pBottom} Z`;
+
+    // Price Gridlines (4 levels)
+    const priceTicks = [0, 0.33, 0.66, 1.0].map(ratio => {
+      const val = minP + ratio * (maxP - minP);
+      const y = getYPrice(val);
+      return { val: val.toFixed(1), y };
+    });
+
+    // Date ticks (5 to 7 dates)
+    const step = Math.max(1, Math.floor(data.length / 6));
+    const dateTicks = [];
+    for (let i = 0; i < data.length; i += step) {
+      dateTicks.push({ label: data[i].date, x: getX(i) });
+    }
+    if (dateTicks.length > 0 && dateTicks[dateTicks.length - 1].x < W - padR - 50) {
+      dateTicks.push({ label: data[data.length - 1].date, x: getX(data.length - 1) });
+    }
+
+    const svgHtml = `
+      <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%; height:auto;" id="fgDualSvg">
+        <defs>
+          <linearGradient id="priceAreaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ffaa00" stop-opacity="0.28"/>
+            <stop offset="100%" stop-color="#ffaa00" stop-opacity="0.0"/>
+          </linearGradient>
+          <linearGradient id="fgLineGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#38bdf8"/>
+            <stop offset="100%" stop-color="#38bdf8"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Pane 1: SPY Price Gridlines -->
+        ${priceTicks.map(t => `
+          <line x1="${padL}" y1="${t.y}" x2="${W - padR}" y2="${t.y}" stroke="#1f2838" stroke-width="1" stroke-dasharray="2,3"/>
+          <text x="${W - padR + 6}" y="${t.y + 4}" fill="#718096" font-family="var(--font-mono)" font-size="10">$${t.val}</text>
+        `).join('')}
+
+        <!-- Price Area & Line -->
+        <path d="${priceAreaD}" fill="url(#priceAreaGrad)" />
+        <path d="${priceLineD}" fill="none" stroke="#ffaa00" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+        <text x="${padL + 8}" y="${pTop + 14}" fill="#ffaa00" font-family="var(--font-mono)" font-size="11" font-weight="700">S&amp;P 500 ETF (SPY) CLOSE PRICE ($)</text>
+
+        <!-- Pane Divider -->
+        <line x1="${padL}" y1="192" x2="${W - padR}" y2="192" stroke="#263449" stroke-width="1.2"/>
+
+        <!-- Pane 2: Fear & Greed Sentiment Background Bands -->
+        <rect x="${padL}" y="${getYFG(100)}" width="${plotW}" height="${getYFG(75) - getYFG(100)}" fill="rgba(16, 185, 129, 0.09)"/>
+        <rect x="${padL}" y="${getYFG(75)}" width="${plotW}" height="${getYFG(60) - getYFG(75)}" fill="rgba(52, 211, 153, 0.04)"/>
+        <rect x="${padL}" y="${getYFG(60)}" width="${plotW}" height="${getYFG(40) - getYFG(60)}" fill="rgba(251, 191, 36, 0.02)"/>
+        <rect x="${padL}" y="${getYFG(40)}" width="${plotW}" height="${getYFG(25) - getYFG(40)}" fill="rgba(249, 115, 22, 0.04)"/>
+        <rect x="${padL}" y="${getYFG(25)}" width="${plotW}" height="${getYFG(0) - getYFG(25)}" fill="rgba(239, 68, 68, 0.09)"/>
+
+        <!-- Sentiment Zone Reference Lines -->
+        <line x1="${padL}" y1="${getYFG(75)}" x2="${W - padR}" y2="${getYFG(75)}" stroke="rgba(16, 185, 129, 0.35)" stroke-width="1" stroke-dasharray="3,3"/>
+        <text x="${W - padR + 6}" y="${getYFG(75) + 3}" fill="#34d399" font-family="var(--font-mono)" font-size="9.5">75 (GREED)</text>
+
+        <line x1="${padL}" y1="${getYFG(50)}" x2="${W - padR}" y2="${getYFG(50)}" stroke="rgba(251, 191, 36, 0.3)" stroke-width="1" stroke-dasharray="2,2"/>
+        <text x="${W - padR + 6}" y="${getYFG(50) + 3}" fill="#fbbf24" font-family="var(--font-mono)" font-size="9.5">50 (NEUTRAL)</text>
+
+        <line x1="${padL}" y1="${getYFG(25)}" x2="${W - padR}" y2="${getYFG(25)}" stroke="rgba(239, 68, 68, 0.35)" stroke-width="1" stroke-dasharray="3,3"/>
+        <text x="${W - padR + 6}" y="${getYFG(25) + 3}" fill="#ef4444" font-family="var(--font-mono)" font-size="9.5">25 (FEAR)</text>
+
+        <!-- FG Indicator Line -->
+        <path d="${fgLineD}" fill="none" stroke="#38bdf8" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
+        <text x="${padL + 8}" y="${fgTop + 14}" fill="#38bdf8" font-family="var(--font-mono)" font-size="11" font-weight="700">MoQ FEAR &amp; GREED COMPOSITE SCORE (0–100)</text>
+
+        <!-- Date Ticks -->
+        ${dateTicks.map(t => `
+          <line x1="${t.x}" y1="${fgBottom}" x2="${t.x}" y2="${fgBottom + 4}" stroke="#4a5568" stroke-width="1"/>
+          <text x="${t.x}" y="${fgBottom + 16}" text-anchor="middle" fill="#718096" font-family="var(--font-mono)" font-size="9.5">${t.label}</text>
+        `).join('')}
+
+        <!-- Dynamic Hover Tracking Guides -->
+        <g id="fgHoverGroup" style="display:none;">
+          <line id="fgHoverLine" x1="0" y1="${pTop}" x2="0" y2="${fgBottom}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3,3" opacity="0.75"/>
+          <circle id="fgHoverPriceDot" cx="0" cy="0" r="4.5" fill="#ffaa00" stroke="#0e131e" stroke-width="2"/>
+          <circle id="fgHoverFgDot" cx="0" cy="0" r="4.5" fill="#38bdf8" stroke="#0e131e" stroke-width="2"/>
+        </g>
+
+        <!-- Invisible Mouse Target Layer -->
+        <rect id="fgMouseOverlay" x="${padL}" y="${pTop}" width="${plotW}" height="${fgBottom - pTop}" fill="transparent" style="cursor:crosshair; pointer-events:all;"/>
+      </svg>
+    `;
+
+    container.innerHTML = svgHtml;
+
+    // Attach interactive hover listener
+    const overlay = document.getElementById('fgMouseOverlay');
+    const hoverGroup = document.getElementById('fgHoverGroup');
+    const hoverLine = document.getElementById('fgHoverLine');
+    const priceDot = document.getElementById('fgHoverPriceDot');
+    const fgDot = document.getElementById('fgHoverFgDot');
+    const readout = document.getElementById('fgChartHoverReadout');
+
+    if (overlay && hoverGroup && readout) {
+      overlay.addEventListener('mousemove', (e) => {
+        const rect = overlay.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const normX = Math.max(0, Math.min(1, mouseX / rect.width));
+        const idx = Math.round(normX * (data.length - 1));
+        const item = data[idx];
+        if (!item) return;
+
+        const x = getX(idx);
+        const yP = getYPrice(item.spy_close);
+        const yF = getYFG(item.score);
+
+        hoverGroup.style.display = 'block';
+        hoverLine.setAttribute('x1', x);
+        hoverLine.setAttribute('x2', x);
+        priceDot.setAttribute('cx', x);
+        priceDot.setAttribute('cy', yP);
+        fgDot.setAttribute('cx', x);
+        fgDot.setAttribute('cy', yF);
+
+        const chgSign = item.pct_change >= 0 ? '+' : '';
+        const chgColor = item.pct_change >= 0 ? '#34d399' : '#ef4444';
+
+        readout.innerHTML = `
+          <strong>${item.date}</strong> &bull; SPY: <strong style="color:#ffaa00;">$${item.spy_close}</strong> (<span style="color:${chgColor};">${chgSign}${item.pct_change}%</span>) &bull; F&amp;G: <strong style="color:${item.bar_color};">${item.score} (${item.label.toUpperCase()})</strong> &bull; RSI: <strong>${item.rsi}</strong>
+        `;
+      });
+
+      overlay.addEventListener('mouseleave', () => {
+        hoverGroup.style.display = 'none';
+        readout.textContent = 'Hover over chart to inspect daily values';
+      });
+    }
+  }
+
+  function renderFearGreedHistoryTable() {
+    const tbody = document.getElementById('fgHistoryTbody');
+    const countEl = document.getElementById('fgHistoryRecordCount');
+    if (!tbody) return;
+
+    const rawData = macroState.fgHistory;
+    if (!rawData || rawData.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="padding:24px; color:var(--text-muted);">No historical records available.</td></tr>`;
+      return;
+    }
+
+    const data = rawData.slice(-macroState.fgHistoryDays);
+    if (countEl) countEl.textContent = `Showing ${data.length} Trading Sessions`;
+
+    const reversed = [...data].reverse();
+
+    tbody.innerHTML = reversed.map(r => {
+      const isPos = r.pct_change >= 0;
+      const chgColor = isPos ? 'color-bull' : 'color-bear';
+      const chgSign = isPos ? '+' : '';
+
+      // Sentiment badge
+      let badgeClass = 'verdict-pill hit';
+      if (r.score <= 25) badgeClass = 'verdict-pill miss';
+      else if (r.score <= 40) badgeClass = 'badge-stance bearish';
+      else if (r.score <= 60) badgeClass = 'verdict-pill too_early';
+      else if (r.score <= 75) badgeClass = 'badge-stance bullish';
+
+      // Market inflection signal note
+      let signal = '🟢 Normal Risk-On Carry';
+      if (r.score <= 25 && r.rsi <= 40) {
+        signal = '🚨 <strong class="color-bear">CAPITULATION PANIC (CONTRARIAN BUY)</strong>';
+      } else if (r.score <= 35) {
+        signal = '⚠️ <span class="color-bear">Risk-Off Deleveraging</span>';
+      } else if (r.score >= 75 && r.rsi >= 65) {
+        signal = '⚡ <strong class="highlight-gold">EXUBERANCE / FROTH OVERBOUGHT</strong>';
+      } else if (r.score >= 60) {
+        signal = '🟢 Favorable Equity Carry';
+      } else {
+        signal = '🟡 Consolidation / Equilibrium';
+      }
+
+      return `
+        <tr>
+          <td class="font-mono font-bold">${r.date}</td>
+          <td class="text-right font-mono font-bold highlight-gold">$${r.spy_close.toFixed(2)}</td>
+          <td class="text-right font-mono ${chgColor}">${chgSign}${r.pct_change}%</td>
+          <td class="text-center">
+            <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
+              <div style="width:40px; height:5px; background:rgba(255,255,255,0.06); border-radius:3px; overflow:hidden;">
+                <div style="width:${r.score}%; height:100%; background:${r.bar_color}; border-radius:3px;"></div>
+              </div>
+              <strong class="font-mono" style="color:${r.bar_color};">${r.score}</strong>
+            </div>
+          </td>
+          <td class="text-center"><span class="${badgeClass}">${r.label.toUpperCase()}</span></td>
+          <td class="text-center font-mono">${r.rsi}</td>
+          <td class="text-center font-mono text-muted">${r.realized_vol_21d}%</td>
+          <td style="font-size:11px;">${signal}</td>
+        </tr>
       `;
     }).join('');
   }
@@ -408,6 +668,19 @@
             macroState.correlation = data;
             renderCorrelationMatrix();
           });
+      });
+    }
+
+    const fgLookbackPills = document.getElementById('fgLookbackPills');
+    if (fgLookbackPills) {
+      fgLookbackPills.addEventListener('click', (e) => {
+        const btn = e.target.closest('.curve-span-pill');
+        if (!btn) return;
+        fgLookbackPills.querySelectorAll('.curve-span-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        macroState.fgHistoryDays = parseInt(btn.dataset.days || '300', 10);
+        renderFearGreedHistoryChart();
+        renderFearGreedHistoryTable();
       });
     }
   }

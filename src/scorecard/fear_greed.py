@@ -622,6 +622,8 @@ def compute_fear_greed_index(conn: sqlite3.Connection) -> Dict[str, Any]:
         "credit_relative_return_30d": _detail("credit", "relative_return_30d_pct"),
     }
 
+    history = compute_fear_greed_history(conn, lookback_days=300)
+
     return {
         "composite_score": composite_score,
         "label": _label(composite_score),
@@ -632,4 +634,109 @@ def compute_fear_greed_index(conn: sqlite3.Connection) -> Dict[str, Any]:
         "categories": categories,
         "key_metrics": key_metrics,
         "category_order": list(WEIGHTS.keys()),
+        "history": history,
     }
+
+
+def compute_fear_greed_history(
+    conn: sqlite3.Connection, lookback_days: int = 500
+) -> List[Dict[str, Any]]:
+    """
+    Compute daily historical Fear & Greed Index values alongside SPY stock prices.
+
+    Generates continuous backtested daily records of composite sentiment scores,
+    14-day RSI, 21-day realized volatility, and price changes.
+    """
+    spy_all = _fetch_series(conn, "SPY", limit=lookback_days + 150)
+    if not spy_all or len(spy_all) < 30:
+        return []
+
+    gld_all = {r["date"]: r["close"] for r in _fetch_series(conn, "GLD", limit=lookback_days + 150)}
+    hyg_all = {r["date"]: r["close"] for r in _fetch_series(conn, "HYG", limit=lookback_days + 150)}
+    ief_all = {r["date"]: r["close"] for r in _fetch_series(conn, "IEF", limit=lookback_days + 150)}
+    xlk_all = {r["date"]: r["close"] for r in _fetch_series(conn, "XLK", limit=lookback_days + 150)}
+    xlu_all = {r["date"]: r["close"] for r in _fetch_series(conn, "XLU", limit=lookback_days + 150)}
+
+    start_idx = max(25, len(spy_all) - lookback_days)
+    history: List[Dict[str, Any]] = []
+
+    for idx in range(start_idx, len(spy_all)):
+        sub_spy = spy_all[: idx + 1]
+        d = sub_spy[-1]["date"]
+        c = sub_spy[-1]["close"]
+        prev_c = sub_spy[-2]["close"] if len(sub_spy) >= 2 else c
+        pct_chg = ((c / prev_c) - 1.0) * 100.0 if prev_c > 0 else 0.0
+        closes = [b["close"] for b in sub_spy]
+
+        # 1. Trend: distance from 125d and 50d SMA
+        sma_window = min(len(closes), 125)
+        sma = sum(closes[-sma_window:]) / float(sma_window)
+        trend_diff = ((c / sma) - 1.0) * 100.0
+        score_trend = _clamp((trend_diff + 6.0) / 12.0 * 100.0)
+
+        # 2. Momentum: RSI 14
+        rsi = _calc_rsi(closes)
+        score_momentum = _clamp(rsi)
+
+        # 3. Volatility: 21d Realized Vol
+        rvol = _realized_vol(closes, 21) or 15.0
+        score_vol = _clamp(100.0 - ((rvol - 10.0) / 25.0 * 100.0))
+
+        # 4. Sentiment 20d & 5d return
+        ret20 = ((closes[-1] / closes[-21]) - 1.0) * 100.0 if len(closes) >= 21 else 0.0
+        ret5 = ((closes[-1] / closes[-6]) - 1.0) * 100.0 if len(closes) >= 6 else 0.0
+        sent_score = _clamp(((ret20 + 6.0) / 12.0 * 100.0) * 0.6 + ((ret5 + 3.0) / 6.0 * 100.0) * 0.4)
+
+        # 5. Sector relative momentum (XLK vs XLU)
+        if d in xlk_all and d in xlu_all:
+            p_date = sub_spy[-22]["date"] if len(sub_spy) >= 22 else sub_spy[0]["date"]
+            xlk_r = (xlk_all[d] / xlk_all.get(p_date, xlk_all[d])) - 1.0
+            xlu_r = (xlu_all[d] / xlu_all.get(p_date, xlu_all[d])) - 1.0
+            sec_spread = (xlk_r - xlu_r) * 100.0
+            score_sectors = _clamp((sec_spread + 8.0) / 16.0 * 100.0)
+        else:
+            score_sectors = 50.0
+
+        # 6. Credit spread (HYG vs IEF)
+        if d in hyg_all and d in ief_all:
+            p_date = sub_spy[-22]["date"] if len(sub_spy) >= 22 else sub_spy[0]["date"]
+            hyg_r = (hyg_all[d] / hyg_all.get(p_date, hyg_all[d])) - 1.0
+            ief_r = (ief_all[d] / ief_all.get(p_date, ief_all[d])) - 1.0
+            cred_spread = (hyg_r - ief_r) * 100.0
+            score_credit = _clamp((cred_spread + 4.0) / 8.0 * 100.0)
+        else:
+            score_credit = 50.0
+
+        # 7. Cross-asset (SPY vs GLD)
+        if d in gld_all:
+            p_date = sub_spy[-22]["date"] if len(sub_spy) >= 22 else sub_spy[0]["date"]
+            spy_r = (c / sub_spy[-22]["close"]) - 1.0 if len(sub_spy) >= 22 else 0.0
+            gld_r = (gld_all[d] / gld_all.get(p_date, gld_all[d])) - 1.0
+            gld_spread = (spy_r - gld_r) * 100.0
+            score_gld = _clamp((gld_spread + 8.0) / 16.0 * 100.0)
+        else:
+            score_gld = 50.0
+
+        comp = (
+            score_trend * 0.15 +
+            score_momentum * 0.15 +
+            score_vol * 0.15 +
+            sent_score * 0.15 +
+            score_sectors * 0.15 +
+            score_credit * 0.15 +
+            score_gld * 0.10
+        )
+        score_final = round(_clamp(comp), 1)
+
+        history.append({
+            "date": d,
+            "spy_close": round(c, 2),
+            "pct_change": round(pct_chg, 2),
+            "score": score_final,
+            "label": _label(score_final),
+            "bar_color": _bar_color(score_final),
+            "rsi": round(rsi, 1),
+            "realized_vol_21d": round(rvol, 1),
+        })
+
+    return history

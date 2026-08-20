@@ -617,7 +617,7 @@ from scorecard.regime import (
     compute_sector_rotation,
 )
 from scorecard.vix import compute_vix_structure
-from scorecard.fear_greed import compute_fear_greed_index
+from scorecard.fear_greed import compute_fear_greed_index, compute_fear_greed_history
 from scorecard.options import compute_options_analytics, compute_options_trio_comparison
 
 
@@ -637,6 +637,12 @@ def get_macro_vix_structure() -> Response:
 def get_macro_fear_greed() -> Response:
     """Return MoQ Fear & Greed Index 2.0 multi-factor sentiment scoring."""
     return _cached_json_response("macro_fear_greed", lambda: compute_fear_greed_index(get_connection()))
+
+
+@app.get("/api/macro/fear-greed/history")
+def get_macro_fear_greed_history(lookback: int = 500) -> Response:
+    """Return daily historical Fear & Greed scores alongside SPY stock prices."""
+    return _cached_json_response(f"macro_fear_greed_hist_{lookback}", lambda: compute_fear_greed_history(get_connection(), lookback_days=lookback))
 
 
 @app.get("/api/analytics/options")

@@ -237,7 +237,9 @@ def load_chain_rows(
         "SELECT MAX(snapshot_date) AS d FROM option_contract WHERE underlying = ?",
         (underlying.upper(),),
     ).fetchone()
-    snapshot_date = head["d"] if head else None
+    if head is None:
+        return None, []
+    snapshot_date = head["d"] if (isinstance(head, sqlite3.Row) or isinstance(head, dict)) else head[0]
     if not snapshot_date:
         return None, []
 
@@ -251,6 +253,11 @@ def load_chain_rows(
         """,
         (underlying.upper(), snapshot_date),
     ).fetchall()
+    if not rows:
+        return snapshot_date, []
+    if not (isinstance(rows[0], sqlite3.Row) or isinstance(rows[0], dict)):
+        cols = ["expiration_date", "strike", "contract_type", "open_interest", "volume", "close", "vendor_iv", "vendor_delta", "vendor_gamma"]
+        return snapshot_date, [dict(zip(cols, r)) for r in rows]
     return snapshot_date, [dict(r) for r in rows]
 
 
