@@ -51,15 +51,15 @@ def build_system_macro_context(conn: sqlite3.Connection) -> Dict[str, Any]:
     sell_side = {}
     try:
         cur = conn.execute("""
-            SELECT c.institution_id, i.name as inst_name, c.target_price, c.direction, c.published_on, c.horizon
+            SELECT c.institution_id, i.name as inst_name, c.target_level, c.direction, c.published_on, c.forecast_horizon
             FROM call c
-            JOIN institution i ON c.institution_id = i.institution_id
-            WHERE c.target_price IS NOT NULL
+            JOIN institution i ON c.institution_id = i.id
+            WHERE c.target_level IS NOT NULL
             ORDER BY c.published_on DESC
             LIMIT 40
         """)
         calls = [dict(r) for r in cur.fetchall()]
-        targets = [c["target_price"] for c in calls if c.get("target_price")]
+        targets = [c["target_level"] for c in calls if c.get("target_level")]
         if targets:
             sell_side = {
                 "total_audited_calls": len(calls),
@@ -67,7 +67,7 @@ def build_system_macro_context(conn: sqlite3.Connection) -> Dict[str, Any]:
                 "target_high": max(targets),
                 "target_low": min(targets),
                 "recent_calls": [
-                    {"institution": c["inst_name"], "target": c["target_price"], "direction": c["direction"], "date": c["published_on"]}
+                    {"institution": c["inst_name"], "target": c["target_level"], "direction": c["direction"], "date": c["published_on"]}
                     for c in calls[:8]
                 ],
             }
@@ -100,6 +100,16 @@ def build_system_macro_context(conn: sqlite3.Connection) -> Dict[str, Any]:
         "worst_calendar_month": "September (-1.2% avg)",
         "q4_win_probability": 0.784,
     }
+
+    # Insider Trading & Smart Money Data
+    insider_data = {}
+    whale_data = {}
+    try:
+        from scorecard.insider import compute_insider_sentiment_analytics, compute_smart_money_whales
+        insider_data = compute_insider_sentiment_analytics(conn)
+        whale_data = compute_smart_money_whales(conn)
+    except Exception as e:
+        logger.warning(f"Error gathering insider/whale data: {e}")
 
     return {
         "as_of_date": regime.get("as_of_date", "2026-08-19"),
@@ -147,6 +157,9 @@ def build_system_macro_context(conn: sqlite3.Connection) -> Dict[str, Any]:
         "sell_side_consensus": sell_side,
         "mag7_leaders": mag7_data,
         "seasonality_profile": seasonality,
+        "insider_sentiment": insider_data.get("summary", {}),
+        "insider_cluster_buys": insider_data.get("cluster_buy_signals", []),
+        "smart_money_consensus": whale_data.get("consensus_overweights", []),
         "sp500_stats": history.get("summary_stats", {}),
     }
 

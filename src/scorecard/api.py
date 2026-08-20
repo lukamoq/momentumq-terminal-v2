@@ -792,6 +792,21 @@ def get_analytics_stats() -> Response:
     return _cached_json_response("analytics_stats", _compute)
 
 
+@app.get("/api/alpha/insider-trades")
+def get_alpha_insider_trades(ticker: Optional[str] = None) -> Response:
+    """Return SEC Form 4 insider transactions, cluster buy signals, and sentiment ratio."""
+    from scorecard.insider import compute_insider_sentiment_analytics
+    cache_key = f"alpha_insider_{ticker.upper() if ticker else 'all'}"
+    return _cached_json_response(cache_key, lambda: compute_insider_sentiment_analytics(get_connection(), ticker))
+
+
+@app.get("/api/alpha/smart-money")
+def get_alpha_smart_money() -> Response:
+    """Return 13F institutional whale portfolio holdings and concentration."""
+    from scorecard.insider import compute_smart_money_whales
+    return _cached_json_response("alpha_smart_money", lambda: compute_smart_money_whales(get_connection()))
+
+
 if WEB_DIR.exists():
     app.mount("/", StaticFiles(directory=str(WEB_DIR), html=True), name="web")
 

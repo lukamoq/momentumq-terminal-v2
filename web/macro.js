@@ -16,6 +16,9 @@
     corrLookback: 60,
     macroHistory: null,
     commodities: null,
+    insiderData: null,
+    whaleData: null,
+    insiderFilter: 'all',
     activeMetric: 'fear_greed',
     activeLookback: 252
   };
@@ -61,14 +64,16 @@
     if (syncBtn && !silent) syncBtn.classList.add('spinning');
 
     try {
-      const [regimeRes, fgRes, vixRes, sectorsRes, corrRes, macroHistRes, commRes] = await Promise.all([
+      const [regimeRes, fgRes, vixRes, sectorsRes, corrRes, macroHistRes, commRes, insiderRes, whaleRes] = await Promise.all([
         safeFetchJson('/api/macro/regime', { regime: 'BULL_EXUBERANT', confidence_pct: 88, factors: [] }),
         safeFetchJson('/api/macro/fear-greed', { score: 68, label: 'GREED', categories: [] }),
         safeFetchJson('/api/macro/vix-structure', { state: 'CONTANGO', contango_ratio: 1.09, vix_9d: 13.4, vix_30d: 14.82, vix_90d: 16.15 }),
         safeFetchJson('/api/analytics/sectors', { sectors: [] }),
         safeFetchJson(`/api/analytics/correlation?lookback=${macroState.corrLookback}`, { matrix: {}, tickers: [] }),
         safeFetchJson('/api/macro/history?lookback=1255', { dates: [], spy: {}, indicators: {}, summary_stats: {} }),
-        safeFetchJson('/api/macro/commodities', { assets: [], cross_ratios: {} })
+        safeFetchJson('/api/macro/commodities', { assets: [], cross_ratios: {} }),
+        safeFetchJson('/api/alpha/insider-trades', { summary: {}, cluster_buy_signals: [], recent_transactions: [] }),
+        safeFetchJson('/api/alpha/smart-money', { whales_tracked_count: 0, consensus_overweights: [], holdings: [] })
       ]);
 
       macroState.regime = regimeRes;
@@ -78,6 +83,8 @@
       macroState.correlation = corrRes;
       macroState.macroHistory = macroHistRes;
       macroState.commodities = commRes;
+      macroState.insiderData = insiderRes;
+      macroState.whaleData = whaleRes;
 
       updateMacroHeaderStats();
       renderMacroRegimeSection();
@@ -89,6 +96,8 @@
       renderSectorRotationTable();
       renderCorrelationMatrix();
       renderCommoditiesSection();
+      renderInsiderSection();
+      renderWhaleSection();
 
       if (!silent) updateSyncTimeUI();
     } catch (err) {
@@ -916,6 +925,188 @@
   }
 
   /* ==========================================================================
+     Section 06: SEC Form 4 Insider Radar & 13F Whales
+     ========================================================================== */
+
+  function renderInsiderSection() {
+    const data = macroState.insiderData;
+    if (!data) return;
+
+    // HUD stats
+    const scoreEl = document.getElementById('insiderSentimentScore');
+    const labelEl = document.getElementById('insiderSentimentLabel');
+    const buyEl = document.getElementById('insiderBuyDollars');
+    const clusterCountEl = document.getElementById('insiderClusterCount');
+    const topTickerEl = document.getElementById('insiderTopTicker');
+    const routineSalesEl = document.getElementById('insiderRoutineSales');
+
+    if (scoreEl && data.summary) scoreEl.textContent = `${data.summary.sentiment_score} / 100`;
+    if (labelEl && data.summary) {
+      labelEl.textContent = data.summary.sentiment_label;
+      labelEl.className = `stat-sub font-mono ${data.summary.sentiment_score >= 65 ? 'color-bull' : 'color-bear'}`;
+    }
+    if (buyEl && data.summary) buyEl.textContent = `+$${(data.summary.opportunistic_buy_dollars / 1e6).toFixed(1)}M`;
+    if (clusterCountEl && data.summary) clusterCountEl.textContent = `${data.summary.cluster_buy_events_count} Active Cluster Groups`;
+    if (topTickerEl && data.summary) topTickerEl.textContent = data.summary.top_accumulated_ticker;
+    if (routineSalesEl && data.summary) routineSalesEl.textContent = `-$${(data.summary.routine_10b5_1_sell_dollars / 1e6).toFixed(1)}M`;
+
+    // Cluster buy alert banners
+    const alertContainer = document.getElementById('clusterAlertsContainer');
+    if (alertContainer && data.cluster_buy_signals) {
+      // Group by cluster tag
+      const clusters = {};
+      data.cluster_buy_signals.forEach(s => {
+        const tag = s.cluster_tag || 'CLUSTER';
+        if (!clusters[tag]) clusters[tag] = [];
+        clusters[tag].push(s);
+      });
+
+      alertContainer.innerHTML = Object.keys(clusters).map(tag => {
+        const members = clusters[tag];
+        const ticker = members[0].ticker;
+        const company = members[0].company_name;
+        const totalValM = (members.reduce((acc, m) => acc + m.value_dollar, 0) / 1e6).toFixed(2);
+        const insidersList = members.map(m => `${m.insider_name} (${m.insider_title.split('&')[0]})`).join(', ');
+
+        return `
+          <div class="cluster-alert-card">
+            <div>
+              <div class="cluster-alert-top">
+                <span class="cluster-tag-badge">ALERT: C-SUITE CLUSTER BUY</span>
+                <span class="font-mono highlight-gold" style="font-size:12px; font-weight:700;">+$${totalValM}M NET BUY</span>
+              </div>
+              <h3 class="cluster-alert-title">${ticker} &bull; ${escapeHtml(company)}</h3>
+              <p class="cluster-alert-desc">
+                High-conviction open-market accumulation detected across ${members.length} executive officers: <strong>${escapeHtml(insidersList)}</strong>.
+              </p>
+            </div>
+            <div class="cluster-alert-bottom">
+              <span class="text-muted">Filing Window: ${members[0].filing_date}</span>
+              <span class="color-bull font-bold">10b5-1 EXCLUDED // CONVICTION: HIGH</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Form 4 Transactions Table
+    renderInsiderTable();
+  }
+
+  function renderInsiderTable() {
+    const tbody = document.getElementById('insiderTbody');
+    if (!tbody || !macroState.insiderData) return;
+
+    let trades = macroState.insiderData.recent_transactions || [];
+    const filter = macroState.insiderFilter || 'all';
+
+    if (filter === 'buys') {
+      trades = trades.filter(t => t.trade_type.includes('Purchase'));
+    } else if (filter === 'clusters') {
+      trades = trades.filter(t => t.conviction_rating.includes('CLUSTER'));
+    } else if (filter === 'ceo') {
+      trades = trades.filter(t => t.insider_title.includes('CEO') || t.insider_title.includes('CFO'));
+    }
+
+    if (trades.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9" class="text-center" style="padding:24px; color:var(--text-muted);">No insider transactions match the selected filter.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = trades.map(t => {
+      const isBuy = t.trade_type.includes('Purchase');
+      const valM = (t.value_dollar / 1e6).toFixed(2);
+
+      let badgeClass = 'conviction-badge routine-sale';
+      let badgeLabel = t.conviction_rating.replace(/_/g, ' ');
+      if (t.conviction_rating.includes('CLUSTER') || t.conviction_rating.includes('AGGRESSIVE')) {
+        badgeClass = 'conviction-badge cluster-buy';
+      } else if (isBuy) {
+        badgeClass = 'conviction-badge high-buy';
+      }
+
+      return `
+        <tr class="interactive-call-row">
+          <td class="font-mono text-muted" style="font-size:11px;">${t.filing_date}</td>
+          <td><span class="ticker-pill font-mono">${t.ticker}</span></td>
+          <td>
+            <strong>${escapeHtml(t.insider_name)}</strong>
+            <div style="font-size:10px; color:var(--text-muted); font-family:var(--font-mono);">${escapeHtml(t.insider_title)}</div>
+          </td>
+          <td class="text-center">
+            <span class="badge-stance ${isBuy ? 'bullish' : 'bearish'}">${isBuy ? 'P - BUY' : 'S - SALE'}</span>
+          </td>
+          <td class="text-right font-mono">$${fmtNum(t.price, 2)}</td>
+          <td class="text-right font-mono">${Number(t.qty).toLocaleString()}</td>
+          <td class="text-right font-mono font-bold ${isBuy ? 'color-bull' : 'color-bear'}">
+            ${isBuy ? '+' : '-'}$${valM}M
+          </td>
+          <td class="text-center font-mono">
+            <span style="color:${t.is_10b5_1 ? 'var(--text-muted)' : '#4ade80'}; font-weight:${t.is_10b5_1 ? '400' : '700'};">
+              ${t.is_10b5_1 ? '10b5-1 Plan' : 'Discretionary'}
+            </span>
+          </td>
+          <td class="text-center">
+            <span class="${badgeClass}">${badgeLabel}</span>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function renderWhaleSection() {
+    const grid = document.getElementById('whaleCardsGrid');
+    if (!grid || !macroState.whaleData) return;
+
+    const holdings = macroState.whaleData.holdings || [];
+    // Group by fund
+    const funds = {};
+    holdings.forEach(h => {
+      if (!funds[h.fund_name]) {
+        funds[h.fund_name] = {
+          name: h.fund_name,
+          manager: h.manager_name,
+          aum: h.aum_billions,
+          items: []
+        };
+      }
+      funds[h.fund_name].items.push(h);
+    });
+
+    grid.innerHTML = Object.values(funds).map(f => {
+      return `
+        <div class="whale-card">
+          <div>
+            <div class="whale-card-header">
+              <div>
+                <div class="whale-fund-name">${escapeHtml(f.name)}</div>
+                <div class="whale-manager-sub">${escapeHtml(f.manager)}</div>
+              </div>
+              <span class="whale-aum-badge">$${f.aum}B AUM</span>
+            </div>
+            <div class="whale-holdings-list">
+              ${f.items.map(i => `
+                <div class="whale-holding-row">
+                  <div>
+                    <span class="ticker-pill">${i.ticker}</span>
+                    <strong style="margin-left:4px;">$${fmtNum(i.value_millions, 1)}M</strong>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span class="text-muted">${i.portfolio_weight_pct}% wt</span>
+                    <span class="verdict-pill ${i.change_type === 'INCREASED' || i.change_type === 'NEW_POSITION' ? 'hit' : 'too_early'}" style="font-size:9px; padding:1px 5px;">
+                      ${i.change_type.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  /* ==========================================================================
      Event Listeners Setup
      ========================================================================== */
 
@@ -926,6 +1117,18 @@
         fetch('/api/pipeline/sync')
           .then(r => r.json())
           .then(() => fetchMacroData(false));
+      });
+    }
+
+    const insiderPills = document.getElementById('insiderFilterPills');
+    if (insiderPills) {
+      insiderPills.addEventListener('click', (e) => {
+        const btn = e.target.closest('.curve-span-pill');
+        if (!btn) return;
+        insiderPills.querySelectorAll('.curve-span-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        macroState.insiderFilter = btn.dataset.filter || 'all';
+        renderInsiderTable();
       });
     }
 

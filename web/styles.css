@@ -6618,32 +6618,192 @@ body.theme-green .macro-factor-box {
   margin: 20px 0;
 }
 
-@media (max-width: 1200px) {
-  .agent-stats-strip {
-    grid-template-columns: repeat(3, 1fr);
+/* ==========================================================================
+   9. SEC Form 4 Insider Radar & 13F Smart Money Styles
+   ========================================================================== */
+
+.cluster-alerts-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-3);
+}
+
+.cluster-alert-card {
+  background: linear-gradient(180deg, rgba(251, 191, 36, 0.08) 0%, var(--bg-surface) 100%);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 4px 14px rgba(251, 191, 36, 0.1);
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+.cluster-alert-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-gold);
+}
+
+.cluster-alert-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.cluster-tag-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--accent-gold);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
+.cluster-alert-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 6px 0;
+}
+
+.cluster-alert-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0 0 10px 0;
+}
+
+.cluster-alert-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* 13F Whale Cards */
+.whale-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-3);
+}
+
+.whale-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+.whale-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
+}
+
+.whale-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.whale-fund-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+.whale-manager-sub {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.whale-aum-badge {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--accent-gold);
+  background: rgba(251, 191, 36, 0.1);
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  white-space: nowrap;
+}
+
+.whale-holdings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.whale-holding-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--bg-surface-elevated);
+  padding: 5px 8px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-subtle);
+}
+
+.conviction-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+}
+
+.conviction-badge.high-buy {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.conviction-badge.cluster-buy {
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--accent-gold);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
+.conviction-badge.routine-sale {
+  background: rgba(148, 163, 184, 0.1);
+  color: var(--text-secondary);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+@media (max-width: 1024px) {
+  .cluster-alerts-container {
+    grid-template-columns: 1fr;
   }
-  .agent-nodes-grid {
-    grid-template-columns: repeat(3, 1fr);
+  .whale-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 768px) {
-  .agent-stats-strip {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .agent-nodes-grid {
+@media (max-width: 640px) {
+  .whale-cards-grid {
     grid-template-columns: 1fr;
-  }
-  .agent-input-wrap {
-    flex-direction: column;
-  }
-  .agent-prompt-prefix {
-    border-right: 1px solid var(--border-subtle);
-    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-    padding: 6px 12px;
-  }
-  .agent-prompt-input {
-    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
   }
 }
 

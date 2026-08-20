@@ -43,7 +43,8 @@
         <a class="rail-link" href="#secFearGreed"><span class="rail-num">02</span> Fear &amp; Greed 2.0</a>
         <a class="rail-link" href="#secVixTerm"><span class="rail-num">03</span> Volatility Structure</a>
         <a class="rail-link" href="#secSectorRotation"><span class="rail-num">04</span> Sector Rotation</a>
-        <a class="rail-link" href="#secCorrelation"><span class="rail-num">05</span> Correlation Matrix</a>
+        <a class="rail-link" href="#secCommodities"><span class="rail-num">05</span> Commodities &amp; FX</a>
+        <a class="rail-link" href="#secInsiderWhales"><span class="rail-num">06</span> Insider &amp; Whales</a>
       </div>
     </nav>
 
@@ -444,6 +445,86 @@
             <tr class="skeleton-row"><td colspan="10"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
           </tbody>
         </table>
+      </div>
+    </section>
+
+    <!-- Section 06: SEC Form 4 Insider Radar & 13F Smart Money -->
+    <section class="section-insider-whales" id="secInsiderWhales" style="margin-bottom: var(--sp-6);">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">06 // SEC FORM 4 INSIDER RADAR &amp; 13F WHALES</span>
+          <h2>Corporate Insider Cluster Buys &amp; Smart Money Conviction</h2>
+          <span class="section-meta">Filters programmatic 10b5-1 executive sales to isolate high-conviction open-market C-suite purchases, multi-director cluster buying, and 13F institutional whale accumulation.</span>
+        </div>
+      </div>
+
+      <!-- Insider HUD Cards -->
+      <div class="macro-stats-strip" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:var(--sp-4);">
+        <div class="stat-card">
+          <span class="stat-label">INSIDER SENTIMENT SCORE</span>
+          <div class="stat-value highlight-gold font-mono" id="insiderSentimentScore">98.0 / 100</div>
+          <span class="stat-sub font-mono color-bull" id="insiderSentimentLabel">BULLISH ACCUMULATION</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">OPPORTUNISTIC BUYS (30D)</span>
+          <div class="stat-value color-bull font-mono" id="insiderBuyDollars">+$32.0M</div>
+          <span class="stat-sub font-mono" id="insiderClusterCount">8 Cluster Purchases</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">TOP ACCUMULATED TICKER</span>
+          <div class="stat-value highlight-gold font-mono" id="insiderTopTicker">NVDA</div>
+          <span class="stat-sub font-mono">CEO + CFO + Director Cluster</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">10b5-1 PROGRAM SALES (FILTERED)</span>
+          <div class="stat-value font-mono text-muted" id="insiderRoutineSales">-$27.3M</div>
+          <span class="stat-sub font-mono">Pre-Scheduled / Excluded</span>
+        </div>
+      </div>
+
+      <!-- Cluster Buy Alert Banner -->
+      <div class="cluster-alerts-container" id="clusterAlertsContainer" style="margin-bottom:var(--sp-4);">
+        <!-- Rendered by macro.js -->
+      </div>
+
+      <!-- SEC Form 4 Transactions Table -->
+      <div class="table-responsive is-auto-height" style="margin-bottom:var(--sp-5);">
+        <div class="card-header-row" style="padding:10px 14px; background:var(--bg-surface); border:1px solid var(--border-subtle); border-bottom:none; border-radius:6px 6px 0 0; display:flex; justify-content:space-between; align-items:center;">
+          <span class="card-kicker font-mono">SEC FORM 4 VERIFIED INSIDER TRANSACTIONS BLOTTER</span>
+          <div class="curve-span-pills" id="insiderFilterPills" style="margin:0;">
+            <button class="curve-span-pill active" data-filter="all">ALL FILINGS</button>
+            <button class="curve-span-pill" data-filter="buys">BUYS ONLY</button>
+            <button class="curve-span-pill" data-filter="clusters">CLUSTER BUYS</button>
+            <button class="curve-span-pill" data-filter="ceo">CEO / CFO ONLY</button>
+          </div>
+        </div>
+        <table class="blotter-table compact-table" id="insiderTable">
+          <thead>
+            <tr>
+              <th style="min-width:95px;">FILING DATE</th>
+              <th style="min-width:75px;">TICKER</th>
+              <th style="min-width:140px;">INSIDER &amp; TITLE</th>
+              <th class="text-center" style="min-width:110px;">TRADE TYPE</th>
+              <th class="text-right" style="min-width:85px;">PRICE</th>
+              <th class="text-right" style="min-width:85px;">SHARES</th>
+              <th class="text-right" style="min-width:110px;">VALUE ($)</th>
+              <th class="text-center" style="min-width:110px;">10b5-1 PLAN?</th>
+              <th class="text-center" style="min-width:150px;">CONVICTION RATING</th>
+            </tr>
+          </thead>
+          <tbody id="insiderTbody">
+            <!-- Rendered by macro.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Institutional 13F Whale Tracker Grid -->
+      <div class="section-heading" style="margin-bottom:var(--sp-3);">
+        <span class="section-kicker">INSTITUTIONAL 13F WHALE PORTFOLIO TRACKER</span>
+        <h3>Tier-1 Quantitative Hedge Fund &amp; Asset Manager Overweights</h3>
+      </div>
+      <div class="whale-cards-grid" id="whaleCardsGrid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">
+        <!-- Rendered by macro.js -->
       </div>
     </section>
 
