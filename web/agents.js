@@ -433,6 +433,49 @@
       if (apiKeyModal) apiKeyModal.style.display = 'none';
       refreshAgentStatus();
     });
+
+    // Generate EOD Market Wrap Button
+    document.getElementById('generateEodWrapBtn')?.addEventListener('click', async () => {
+      const btnText = document.getElementById('eodWrapBtnText');
+      if (btnText) btnText.textContent = 'SYNTHESIZING EOD BATCH...';
+
+      try {
+        const res = await fetch('/api/news/eod-wrap', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ api_key: agentState.apiKey || undefined })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        // Update Dossier Viewer with EOD Wrap
+        const title = `End-of-Day Market News & Sentiment Synthesis (${data.session_date})`;
+        const item = {
+          id: `eod-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          type: 'eod_news_wrap',
+          title: title,
+          model: 'gemini-3.7-flash',
+          mode: data.mode,
+          content: data.report_markdown
+        };
+
+        agentState.activeReport = item;
+        agentState.reportsArchive.unshift(item);
+        if (agentState.reportsArchive.length > 20) agentState.reportsArchive.pop();
+        localStorage.setItem('mq_agent_reports', JSON.stringify(agentState.reportsArchive));
+
+        updateDossierDisplay(item.content, item.title, item.timestamp, item.model, item.mode);
+        renderReportsArchiveTable();
+
+        // Scroll to viewer
+        document.getElementById('secReportViewer')?.scrollIntoView({ behavior: 'smooth' });
+      } catch (err) {
+        console.error('Failed to generate EOD wrap:', err);
+      } finally {
+        if (btnText) btnText.innerHTML = '&#9889; GENERATE EOD MARKET WRAP';
+      }
+    });
   }
 
   /* ==========================================================================

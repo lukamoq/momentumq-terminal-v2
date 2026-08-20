@@ -706,6 +706,23 @@ def post_news_analyze(req: NewsAnalyzeRequest) -> Response:
     return Response(content=json.dumps(data), media_type="application/json")
 
 
+@app.get("/api/news/eod-wrap")
+def get_news_eod_wrap(api_key: Optional[str] = None) -> Response:
+    """Return aggregated End-of-Day (EOD) Market News & Sentiment Synthesis."""
+    from scorecard.news import generate_eod_news_synthesis
+    return _cached_json_response("news_eod_wrap", lambda: generate_eod_news_synthesis(api_key=api_key))
+
+
+@app.post("/api/news/eod-wrap")
+def post_news_eod_wrap(req: Optional[NewsAnalyzeRequest] = None) -> Response:
+    """Trigger fresh End-of-Day (EOD) Market News & Sentiment Synthesis."""
+    from scorecard.news import generate_eod_news_synthesis
+    api_key = req.api_key if req else None
+    data = generate_eod_news_synthesis(api_key=api_key)
+    return Response(content=json.dumps(data), media_type="application/json")
+
+
+
 
 @app.get("/api/macro/regime")
 def get_macro_regime() -> Response:

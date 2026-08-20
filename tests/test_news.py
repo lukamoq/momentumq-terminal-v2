@@ -107,3 +107,21 @@ def test_news_api_endpoints():
     analyze_data = res_analyze.json()
     assert analyze_data["sentiment"] == "BULLISH"
     assert analyze_data["confidence_pct"] >= 75.0
+
+    # Test EOD wrap endpoints
+    res_eod = client.get("/api/news/eod-wrap")
+    assert res_eod.status_code == 200
+    eod_data = res_eod.json()
+    assert "report_markdown" in eod_data
+    assert "session_verdict" in eod_data
+
+
+def test_generate_eod_news_synthesis():
+    """Test batch EOD news synthesis engine without API calls."""
+    from scorecard.news import generate_eod_news_synthesis
+    res = generate_eod_news_synthesis()
+    assert res["status"] == "success"
+    assert res["total_wires_analyzed"] >= 5
+    assert len(res["report_markdown"]) > 100
+    assert res["api_calls_used"] == 0
+
