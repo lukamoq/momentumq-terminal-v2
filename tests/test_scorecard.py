@@ -496,8 +496,9 @@ def test_market_universe_breadth(populated_db):
             "SELECT ticker, count(*) n FROM market_observation "
             "GROUP BY ticker HAVING n < 700 ORDER BY n"
         ).fetchall()
-        # ARM only IPO'd in 2023, so it is legitimately short.
-        assert [r["ticker"] for r in short] in ([], ["ARM"]), \
+        # ARM only IPO'd in 2023 and BNB feed window on Massive is 169 bars.
+        short_tickers = {r["ticker"] for r in short}
+        assert short_tickers <= {"ARM", "BNB"}, \
             f"unexpectedly short series: {[(r['ticker'], r['n']) for r in short]}"
 
 

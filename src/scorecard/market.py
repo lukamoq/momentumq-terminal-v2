@@ -56,9 +56,13 @@ BREADTH_TICKERS = (
     "XOM", "CVX", "DIS", "CAT", "BA", "HON", "PG", "KO", "WMT", "COST", "VZ",
 )
 
+# Crypto & Digital Asset series
+CRYPTO_TICKERS = ("BTC", "ETH", "SOL", "BNB", "XRP")
+INSTITUTIONAL_CRYPTO_TICKERS = ("IBIT", "MSTR", "COIN")
+
 DEFAULT_TICKERS = (
     CORE_TICKERS + MAG7_TICKERS + SECTOR_TICKERS + MACRO_TICKERS
-    + AI_ADJACENT_TICKERS + BREADTH_TICKERS
+    + AI_ADJACENT_TICKERS + BREADTH_TICKERS + CRYPTO_TICKERS + INSTITUTIONAL_CRYPTO_TICKERS
 )
 
 # Ticker lineage: which vendor symbol carried the company we are scoring, over
@@ -84,6 +88,21 @@ TICKER_LINEAGE: Dict[str, List[Tuple[str, Optional[str], Optional[str]]]] = {
     "META": [
         ("FB", None, "2022-06-09"),
         ("META", "2022-06-09", None),
+    ],
+    "BTC": [
+        ("X:BTCUSD", None, None),
+    ],
+    "ETH": [
+        ("X:ETHUSD", None, None),
+    ],
+    "SOL": [
+        ("X:SOLUSD", None, None),
+    ],
+    "BNB": [
+        ("X:BNBUSD", None, None),
+    ],
+    "XRP": [
+        ("X:XRPUSD", None, None),
     ],
 }
 
@@ -163,6 +182,10 @@ def load_lineage_observations(ticker: str) -> List[Dict[str, Any]]:
     for source, start, end in lineage_segments(canonical):
         cache_file = MASSIVE_CACHE_DIR / f"{source}.json"
         if not cache_file.exists():
+            cache_file = MASSIVE_CACHE_DIR / f"{source.replace(':', '_')}.json"
+        if not cache_file.exists():
+            cache_file = MASSIVE_CACHE_DIR / f"{canonical}.json"
+        if not cache_file.exists():
             fetch_and_cache_market_data((source,))
         if not cache_file.exists():
             logger.warning("No cache for lineage segment %s of %s", source, canonical)
@@ -210,7 +233,8 @@ def fetch_and_cache_market_data(
     counts = {}
 
     for ticker in expand_to_source_symbols(tickers):
-        cache_file = MASSIVE_CACHE_DIR / f"{ticker.upper()}.json"
+        safe_sym = ticker.replace(":", "_").upper()
+        cache_file = MASSIVE_CACHE_DIR / f"{safe_sym}.json"
         data = None
 
         if MASSIVE_API_KEY and (force_api or not cache_file.exists()):
