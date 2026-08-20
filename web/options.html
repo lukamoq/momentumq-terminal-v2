@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Options Volatility Surface &amp; Dealer GEX — MomentumQ Terminal</title>
+  <meta name="description" content="Closed-form Black-Scholes-Merton (BSM) options Greeks, dealer gamma exposure (GEX), true 25-delta skew, and constant-maturity volatility term structure computed from observed option chains.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="blotter-container">
+    <!-- Top Global App Navigation (5 Modules) -->
+    <div class="app-global-nav">
+      <div class="nav-brand-wrap">
+        <a href="index.html" class="nav-brand-link" style="display:flex; align-items:center; text-decoration:none;">
+          <img src="images/logo.png" alt="MomentumQ" class="nav-brand-logo" height="24">
+        </a>
+        <span class="nav-brand-divider">/</span>
+        <span class="nav-brand-suite">OPTIONS &amp; VOLATILITY SURFACE</span>
+      </div>
+      <div class="nav-tabs-wrapper">
+        <a href="index.html" class="nav-page-btn"><span class="nav-page-num">01</span> Forecasts</a>
+        <a href="mag7.html" class="nav-page-btn"><span class="nav-page-num">02</span> Mag 7 Tech</a>
+        <a href="seasonality.html" class="nav-page-btn"><span class="nav-page-num">03</span> Seasonality</a>
+        <a href="options.html" class="nav-page-btn active" aria-current="page"><span class="nav-page-num">04</span> Options &amp; GEX</a>
+        <a href="macro.html" class="nav-page-btn"><span class="nav-page-num">05</span> Macro Regime</a>
+      </div>
+      <div class="nav-status-badge">
+        <span class="live-pulse"></span>
+        <span>BSM CLOSED-FORM // OBSERVED CHAINS</span>
+      </div>
+    </div>
+
+    <!-- Section Navigation Rail -->
+    <nav class="section-rail" id="sectionRail" aria-label="Section navigation">
+      <span class="rail-label">JUMP TO</span>
+      <div class="rail-links">
+        <a class="rail-link" href="#secOptionsOverview"><span class="rail-num">01</span> Overview &amp; Greeks</a>
+        <a class="rail-link" href="#secDealerGex"><span class="rail-num">02</span> Dealer GEX &amp; Gamma Walls</a>
+        <a class="rail-link" href="#secTermStructure"><span class="rail-num">03</span> Constant-Maturity IV &amp; Skew</a>
+        <a class="rail-link" href="#secExpectedMove"><span class="rail-num">04</span> Expected Move Cones</a>
+        <a class="rail-link" href="#secOpenInterest"><span class="rail-num">05</span> Open Interest &amp; Max Pain</a>
+      </div>
+    </nav>
+
+    <!-- Header -->
+    <header class="blotter-header">
+      <div class="brand-row">
+        <div class="brand-title">
+          <div class="brand-top-meta">
+            <span class="brand-tag">MQ-DERIVATIVES // OPTIONS SURFACE &amp; GEX</span>
+            <div class="sync-status-indicator" id="syncStatusIndicator">
+              <span class="sync-dot pulsing"></span>
+              <span class="sync-text" id="syncStatusText">CHAIN FEED: OBSERVED</span>
+              <span class="sync-time" id="syncTimeText">Last refreshed: Checking...</span>
+              <button class="sync-now-btn" id="syncNowBtn" title="Recalculate options analytics immediately">&#8635; RECALCULATE</button>
+            </div>
+          </div>
+          <h1>OPTIONS VOLATILITY SURFACE &amp; DEALER GEX</h1>
+          <span class="subhead">CLOSED-FORM BSM GREEKS // DEALER GAMMA EXPOSURE // TRUE 25&Delta; SKEW // OBSERVED CONTRACT CHAINS</span>
+        </div>
+        <div class="stats-ticker" id="optionsStatsTicker">
+          <div class="ticker-box">
+            <span class="ticker-label">SPY ATM IV</span>
+            <span class="ticker-val highlight-gold" id="tickerSpyIv">14.8%</span>
+          </div>
+          <div class="ticker-box">
+            <span class="ticker-label">SPY NET GEX</span>
+            <span class="ticker-val color-bull" id="tickerSpyGex">+$420.5M</span>
+          </div>
+          <div class="ticker-box">
+            <span class="ticker-label">GAMMA REGIME</span>
+            <span class="ticker-val color-bull" id="tickerGammaRegime">LONG GAMMA</span>
+          </div>
+          <div class="ticker-box">
+            <span class="ticker-label">OBSERVED CONTRACTS</span>
+            <span class="ticker-val" id="tickerContracts">14,892</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Section 01: Multi-Horizon BSM Greeks Matrix -->
+    <section class="section-options-matrix" id="secOptionsOverview">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">01 // BSM ANALYTICAL MATRIX</span>
+          <h2>Comparative Index &amp; Equity Greeks Summary</h2>
+          <span class="section-meta">Closed-form Black-Scholes-Merton 1st- and 2nd-order Greeks computed with continuous dividend yield cost-of-carry ($b = r - q$) across observed options chains.</span>
+        </div>
+        <div class="section-controls">
+          <div class="curve-span-pills" id="optionsHorizonPills">
+            <span class="span-label">TENOR:</span>
+            <button class="curve-span-pill active" data-horizon="1_week">1W (7D)</button>
+            <button class="curve-span-pill" data-horizon="2_weeks">2W (14D)</button>
+            <button class="curve-span-pill" data-horizon="1_month">1M (30D)</button>
+            <button class="curve-span-pill" data-horizon="3_months">3M (90D)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comparative Table -->
+      <div class="table-responsive is-auto-height" style="margin-bottom: var(--sp-4);">
+        <table class="blotter-table" id="optionsTrioTable">
+          <thead>
+            <tr>
+              <th style="min-width: 130px;">UNDERLYING / SPOT</th>
+              <th class="text-center" style="min-width: 75px;" title="Implied Volatility derived from at-the-money options across chosen horizon">HORIZON IV</th>
+              <th class="text-center" style="min-width: 75px;" title="20-day historical realized annualized volatility">20D VOL</th>
+              <th class="text-center" style="min-width: 80px;" title="First-order price sensitivity: change in option value per $1.00 move in spot">DELTA (&Delta;)</th>
+              <th class="text-center" style="min-width: 80px;" title="Second-order price sensitivity: change in Delta per $1.00 move in spot. Key for dealer hedging">GAMMA (&Gamma;)</th>
+              <th class="text-center" style="min-width: 85px;" title="Time decay rate: dollar value lost per 1 calendar day holding period">THETA (&Theta;/d)</th>
+              <th class="text-center" style="min-width: 80px;" title="Volatility sensitivity: change in option value per 1.0% (100 bps) shift in IV">VEGA (V)</th>
+              <th class="text-center" style="min-width: 75px;" title="Interest rate sensitivity: change in option value per 1.0% shift in risk-free baseline">RHO (&rho;)</th>
+              <th class="text-center" style="min-width: 75px;" title="Second-order cross-Greek (∂Δ/∂σ): rate of Delta change per 1% change in Implied Volatility">VANNA</th>
+              <th class="text-center" style="min-width: 75px;" title="Delta decay over time (∂Δ/∂t): rate of Delta bleed per calendar day passed">CHARM</th>
+              <th class="text-right" style="min-width: 90px;" title="Total open interest strike price where option writers minimize dollar payout upon expiration">MAX PAIN</th>
+              <th class="text-center" style="min-width: 120px;" title="Market maker Gamma exposure: Long Gamma dampens volatility, Short Gamma amplifies volatility">GAMMA REGIME</th>
+              <th class="text-right" style="min-width: 110px;" id="optionsExpMoveHeader" title="Diffusion expected move cone: S × IV × sqrt(T) representing 68.2% statistical confidence interval">EXP MOVE (&plusmn;1&sigma;)</th>
+            </tr>
+          </thead>
+          <tbody id="optionsTrioTbody">
+            <tr class="skeleton-row"><td colspan="13"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+            <tr class="skeleton-row"><td colspan="13"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+            <tr class="skeleton-row"><td colspan="13"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Asset Options Detail Cards Grid -->
+      <div class="options-detail-grid" id="optionsCardsGrid">
+        <div class="skeleton-card skeleton-shimmer"><div class="skeleton-box" style="width:50%;"></div><div class="skeleton-box" style="width:80%; height:32px;"></div></div>
+        <div class="skeleton-card skeleton-shimmer"><div class="skeleton-box" style="width:50%;"></div><div class="skeleton-box" style="width:80%; height:32px;"></div></div>
+        <div class="skeleton-card skeleton-shimmer"><div class="skeleton-box" style="width:50%;"></div><div class="skeleton-box" style="width:80%; height:32px;"></div></div>
+      </div>
+    </section>
+
+    <!-- Section 02: Dealer GEX & Gamma Walls -->
+    <section class="section-dealer-gex" id="secDealerGex">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">02 // DEALER POSITIONING</span>
+          <h2>Dealer Gamma Exposure (GEX) &amp; Structural Walls</h2>
+          <span class="section-meta">Quantifies market maker delta hedging requirements per $1.00 move in underlying spot price derived from live open interest.</span>
+        </div>
+      </div>
+
+      <div class="gex-visualizer-grid" id="gexVisualizerGrid">
+        <div class="gex-summary-card">
+          <span class="card-kicker font-mono">SPY // DEALER GAMMA PROFILE</span>
+          <div class="gex-metric-hero font-mono color-bull" id="gexTotalHero">+$420.5M GEX</div>
+          <span class="gex-hero-sub font-mono">PER 1% S&amp;P 500 MOVE (VOLATILITY DAMPENING)</span>
+          <div class="snap-divider"></div>
+          <div class="gex-stat-row"><span>Call Open Interest Gamma:</span> <strong class="color-bull" id="gexCallOi">+$580.2M</strong></div>
+          <div class="gex-stat-row"><span>Put Open Interest Gamma:</span> <strong class="color-bear" id="gexPutOi">-$159.7M</strong></div>
+          <div class="gex-stat-row"><span>Zero Gamma Flip Level:</span> <strong class="font-mono" id="gexFlipLevel">$574.50 (-2.5%)</strong></div>
+          <div class="gex-stat-row"><span>Primary Call Gamma Wall:</span> <strong class="highlight-gold font-mono" id="gexCallWall">$600.00 Strike</strong></div>
+          <div class="gex-stat-row"><span>Primary Put Gamma Wall:</span> <strong class="color-bear font-mono" id="gexPutWall">$580.00 Strike</strong></div>
+          <div class="gex-stat-row"><span>Current Spot Positioning:</span> <strong class="font-mono">ABOVE FLIP (LONG GAMMA ZONE)</strong></div>
+        </div>
+
+        <div class="gex-bars-card">
+          <div class="card-header-row">
+            <span class="card-kicker font-mono">GAMMA CONCENTRATION BY STRIKE (SPY)</span>
+            <span class="font-mono" style="font-size:11px; color:var(--text-muted);">Observed Book</span>
+          </div>
+          <div class="gex-strike-bars-container" id="gexStrikeBarsContainer">
+            <!-- Rendered by options.js -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 03: Constant-Maturity IV Surface & 25Δ Skew -->
+    <section class="section-term-structure" id="secTermStructure">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">03 // SURFACE INTERPOLATION</span>
+          <h2>Constant-Maturity Term Structure &amp; 25-Delta Skew</h2>
+          <span class="section-meta">Implied volatility interpolated in total variance ($\sigma^2 T$ linear in $T$) ensuring absence of calendar arbitrage. True 25&Delta; skew read at exact $|\Delta| = 0.25$ strike.</span>
+        </div>
+      </div>
+
+      <div class="term-surface-grid" id="termSurfaceGrid">
+        <div class="surface-card">
+          <span class="card-kicker font-mono">CONSTANT-MATURITY TERM STRUCTURE</span>
+          <div class="surface-tenor-table font-mono" id="surfaceTenorTable">
+            <!-- Rendered by options.js -->
+          </div>
+        </div>
+        <div class="surface-card">
+          <span class="card-kicker font-mono">TRUE 25-DELTA SKEW &amp; PUT/CALL PREMIUM</span>
+          <div class="surface-skew-container" id="surfaceSkewContainer">
+            <!-- Rendered by options.js -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 04: Diffusion Expected Move Cones -->
+    <section class="section-expected-move" id="secExpectedMove">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">04 // RISK BOUNDS</span>
+          <h2>Statistical Diffusion Expected Move Cones</h2>
+          <span class="section-meta">Exact BSM diffusion cones ($\pm 1\sigma = S \cdot \sigma_T \sqrt{T}$, $\pm 2\sigma = 2 \cdot S \cdot \sigma_T \sqrt{T}$) priced at each tenor's own constant-maturity implied volatility.</span>
+        </div>
+      </div>
+
+      <div class="exp-move-cards-grid" id="expMoveCardsGrid">
+        <!-- Rendered by options.js -->
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-meta">
+        <span>MQ-DERIVATIVES // CLOSED-FORM BSM &amp; OBSERVED CONTRACT SURFACES</span>
+        <span>ZERO SYNTHETIC SMOOTHING // TRUE 25&Delta; WINGS</span>
+        <span>OPEN SPECIFICATION // VERIFIED HISTORICAL BOOK</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="terminal.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

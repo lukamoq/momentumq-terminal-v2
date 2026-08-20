@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Macro Regime, VIX Structure &amp; Fear/Greed 2.0 — MomentumQ Terminal</title>
+  <meta name="description" content="5-state cross-asset macro regime classifier, 10-factor Fear &amp; Greed Index 2.0, implied volatility term structure, sector rotation breadth, and cross-asset correlation matrix.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="blotter-container">
+    <!-- Top Global App Navigation (5 Modules) -->
+    <div class="app-global-nav">
+      <div class="nav-brand-wrap">
+        <a href="index.html" class="nav-brand-link" style="display:flex; align-items:center; text-decoration:none;">
+          <img src="images/logo.png" alt="MomentumQ" class="nav-brand-logo" height="24">
+        </a>
+        <span class="nav-brand-divider">/</span>
+        <span class="nav-brand-suite">MACRO REGIME &amp; SENTIMENT</span>
+      </div>
+      <div class="nav-tabs-wrapper">
+        <a href="index.html" class="nav-page-btn"><span class="nav-page-num">01</span> Forecasts</a>
+        <a href="mag7.html" class="nav-page-btn"><span class="nav-page-num">02</span> Mag 7 Tech</a>
+        <a href="seasonality.html" class="nav-page-btn"><span class="nav-page-num">03</span> Seasonality</a>
+        <a href="options.html" class="nav-page-btn"><span class="nav-page-num">04</span> Options &amp; GEX</a>
+        <a href="macro.html" class="nav-page-btn active" aria-current="page"><span class="nav-page-num">05</span> Macro Regime</a>
+      </div>
+      <div class="nav-status-badge">
+        <span class="live-pulse"></span>
+        <span>5-STATE REGIME // 10-FACTOR F&amp;G</span>
+      </div>
+    </div>
+
+    <!-- Section Navigation Rail -->
+    <nav class="section-rail" id="sectionRail" aria-label="Section navigation">
+      <span class="rail-label">JUMP TO</span>
+      <div class="rail-links">
+        <a class="rail-link" href="#secMacroRegime"><span class="rail-num">01</span> Macro Regime</a>
+        <a class="rail-link" href="#secFearGreed"><span class="rail-num">02</span> Fear &amp; Greed 2.0</a>
+        <a class="rail-link" href="#secVixTerm"><span class="rail-num">03</span> Volatility Structure</a>
+        <a class="rail-link" href="#secSectorRotation"><span class="rail-num">04</span> Sector Rotation</a>
+        <a class="rail-link" href="#secCorrelation"><span class="rail-num">05</span> Correlation Matrix</a>
+      </div>
+    </nav>
+
+    <!-- Header -->
+    <header class="blotter-header">
+      <div class="brand-row">
+        <div class="brand-title">
+          <div class="brand-top-meta">
+            <span class="brand-tag">MQ-MACRO // REGIME CLASSIFIER &amp; SENTIMENT</span>
+            <div class="sync-status-indicator" id="syncStatusIndicator">
+              <span class="sync-dot pulsing"></span>
+              <span class="sync-text" id="syncStatusText">TAPE FEED: REALIZED</span>
+              <span class="sync-time" id="syncTimeText">Last refreshed: Checking...</span>
+              <button class="sync-now-btn" id="syncNowBtn" title="Recalculate macro analytics immediately">&#8635; RECALCULATE</button>
+            </div>
+          </div>
+          <h1>MACRO REGIME, VIX STRUCTURE &amp; FEAR/GREED</h1>
+          <span class="subhead">5-STATE CROSS-ASSET CLASSIFIER // 10-FACTOR WEIGHTED SENTIMENT // CONSTANT-MATURITY CBOE VARIANCE // GICS SECTOR BREADTH</span>
+        </div>
+        <div class="stats-ticker" id="macroStatsTicker">
+          <div class="ticker-box">
+            <span class="ticker-label">ACTIVE REGIME</span>
+            <span class="ticker-val color-bull" id="tickerMacroRegime">BULL EXUBERANT</span>
+          </div>
+          <div class="ticker-box">
+            <span class="ticker-label">FEAR &amp; GREED 2.0</span>
+            <span class="ticker-val highlight-gold" id="tickerFgScore">68 / 100</span>
+          </div>
+          <div class="ticker-box">
+            <span class="ticker-label">VIX 3M/1M SLOPE</span>
+            <span class="ticker-val color-bull" id="tickerVixSlope">1.09 (CONTANGO)</span>
+          </div>
+          <div class="ticker-box">
+            <span class="ticker-label">10Y-2Y SLOPE</span>
+            <span class="ticker-val highlight-gold" id="tickerYieldSlope">+30 BPS</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Section 01: 5-State Cross-Asset Macro Regime Classifier -->
+    <section class="section-macro-regime" id="secMacroRegime">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">01 // REGIME ENGINE</span>
+          <h2>5-State Cross-Asset Macro Regime Classifier</h2>
+          <span class="section-meta">Evaluates trend, breadth, Treasury slope, credit spreads, and volatility against objective quantitative thresholds to establish current institutional risk posture.</span>
+        </div>
+      </div>
+
+      <div class="macro-regime-hero-card" id="macroRegimeHeroCard">
+        <div class="macro-hero-left">
+          <span class="macro-hero-label font-mono">CURRENT COMPUTED MARKET REGIME</span>
+          <div class="macro-hero-title color-bull" id="macroRegimeTitle">BULL EXUBERANT</div>
+          <span class="macro-hero-conf font-mono" id="macroRegimeConf">CONFIDENCE SCORE: 88.4% (HIGH CONVICTION)</span>
+          <p class="macro-hero-desc" id="macroRegimeDesc">
+            S&amp;P 500 trading firmly above 50D and 200D SMAs with positive breadth, normalized Treasury yield curve (+30 bps), and tight high-yield credit spreads. Favorable equity risk allocation.
+          </p>
+        </div>
+        <div class="macro-hero-right">
+          <span class="macro-hero-label font-mono">5-STATE REGIME SPECTRUM</span>
+          <div class="regime-spectrum-bar font-mono">
+            <span class="regime-chip">BEAR CONTRACTION</span>
+            <span class="regime-chip">VOLATILE CORRECTION</span>
+            <span class="regime-chip">RANGEBOUND</span>
+            <span class="regime-chip">BULL TRENDING</span>
+            <span class="regime-chip active color-bull">BULL EXUBERANT</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Macro Condition Checklist -->
+      <div class="macro-factors-grid" id="macroFactorsGrid">
+        <div class="skeleton-card skeleton-shimmer"><div class="skeleton-box" style="width:50%;"></div><div class="skeleton-box" style="width:80%; height:24px;"></div></div>
+        <div class="skeleton-card skeleton-shimmer"><div class="skeleton-box" style="width:50%;"></div><div class="skeleton-box" style="width:80%; height:24px;"></div></div>
+        <div class="skeleton-card skeleton-shimmer"><div class="skeleton-box" style="width:50%;"></div><div class="skeleton-box" style="width:80%; height:24px;"></div></div>
+        <div class="skeleton-card skeleton-shimmer"><div class="skeleton-box" style="width:50%;"></div><div class="skeleton-box" style="width:80%; height:24px;"></div></div>
+      </div>
+    </section>
+
+    <!-- Section 02: Fear & Greed Index 2.0 (10 Factors) -->
+    <section class="section-fear-greed" id="secFearGreed">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">02 // MULTI-FACTOR SENTIMENT</span>
+          <h2>MomentumQ Fear &amp; Greed Index 2.0</h2>
+          <span class="section-meta">10-factor weighted quantitative sentiment index combining observed put/call positioning, constant-maturity IV, cross-sector breadth, and high-yield credit spreads.</span>
+        </div>
+      </div>
+
+      <div class="fg-panel-grid" id="fgPanelGrid">
+        <div class="fg-gauge-card">
+          <span class="card-kicker font-mono">COMPOSITE SENTIMENT SCORE</span>
+          <div class="fg-score-hero highlight-gold font-mono" id="fgScoreHero">68</div>
+          <div class="fg-label-hero color-bull font-mono" id="fgLabelHero">GREED</div>
+          <div class="snap-divider"></div>
+          <div class="snap-key-val"><span>Previous Day Close:</span> <strong class="font-mono">65 (GREED)</strong></div>
+          <div class="snap-key-val"><span>1-Week Prior Average:</span> <strong class="font-mono">62 (GREED)</strong></div>
+          <div class="snap-key-val"><span>1-Month Prior Average:</span> <strong class="font-mono">54 (NEUTRAL)</strong></div>
+          <div class="snap-key-val"><span>1-Year Historical Range:</span> <strong class="font-mono">22 (EXTREME FEAR) &mdash; 84 (EXTREME GREED)</strong></div>
+        </div>
+
+        <div class="fg-categories-card">
+          <div class="card-header-row">
+            <span class="card-kicker font-mono">10 WEIGHTED SENTIMENT COMPONENT GAUGES</span>
+            <span class="font-mono" style="font-size:11px; color:var(--text-muted);">100% Observed Data</span>
+          </div>
+          <div class="fg-categories-list" id="fgCategoriesList">
+            <!-- Rendered by macro.js -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 03: Implied Volatility Term Structure & CBOE Curve -->
+    <section class="section-vix-structure" id="secVixTerm">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">03 // VOLATILITY SURFACE</span>
+          <h2>Model-Free Implied Volatility Term Structure</h2>
+          <span class="section-meta">Computed from the observed SPY contract book with CBOE variance integration across 9-day, 30-day, and 90-day constant-maturity horizons.</span>
+        </div>
+      </div>
+
+      <div class="vix-cards-grid" id="vixCardsGrid">
+        <div class="vix-metric-card">
+          <span class="card-kicker font-mono">TERM STRUCTURE REGIME</span>
+          <div class="snap-metric-big color-bull font-mono" id="vixStateHero">CONTANGO</div>
+          <span class="snap-metric-sub font-mono">NORMAL VOLATILITY RISK PREMIUM</span>
+          <div class="snap-divider"></div>
+          <div class="snap-key-val"><span>9-Day Short Vol (VIX9D):</span> <strong class="font-mono" id="vix9dVal">13.40</strong></div>
+          <div class="snap-key-val"><span>30-Day Constant Vol (VIX30D):</span> <strong class="font-mono" id="vix30dVal">14.82</strong></div>
+          <div class="snap-key-val"><span>90-Day Medium Vol (VIX3M):</span> <strong class="font-mono" id="vix90dVal">16.15</strong></div>
+          <div class="snap-key-val"><span>3M / 1M Slope Ratio:</span> <strong class="font-mono color-bull" id="vixSlopeVal">1.090x (Contango)</strong></div>
+        </div>
+
+        <div class="vix-metric-card">
+          <span class="card-kicker font-mono">HISTORICAL REGIME CLASSIFICATION</span>
+          <div class="vix-regimes-list font-mono" id="vixRegimesList">
+            <div class="snap-key-val"><span>Deep Contango (&gt;1.10x):</span> <strong class="color-bull">38% Historical Frequency</strong></div>
+            <div class="snap-key-val"><span>Mild Contango (1.00 &mdash; 1.10x):</span> <strong class="color-bull">44% Historical Frequency</strong></div>
+            <div class="snap-key-val"><span>Inverted Backwardation (&lt;1.00x):</span> <strong class="color-bear">18% Historical Frequency (Stress)</strong></div>
+            <div class="snap-key-val"><span>Current Spread Status:</span> <strong class="highlight-gold">Complacent / Normal Hedging</strong></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 04: Sector Rotation Breadth Table -->
+    <section class="section-sector-rotation" id="secSectorRotation">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">04 // GICS SECTOR BREADTH</span>
+          <h2>11-Sector Relative Performance &amp; Rotation Quadrants</h2>
+          <span class="section-meta">Measures sector dispersion against SPY to identify cyclical leadership, defensive rotations, and broadening participation.</span>
+        </div>
+      </div>
+
+      <div class="table-responsive is-auto-height">
+        <table class="blotter-table" id="sectorRotationTable">
+          <thead>
+            <tr>
+              <th>SECTOR / ETF</th>
+              <th class="text-right">YTD RETURN</th>
+              <th class="text-right">1-MONTH RETURN</th>
+              <th class="text-right">ALPHA VS SPY</th>
+              <th class="text-center">ROTATION QUADRANT</th>
+              <th class="text-center">MOMENTUM SCORE</th>
+              <th>LEADING CONSTITUENT DRIVERS</th>
+            </tr>
+          </thead>
+          <tbody id="sectorRotationTbody">
+            <tr class="skeleton-row"><td colspan="7"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+            <tr class="skeleton-row"><td colspan="7"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+            <tr class="skeleton-row"><td colspan="7"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 05: Cross-Asset Correlation Matrix -->
+    <section class="section-correlation-matrix" id="secCorrelation">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">05 // CROSS-ASSET DIVERSIFICATION</span>
+          <h2>Rolling Cross-Asset Correlation Matrix</h2>
+          <span class="section-meta">Measures co-movement across Equities, Fixed Income, Commodities, Dollar, High-Yield Credit, and Digital Assets.</span>
+        </div>
+        <div class="section-controls">
+          <div class="curve-span-pills" id="corrLookbackPills">
+            <span class="span-label">LOOKBACK:</span>
+            <button class="curve-span-pill" data-lookback="30">30D</button>
+            <button class="curve-span-pill active" data-lookback="60">60D</button>
+            <button class="curve-span-pill" data-lookback="90">90D</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive is-auto-height">
+        <table class="blotter-table compact-table" id="corrMatrixTable">
+          <thead id="corrMatrixThead">
+            <!-- Rendered by macro.js -->
+          </thead>
+          <tbody id="corrMatrixTbody">
+            <tr class="skeleton-row"><td colspan="10"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-meta">
+        <span>MQ-MACRO // 5-STATE QUANTITATIVE REGIME &amp; SENTIMENT INTELLIGENCE</span>
+        <span>NO LAG HEURISTICS // CONTINUOUS OBSERVED TAPE</span>
+        <span>OPEN SPECIFICATION // VERIFIED HISTORICAL RECORD</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="terminal.js"></script>
+  <script src="macro.js"></script>
+</body>
+</html>

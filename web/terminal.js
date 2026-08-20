@@ -60,17 +60,19 @@
       { cmd: 'TSLA <GO>', desc: 'Tesla audit, targets & seasonality', action: () => openTickerSnapshot('TSLA') },
       { cmd: 'QQQ <GO>', desc: 'Nasdaq 100 ETF audit & Greeks snapshot', action: () => openTickerSnapshot('QQQ') },
       { cmd: 'IWM <GO>', desc: 'Russell 2000 ETF audit & Greeks snapshot', action: () => openTickerSnapshot('IWM') },
-      { cmd: 'SCORE <GO>', desc: 'Jump to Sell-Side Direction Scorecard Blotter', action: () => navigateTo('index.html#sectionScorecard') },
+      { cmd: 'SCORE <GO>', desc: 'Jump to Sell-Side Direction & Allocation Scorecard', action: () => navigateTo('index.html') },
       { cmd: 'TIMELINE <GO>', desc: 'Jump to Wall Street Stance Timeline Chart', action: () => navigateTo('index.html#sectionTimeline') },
       { cmd: 'MAG7 <GO>', desc: 'Jump to Magnificent 7 Big Tech Leaderboard', action: () => navigateTo('mag7.html') },
       { cmd: 'THEMES <GO>', desc: 'Jump to Big Tech Thematic Dossiers', action: () => navigateTo('mag7.html#mag7Themes') },
-      { cmd: 'SEAS <GO>', desc: 'Jump to 27-Year Cross-Asset Seasonality Matrix', action: () => navigateTo('seasonality.html#seasonalityMatrixSection') },
+      { cmd: 'SEAS <GO>', desc: 'Jump to 27-Year Cross-Asset Seasonality Matrix', action: () => navigateTo('seasonality.html') },
       { cmd: 'CURVES <GO>', desc: 'Jump to 252-Day Cumulative Path Seasonality Curves', action: () => navigateTo('seasonality.html#curveChartContainer') },
-      { cmd: 'GEX <GO>', desc: 'Jump to Options Volatility Surface & BSM Greeks', action: () => navigateTo('seasonality.html#secOptionsAnalysis') },
-      { cmd: 'MACRO <GO>', desc: 'Jump to Macro Regime & Sector Rotation Engine', action: () => navigateTo('seasonality.html#secMacroRegime') },
-      { cmd: 'VIX <GO>', desc: 'Jump to Implied Volatility Term Structure & Slope', action: () => navigateTo('seasonality.html#secVixTermStructure') },
-      { cmd: 'FG <GO>', desc: 'Jump to Fear & Greed Index 2.0 10-Factor Panel', action: () => navigateTo('seasonality.html#secFearGreedPanel') },
-      { cmd: 'CORR <GO>', desc: 'Jump to Cross-Asset Correlation Matrix', action: () => navigateTo('seasonality.html#secCorrelationMatrix') },
+      { cmd: 'OPT <GO>', desc: 'Jump to Dedicated Options Surface & BSM Greeks', action: () => navigateTo('options.html') },
+      { cmd: 'GEX <GO>', desc: 'Jump to Dealer Gamma Exposure & Gamma Walls', action: () => navigateTo('options.html#secDealerGex') },
+      { cmd: 'MACRO <GO>', desc: 'Jump to Dedicated 5-State Macro Regime Terminal', action: () => navigateTo('macro.html') },
+      { cmd: 'FG <GO>', desc: 'Jump to Fear & Greed Index 2.0 10-Factor Panel', action: () => navigateTo('macro.html#secFearGreed') },
+      { cmd: 'VIX <GO>', desc: 'Jump to Implied Volatility Term Structure & Slope', action: () => navigateTo('macro.html#secVixTerm') },
+      { cmd: 'SECTORS <GO>', desc: 'Jump to 11-Sector Rotation Breadth Table', action: () => navigateTo('macro.html#secSectorRotation') },
+      { cmd: 'CORR <GO>', desc: 'Jump to Cross-Asset Correlation Matrix', action: () => navigateTo('macro.html#secCorrelation') },
       { cmd: 'SYNC <GO>', desc: 'Trigger live quantitative recalculation & sync', action: () => triggerLiveSync() },
       { cmd: 'EXPORT <GO>', desc: 'Export active page dataset as CSV', action: () => triggerActiveExport() },
       { cmd: 'THEME OBSIDIAN <GO>', desc: 'Switch terminal CRT theme to Obsidian Dark Slate', action: () => setTerminalTheme('obsidian') },
@@ -312,12 +314,12 @@
     funcBar.innerHTML = `
       <button class="func-key" data-action="help"><span class="f-num">F1</span> <span class="f-label">HELP</span></button>
       <button class="func-key highlight-cmd" data-action="cmd"><span class="f-num">F2</span> <span class="f-label">COMMAND &gt;_</span></button>
-      <button class="func-key" data-action="scorecard"><span class="f-num">F3</span> <span class="f-label">01 SCORE</span></button>
+      <button class="func-key" data-action="forecasts"><span class="f-num">F3</span> <span class="f-label">01 FORECASTS</span></button>
       <button class="func-key" data-action="mag7"><span class="f-num">F4</span> <span class="f-label">02 MAG 7</span></button>
       <button class="func-key" data-action="seasonality"><span class="f-num">F5</span> <span class="f-label">03 SEAS</span></button>
-      <button class="func-key" data-action="options"><span class="f-num">F6</span> <span class="f-label">OPTIONS / GEX</span></button>
-      <button class="func-key" data-action="sync"><span class="f-num">F7</span> <span class="f-label">&#8635; SYNC</span></button>
-      <button class="func-key" data-action="export"><span class="f-num">F8</span> <span class="f-label">&darr; EXPORT</span></button>
+      <button class="func-key" data-action="options"><span class="f-num">F6</span> <span class="f-label">04 OPTIONS / GEX</span></button>
+      <button class="func-key" data-action="macro"><span class="f-num">F7</span> <span class="f-label">05 MACRO</span></button>
+      <button class="func-key" data-action="sync"><span class="f-num">F8</span> <span class="f-label">&#8635; SYNC</span></button>
       <button class="func-key" data-action="theme"><span class="f-num">F9</span> <span class="f-label">CRT THEME</span></button>
     `;
 
@@ -335,10 +337,11 @@
       const act = btn.dataset.action;
       if (act === 'help') openHelpModal();
       else if (act === 'cmd') openCommandModal();
-      else if (act === 'scorecard') navigateTo('index.html');
+      else if (act === 'forecasts' || act === 'scorecard') navigateTo('index.html');
       else if (act === 'mag7') navigateTo('mag7.html');
       else if (act === 'seasonality') navigateTo('seasonality.html');
-      else if (act === 'options') navigateTo('seasonality.html#secOptionsAnalysis');
+      else if (act === 'options') navigateTo('options.html');
+      else if (act === 'macro') navigateTo('macro.html');
       else if (act === 'sync') triggerLiveSync();
       else if (act === 'export') triggerActiveExport();
       else if (act === 'theme') {
@@ -796,10 +799,11 @@
               <div class="help-grid">
                 <div class="help-row"><code>NVDA &lt;GO&gt;</code><span>Open NVIDIA quantitative audit snapshot</span></div>
                 <div class="help-row"><code>SPY &lt;GO&gt;</code><span>Open S&amp;P 500 ETF Greeks &amp; dealer GEX</span></div>
-                <div class="help-row"><code>MAG7 &lt;GO&gt;</code><span>Navigate to Magnificent 7 Big Tech Leaderboard</span></div>
-                <div class="help-row"><code>SEAS &lt;GO&gt;</code><span>Open 27-Year Cross-Asset Seasonality Matrix</span></div>
-                <div class="help-row"><code>GEX &lt;GO&gt;</code><span>Open Options Volatility Surface &amp; BSM Greeks</span></div>
-                <div class="help-row"><code>MACRO &lt;GO&gt;</code><span>Open 5-State Macro Regime Classifier</span></div>
+                <div class="help-row"><code>SCORE &lt;GO&gt;</code><span>Open 01 Sell-Side Forecasts Scorecard</span></div>
+                <div class="help-row"><code>MAG7 &lt;GO&gt;</code><span>Navigate to 02 Magnificent 7 Big Tech</span></div>
+                <div class="help-row"><code>SEAS &lt;GO&gt;</code><span>Open 03 27-Year Cross-Asset Seasonality</span></div>
+                <div class="help-row"><code>OPT &lt;GO&gt; / GEX &lt;GO&gt;</code><span>Open 04 Options Volatility Surface &amp; GEX</span></div>
+                <div class="help-row"><code>MACRO &lt;GO&gt; / FG &lt;GO&gt;</code><span>Open 05 Macro Regime &amp; Fear/Greed</span></div>
                 <div class="help-row"><code>VIX &lt;GO&gt;</code><span>Open Implied Volatility Term Structure</span></div>
                 <div class="help-row"><code>THEME AMBER &lt;GO&gt;</code><span>Switch CRT to Bloomberg Phosphor Amber</span></div>
                 <div class="help-row"><code>THEME GREEN &lt;GO&gt;</code><span>Switch CRT to Matrix Phosphor Green</span></div>
@@ -889,17 +893,17 @@
       }
       if (e.key === 'F6') {
         e.preventDefault();
-        navigateTo('seasonality.html#secOptionsAnalysis');
+        navigateTo('options.html');
         return;
       }
       if (e.key === 'F7') {
         e.preventDefault();
-        triggerLiveSync();
+        navigateTo('macro.html');
         return;
       }
       if (e.key === 'F8') {
         e.preventDefault();
-        triggerActiveExport();
+        triggerLiveSync();
         return;
       }
       if (e.key === 'F9') {
