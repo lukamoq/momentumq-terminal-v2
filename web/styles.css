@@ -39,7 +39,23 @@
   --sp-1: 0.25rem; --sp-2: 0.5rem;  --sp-3: 0.75rem; --sp-4: 1rem;
   --sp-5: 1.5rem;  --sp-6: 2rem;    --sp-7: 3rem;    --sp-8: 4rem;
 
+  /* Motion — a high-frequency tool animates state changes, never decoration. */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-std: cubic-bezier(0.23, 1, 0.32, 1);
+  --dur-1: 0.12s;   /* hover / press feedback */
+  --dur-2: 0.18s;   /* state change */
+  --dur-3: 0.24s;   /* enter / exit */
+
+  /* Chrome heights — the sticky stack reads these so nothing overlaps. */
+  --h-tape: 32px;
+  --h-rail: 41px;
+  --h-chrome: calc(var(--h-tape) + var(--h-rail));
+
+  /* Radius scale. Nested radius rule: inner = outer - gap. */
+  --r-1: 3px;   /* chips, badges, inline code */
+  --r-2: 5px;   /* buttons, inputs */
+  --r-3: 8px;   /* panels, cards */
+  --r-4: 12px;  /* modals, major containers */
 
   /* Brand Accent: MomentumQ Royal Cobalt & Light Cyan Foreground */
   --accent-primary: #2e4cd5;
@@ -80,11 +96,34 @@
   --font-sans: 'Figtree', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* Elevation Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
-  --shadow-modal: 0 24px 48px -12px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  /* Elevation — layered, one light source overhead, opacity falls as the
+     surface rises. A single flat blur is the tell of an unconsidered surface. */
+  --shadow-sm:
+    0 1px 1px rgba(0, 0, 0, 0.30),
+    0 2px 4px -1px rgba(0, 0, 0, 0.24);
+  --shadow-md:
+    0 1px 1px rgba(0, 0, 0, 0.28),
+    0 4px 8px -2px rgba(0, 0, 0, 0.32),
+    0 12px 20px -8px rgba(0, 0, 0, 0.36);
+  --shadow-lg:
+    0 1px 1px rgba(0, 0, 0, 0.30),
+    0 8px 16px -4px rgba(0, 0, 0, 0.38),
+    0 24px 40px -12px rgba(0, 0, 0, 0.46);
+  --shadow-modal:
+    0 0 0 1px rgba(255, 255, 255, 0.07),
+    0 2px 4px rgba(0, 0, 0, 0.34),
+    0 16px 32px -8px rgba(0, 0, 0, 0.52),
+    0 40px 72px -24px rgba(0, 0, 0, 0.68);
+
+  /* The 1px top highlight that makes a raised surface catch the light. */
+  --edge-top: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+
+  /* Interactive accent. Blue is the only colour that means "act here";
+     gold is editorial marking, cyan is live-system status. Keeping those
+     roles separate is what stops the palette reading as accent soup. */
+  --select-bg: rgba(46, 76, 213, 0.16);
+  --select-border: rgba(122, 162, 255, 0.45);
+  --select-fg: #a9c4ff;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -97,6 +136,10 @@
 }
 
 html { scroll-behavior: smooth; }
+
+/* Anchor targets land below the sticky tape + rail, never under them. */
+:where(section, [id]):target,
+section[id] { scroll-margin-top: calc(var(--h-chrome) + var(--sp-4)); }
 
 ::selection {
   background: var(--accent-gold-bg);
@@ -457,9 +500,9 @@ section {
 }
 
 .preset-btn.active {
-  background: var(--bg-surface-elevated);
-  border-color: var(--accent-gold);
-  color: var(--accent-gold);
+  background: var(--select-bg);
+  border-color: var(--select-border);
+  color: var(--select-fg);
 }
 
 .timeline-pan-nav {
@@ -696,19 +739,35 @@ section {
 }
 
 .tab-btn.active {
-  background: var(--bg-surface-elevated);
-  border-color: var(--accent-gold);
-  color: var(--accent-gold);
+  background: var(--select-bg);
+  border-color: var(--select-border);
+  color: var(--select-fg);
 }
 
+/* A capped height here put a second vertical scrollbar inside the page and
+   swallowed the wheel whenever the pointer was over a table — the page simply
+   stopped scrolling. Tables paginate ("show 25 more") instead, so they grow to
+   content height and only ever scroll sideways.
+   The right-edge mask is the affordance for that sideways scroll: without it a
+   clipped final column looks like a column that was never rendered. */
 .table-responsive {
   width: 100%;
-  overflow: auto;
-  max-height: 42rem;
+  overflow-x: auto;
+  overflow-y: visible;
+  max-height: none;
   border: 1px solid var(--border-subtle);
-  border-radius: 6px;
+  border-radius: var(--r-3);
   background: var(--bg-surface);
   scrollbar-color: var(--border-strong) transparent;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent 100%);
+}
+
+/* Once scrolled to the end there is nothing left to hint at, so drop the mask. */
+.table-responsive.is-scroll-end,
+.table-responsive.is-not-overflowing {
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 .table-responsive::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -718,6 +777,7 @@ section {
   border-radius: 5px;
   border: 2px solid var(--bg-surface);
 }
+.table-responsive::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
 
 .table-responsive.is-auto-height { max-height: none; }
 
@@ -1356,6 +1416,26 @@ section {
   gap: 8px;
 }
 
+/* Inline math set in the mono face so symbols keep the data voice, with a
+   drawn radical bar rather than a bare surd glyph. */
+.math {
+  font-family: var(--font-mono);
+  font-style: normal;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+.math sup, .math sub {
+  font-size: 0.72em;
+  line-height: 0;
+}
+
+.math .radicand {
+  border-top: 1px solid currentColor;
+  padding: 0 0.15em 0 0.1em;
+  margin-left: -0.08em;
+}
+
 /* ==========================================================================
    Modal / Detail Drawer & Glassmorphism
    ========================================================================== */
@@ -1602,29 +1682,7 @@ body.modal-open {
   content: '▼';
 }
 
-.table-responsive {
-  position: relative;
-  overflow-x: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-strong) var(--bg-canvas);
-}
-
-.table-responsive::-webkit-scrollbar {
-  height: 6px;
-}
-
-.table-responsive::-webkit-scrollbar-track {
-  background: var(--bg-canvas);
-}
-
-.table-responsive::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
-  border-radius: 3px;
-}
-
-.table-responsive::-webkit-scrollbar-thumb:hover {
-  background: var(--text-dim);
-}
+/* (Duplicate .table-responsive block folded into the canonical one above.) */
 
 /* Search input with clear button */
 .search-clear-btn {
@@ -1826,7 +1884,7 @@ body.modal-open {
 .search-input-wrapper input:focus {
   outline: none;
   border-color: var(--accent-gold);
-  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15);
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.15);
   width: 320px;
 }
 
@@ -1863,9 +1921,11 @@ body.modal-open {
 }
 
 .pill-btn.active {
-  background: var(--accent-gold-bg);
-  color: var(--accent-gold);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: var(--select-bg);
+  border-color: var(--select-border);
+  color: var(--select-fg);
+  border-width: 1px;
+  border-style: solid;
 }
 
 /* Floating Back to Top Button */
@@ -1952,9 +2012,9 @@ body.modal-open {
   padding: 10px 18px;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: 6px;
+  border-radius: var(--r-3);
   margin-bottom: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-md), var(--edge-top);
   gap: var(--sp-4);
 }
 
@@ -1963,6 +2023,7 @@ body.modal-open {
   align-items: center;
   gap: 12px;
   text-decoration: none;
+  flex-shrink: 0;
 }
 
 .nav-brand-logo {
@@ -1984,19 +2045,33 @@ body.modal-open {
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--accent-fg);
+  white-space: nowrap;
 }
 
 .nav-tabs-wrapper {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px;
+  margin: -2px;
+}
+.nav-tabs-wrapper::-webkit-scrollbar { display: none; }
+
+/* Below this the brand + badge + six tabs stop fitting on one line, so the
+   bar becomes two rows with the tab strip scrolling under them. */
+@media (max-width: 1080px) {
+  .app-global-nav { flex-wrap: wrap; }
+  .nav-tabs-wrapper { order: 3; width: 100%; }
 }
 
 .nav-page-btn {
   display: inline-flex;
   align-items: baseline;
   gap: var(--sp-2);
-  padding: 6px 14px;
+  padding: 6px 10px 6px 14px;
   font-family: var(--font-sans);
   font-size: var(--fs-meta);
   font-weight: 600;
@@ -2005,9 +2080,12 @@ body.modal-open {
   color: var(--text-secondary);
   background: var(--bg-surface-elevated);
   border: 1px solid var(--border-subtle);
-  border-radius: 4px;
+  border-radius: var(--r-2);
   text-decoration: none;
-  transition: all 0.16s var(--ease-out);
+  transition:
+    color var(--dur-2) var(--ease-out),
+    background-color var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out);
 }
 
 .nav-page-btn:hover {
@@ -2016,11 +2094,44 @@ body.modal-open {
   background: var(--bg-surface-hover);
 }
 
+.nav-page-btn:hover .nav-page-fkey {
+  color: var(--text-muted);
+  border-color: var(--border-strong);
+}
+
 .nav-page-btn.active {
   color: #ffffff;
   background: var(--accent-primary);
   border-color: var(--accent-fg);
-  box-shadow: 0 0 12px rgba(46, 76, 213, 0.4);
+  box-shadow: var(--shadow-sm), var(--edge-top);
+}
+
+/* The key that reaches this page, shown on the thing it reaches. The old
+   function-key ribbon repeated all six of these as a separate row. */
+.nav-page-fkey {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-1);
+  padding: 2px 4px;
+  margin-left: var(--sp-2);
+  align-self: center;
+  transition: color var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out);
+}
+
+.nav-page-btn.active .nav-page-fkey {
+  color: rgba(255, 255, 255, 0.72);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+/* Pointer users never press F7; the hint is for keyboard users only. */
+@media (hover: none), (max-width: 1180px) {
+  .nav-page-fkey { display: none; }
 }
 
 .nav-page-btn.active .nav-page-num {
@@ -2048,6 +2159,8 @@ body.modal-open {
   font-size: 11px;
   color: var(--text-muted);
   letter-spacing: 0.05em;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .live-pulse {
@@ -2164,9 +2277,9 @@ body.modal-open {
 }
 
 .tag-neutral {
-  background: rgba(196, 181, 106, 0.25);
+  background: rgba(251, 191, 36, 0.25);
   color: var(--accent-gold);
-  border: 1px solid rgba(196, 181, 106, 0.5);
+  border: 1px solid rgba(251, 191, 36, 0.5);
 }
 
 .preview-headline {
@@ -2238,9 +2351,9 @@ body.modal-open {
 }
 
 .stock-pill-btn.active {
-  background: var(--accent-gold-bg);
-  border-color: var(--accent-gold);
-  color: var(--accent-gold);
+  background: var(--select-bg);
+  border-color: var(--select-border);
+  color: var(--select-fg);
 }
 
 .chart-sub-header {
@@ -2895,7 +3008,7 @@ body.modal-open {
 
 .stock-call-timeline-item:hover {
   border-color: var(--accent-gold);
-  background: rgba(196, 181, 106, 0.04);
+  background: rgba(251, 191, 36, 0.04);
   transform: translateX(2px);
 }
 
@@ -3134,8 +3247,8 @@ body.modal-open {
 }
 
 .journey-step-box.happened {
-  border-color: rgba(196, 181, 106, 0.4);
-  background: rgba(196, 181, 106, 0.03);
+  border-color: rgba(251, 191, 36, 0.4);
+  background: rgba(251, 191, 36, 0.03);
 }
 
 .j-step-num {
@@ -3378,9 +3491,9 @@ body.modal-open {
 }
 
 .switch-pill.pill-active {
-  background: rgba(196, 181, 106, 0.12);
+  background: rgba(251, 191, 36, 0.12);
   color: var(--accent-gold);
-  border: 1px solid rgba(196, 181, 106, 0.3);
+  border: 1px solid rgba(251, 191, 36, 0.3);
 }
 
 .switch-desc {
@@ -3519,7 +3632,7 @@ body.modal-open {
 /* --------------------------------------------------------- section rail --- */
 .section-rail {
   position: sticky;
-  top: 0;
+  top: var(--h-tape);
   z-index: 40;
   display: flex;
   align-items: center;
@@ -3796,14 +3909,13 @@ body.modal-open {
 }
 
 .season-pill-btn.active {
-  background: var(--bg-surface-elevated);
-  border-color: var(--accent-gold);
-  color: var(--accent-gold);
-  box-shadow: 0 0 8px rgba(196, 181, 106, 0.2);
+  background: var(--select-bg);
+  border-color: var(--select-border);
+  color: var(--select-fg);
 }
 
 .season-pill-gold {
-  border-color: rgba(196, 181, 106, 0.4);
+  border-color: rgba(251, 191, 36, 0.4);
   color: var(--accent-gold);
 }
 
@@ -4128,11 +4240,7 @@ body.modal-open {
 
 .season-pill-btn:hover { color: var(--text-primary); border-color: var(--border-strong); }
 
-.season-pill-btn.active {
-  color: var(--accent-gold);
-  background: var(--accent-gold-bg);
-  border-color: var(--accent-gold-border);
-}
+/* (Duplicate .season-pill-btn.active removed; the canonical rule is above.) */
 
 /* Composite-cycle phase cards */
 .cycle-phases-grid {
@@ -5008,6 +5116,10 @@ body.modal-open {
   user-select: none;
   gap: 20px;
   flex: 1;
+  /* A hard clip cuts symbols mid-word against the tool cluster; fading the
+     tail reads as "the tape continues" instead of "the layout broke". */
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 24px, #000 calc(100% - 40px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 24px, #000 calc(100% - 40px), transparent 100%);
 }
 
 .tape-content {
@@ -5065,6 +5177,10 @@ body.modal-open {
   flex-shrink: 0;
   border-left: 1px solid #1f293d;
   padding-left: 10px;
+  margin-left: 4px;
+  background: #090c14;
+  position: relative;
+  z-index: 1;
 }
 
 .term-tool-btn {
@@ -5100,66 +5216,9 @@ body.modal-open {
   font-weight: 700;
 }
 
-/* 2. Terminal Function Keys Bar */
-.terminal-func-bar {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 12px;
-  background: #0f131d;
-  border-bottom: 1px solid #1c2436;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.terminal-func-bar::-webkit-scrollbar {
-  display: none;
-}
-
-.func-key {
-  background: #182030;
-  border: 1px solid #26324a;
-  border-radius: 3px;
-  padding: 4px 10px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: all 0.12s ease;
-  white-space: nowrap;
-  font-family: var(--font-mono);
-}
-
-.func-key:hover {
-  background: #232e44;
-  border-color: var(--accent-gold);
-  transform: translateY(-1px);
-}
-
-.func-key .f-num {
-  font-size: 9.5px;
-  font-weight: 700;
-  color: var(--accent-gold);
-  background: rgba(251, 191, 36, 0.12);
-  padding: 1px 4px;
-  border-radius: 2px;
-}
-
-.func-key .f-label {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.func-key.highlight-cmd {
-  border-color: rgba(56, 189, 248, 0.4);
-  background: rgba(56, 189, 248, 0.08);
-}
-
-.func-key.highlight-cmd .f-num {
-  color: #38bdf8;
-  background: rgba(56, 189, 248, 0.18);
-}
+/* (2. The function-key ribbon was removed: every key it showed already
+   existed in the tape tools or the global nav. The keys stay bound, and each
+   nav tab now carries its own .nav-page-fkey hint.) */
 
 /* 3. Terminal Command Omnibar Modal (Cmd+K / F2) */
 .terminal-cmd-backdrop {
@@ -5729,10 +5788,6 @@ body.theme-amber .terminal-tape-ribbon {
   border-color: #3d290c;
 }
 
-body.theme-amber .terminal-func-bar {
-  background: #0f0902;
-  border-color: #3d290c;
-}
 
 body.theme-amber .blotter-table th {
   background: #160e04;
@@ -5784,10 +5839,6 @@ body.theme-green .terminal-tape-ribbon {
   border-color: #14401e;
 }
 
-body.theme-green .terminal-func-bar {
-  background: #031207;
-  border-color: #14401e;
-}
 
 body.theme-green .blotter-table th {
   background: #061e0d;
@@ -6077,6 +6128,80 @@ body.theme-green .macro-factor-box {
   flex-direction: column;
   padding-bottom: 8px;
   border-bottom: 1px dashed rgba(255, 255, 255, 0.04);
+}
+
+.fg-cat-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-1);
+}
+
+.fg-cat-name {
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.fg-cat-weight {
+  font-size: var(--fs-label);
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+/* A factor the chain could not measure must not read as a confident zero. */
+.fg-cat-flag {
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--stance-neutral);
+  border: 1px solid var(--stance-neutral-border);
+  background: var(--stance-neutral-bg);
+  border-radius: var(--r-1);
+  padding: 1px 4px;
+  margin-left: var(--sp-2);
+}
+
+.fg-category-row.is-degraded .fg-cat-track,
+.fg-category-row.is-degraded .fg-cat-desc { opacity: 0.55; }
+
+.fg-cat-score {
+  font-weight: 700;
+  font-size: var(--fs-meta);
+  white-space: nowrap;
+}
+
+.fg-cat-denom {
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.fg-cat-track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: var(--sp-1);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.32);
+}
+
+.fg-cat-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width var(--dur-3) var(--ease-out);
+}
+
+.fg-cat-desc {
+  font-size: var(--fs-label);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.fg-empty {
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+  padding: var(--sp-5) 0;
 }
 
 .vix-cards-grid {
@@ -6534,8 +6659,8 @@ body.theme-green .macro-factor-box {
 }
 
 .agent-view-tab-btn.active {
-  background: var(--bg-surface-elevated);
-  color: var(--accent-gold);
+  background: var(--select-bg);
+  color: var(--select-fg);
 }
 
 .agent-viewer-body {

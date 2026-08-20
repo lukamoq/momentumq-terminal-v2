@@ -22,12 +22,13 @@
         <span class="nav-brand-suite">MACRO REGIME &amp; SENTIMENT</span>
       </div>
       <div class="nav-tabs-wrapper">
-        <a href="index.html" class="nav-page-btn"><span class="nav-page-num">01</span> Forecasts</a>
-        <a href="mag7.html" class="nav-page-btn"><span class="nav-page-num">02</span> Mag 7 Tech</a>
-        <a href="seasonality.html" class="nav-page-btn"><span class="nav-page-num">03</span> Seasonality</a>
-        <a href="options.html" class="nav-page-btn"><span class="nav-page-num">04</span> Options &amp; GEX</a>
-        <a href="macro.html" class="nav-page-btn active" aria-current="page"><span class="nav-page-num">05</span> Macro Regime</a>
-        <a href="agents.html" class="nav-page-btn"><span class="nav-page-num">06</span> AI Agents</a>
+        <a href="index.html" class="nav-page-btn"><span class="nav-page-num">01</span> Forecasts<kbd class="nav-page-fkey">F3</kbd></a>
+        <a href="mag7.html" class="nav-page-btn"><span class="nav-page-num">02</span> Mag 7 Tech<kbd class="nav-page-fkey">F4</kbd></a>
+        <a href="seasonality.html" class="nav-page-btn"><span class="nav-page-num">03</span> Seasonality<kbd class="nav-page-fkey">F5</kbd></a>
+        <a href="options.html" class="nav-page-btn"><span class="nav-page-num">04</span> Options &amp; GEX<kbd class="nav-page-fkey">F6</kbd></a>
+        <a href="macro.html" class="nav-page-btn active" aria-current="page"><span class="nav-page-num">05</span> Macro Regime<kbd class="nav-page-fkey">F7</kbd></a>
+        <a href="agents.html" class="nav-page-btn"><span class="nav-page-num">06</span> AI Agents<kbd class="nav-page-fkey">F8</kbd></a>
+        <a href="crypto.html" class="nav-page-btn"><span class="nav-page-num">07</span> Crypto<kbd class="nav-page-fkey">F9</kbd></a>
       </div>
       <div class="nav-status-badge">
         <span class="live-pulse"></span>
@@ -138,13 +139,13 @@
       <div class="fg-panel-grid" id="fgPanelGrid">
         <div class="fg-gauge-card">
           <span class="card-kicker font-mono">COMPOSITE SENTIMENT SCORE</span>
-          <div class="fg-score-hero highlight-gold font-mono" id="fgScoreHero">68</div>
-          <div class="fg-label-hero color-bull font-mono" id="fgLabelHero">GREED</div>
+          <div class="fg-score-hero highlight-gold font-mono" id="fgScoreHero">&mdash;</div>
+          <div class="fg-label-hero font-mono" id="fgLabelHero">&nbsp;</div>
           <div class="snap-divider"></div>
-          <div class="snap-key-val"><span>Previous Day Close:</span> <strong class="font-mono">65 (GREED)</strong></div>
-          <div class="snap-key-val"><span>1-Week Prior Average:</span> <strong class="font-mono">62 (GREED)</strong></div>
-          <div class="snap-key-val"><span>1-Month Prior Average:</span> <strong class="font-mono">54 (NEUTRAL)</strong></div>
-          <div class="snap-key-val"><span>1-Year Historical Range:</span> <strong class="font-mono">22 (EXTREME FEAR) &mdash; 84 (EXTREME GREED)</strong></div>
+          <div class="snap-key-val"><span>Previous Day Close:</span> <strong class="font-mono" id="fgPrevClose">&mdash;</strong></div>
+          <div class="snap-key-val"><span>1-Week Prior Average:</span> <strong class="font-mono" id="fgWeekAvg">&mdash;</strong></div>
+          <div class="snap-key-val"><span>1-Month Prior Average:</span> <strong class="font-mono" id="fgMonthAvg">&mdash;</strong></div>
+          <div class="snap-key-val"><span>1-Year Historical Range:</span> <strong class="font-mono" id="fgYearRange">&mdash;</strong></div>
         </div>
 
         <div class="fg-categories-card">

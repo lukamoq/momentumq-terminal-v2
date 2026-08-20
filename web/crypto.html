@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crypto &amp; Digital Assets Institutional Studio — MomentumQ Terminal</title>
+  <meta name="description" content="Institutional digital asset intelligence, Bitcoin halving cycles, Spot ETF institutional flows, Crypto Fear &amp; Greed index, and cross-asset beta correlations.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="blotter-container">
+    <!-- Top Global App Navigation (7 Modules) -->
+    <div class="app-global-nav">
+      <div class="nav-brand-wrap">
+        <a href="index.html" class="nav-brand-link" style="display:flex; align-items:center; text-decoration:none;">
+          <img src="images/logo.png" alt="MomentumQ" class="nav-brand-logo" height="24">
+        </a>
+        <span class="nav-brand-divider">/</span>
+        <span class="nav-brand-suite">CRYPTO &amp; DIGITAL ASSETS</span>
+      </div>
+      <div class="nav-tabs-wrapper">
+        <a href="index.html" class="nav-page-btn"><span class="nav-page-num">01</span> Forecasts<kbd class="nav-page-fkey">F3</kbd></a>
+        <a href="mag7.html" class="nav-page-btn"><span class="nav-page-num">02</span> Mag 7 Tech<kbd class="nav-page-fkey">F4</kbd></a>
+        <a href="seasonality.html" class="nav-page-btn"><span class="nav-page-num">03</span> Seasonality<kbd class="nav-page-fkey">F5</kbd></a>
+        <a href="options.html" class="nav-page-btn"><span class="nav-page-num">04</span> Options &amp; GEX<kbd class="nav-page-fkey">F6</kbd></a>
+        <a href="macro.html" class="nav-page-btn"><span class="nav-page-num">05</span> Macro Regime<kbd class="nav-page-fkey">F7</kbd></a>
+        <a href="agents.html" class="nav-page-btn"><span class="nav-page-num">06</span> AI Agents<kbd class="nav-page-fkey">F8</kbd></a>
+        <a href="crypto.html" class="nav-page-btn active" aria-current="page"><span class="nav-page-num">07</span> Crypto<kbd class="nav-page-fkey">F9</kbd></a>
+      </div>
+      <div class="nav-status-badge">
+        <span class="live-pulse"></span>
+        <span>MASSIVE API // DIGITAL ASSETS DESK</span>
+      </div>
+    </div>
+
+    <!-- Section Navigation Rail -->
+    <nav class="section-rail" id="sectionRail" aria-label="Section navigation">
+      <span class="rail-label">JUMP TO</span>
+      <div class="rail-links">
+        <a class="rail-link" href="#secCryptoTape"><span class="rail-num">01</span> Spot Market Tape</a>
+        <a class="rail-link" href="#secCryptoChart"><span class="rail-num">02</span> CRT Studio Chart</a>
+        <a class="rail-link" href="#secCryptoSentiment"><span class="rail-num">03</span> Crypto Sentiment</a>
+        <a class="rail-link" href="#secInstitutionalEtfs"><span class="rail-num">04</span> Spot ETFs &amp; Proxies</a>
+        <a class="rail-link" href="#secHalvingCycles"><span class="rail-num">05</span> Halving Cycles</a>
+        <a class="rail-link" href="#secCryptoCorrelations"><span class="rail-num">06</span> Macro Correlations</a>
+      </div>
+    </nav>
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header-main">
+        <div class="brand-group">
+          <div class="logo-lockup">
+            <span class="logo-mark">MoQ</span>
+            <span class="logo-tag">DIGITAL ASSETS INTELLIGENCE</span>
+          </div>
+          <span class="logo-sub">CRYPTO SPOT TAPE &bull; INSTITUTIONAL ETF FLOWS &bull; 4-YEAR HALVING CYCLES &bull; MASSIVE.COM AGGREGATES</span>
+        </div>
+        <div class="header-kpis">
+          <div class="kpi-group">
+            <span class="kpi-label">TOTAL CRYPTO CAP</span>
+            <span class="kpi-value highlight-gold font-mono" id="kpiCryptoCap">$3.08T</span>
+            <span class="kpi-sub">Aggregate Valuation</span>
+          </div>
+          <div class="kpi-group">
+            <span class="kpi-label">BTC DOMINANCE</span>
+            <span class="kpi-value color-bull font-mono" id="kpiBtcDom">58.4%</span>
+            <span class="kpi-sub">Macro Quality Flight</span>
+          </div>
+          <div class="kpi-group">
+            <span class="kpi-label">30D ETF INFLOWS</span>
+            <span class="kpi-value color-bull font-mono" id="kpiEtfInflows">+$6.66B</span>
+            <span class="kpi-sub">Net Institutional Inflow</span>
+          </div>
+          <div class="kpi-group">
+            <span class="kpi-label">CRYPTO SENTIMENT</span>
+            <span class="kpi-value color-bull font-mono" id="kpiCryptoScore">76.8 / 100</span>
+            <span class="kpi-sub" id="kpiCryptoLabel">EXTREME GREED</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Section 01: Multi-Asset Spot Market Tape -->
+    <section class="section-crypto-tape" id="secCryptoTape" style="margin-bottom: var(--sp-6);">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">01 // SPOT DIGITAL ASSETS BLOTTER</span>
+          <h2>Layer 1, Infrastructure &amp; Ecosystem Leaders</h2>
+          <span class="section-meta">Continuous aggregated pricing via Massive.com API. Tracks 24H/7D/30D/1Y velocity, moving averages distance, and drawdown from all-time high.</span>
+        </div>
+      </div>
+
+      <div class="table-responsive is-auto-height">
+        <table class="blotter-table" id="cryptoSpotTable">
+          <thead>
+            <tr>
+              <th style="min-width:140px;">ASSET</th>
+              <th class="text-right" style="min-width:105px;">SPOT PRICE</th>
+              <th class="text-right" style="min-width:85px;">24H MOVE</th>
+              <th class="text-right" style="min-width:85px;">7D RETURN</th>
+              <th class="text-right" style="min-width:85px;">30D RETURN</th>
+              <th class="text-right" style="min-width:90px;">1Y RETURN</th>
+              <th class="text-right" style="min-width:115px;">MARKET CAP</th>
+              <th class="text-right" style="min-width:100px;">FROM ATH</th>
+              <th class="text-center" style="min-width:85px;">30D VOL</th>
+              <th class="text-center" style="min-width:80px;">14D RSI</th>
+              <th class="text-center" style="min-width:140px;">TREND POSTURE</th>
+            </tr>
+          </thead>
+          <tbody id="cryptoSpotTbody">
+            <tr class="skeleton-row"><td colspan="11"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+            <tr class="skeleton-row"><td colspan="11"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+            <tr class="skeleton-row"><td colspan="11"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 02: Interactive Dual-Pane CRT Chart -->
+    <section class="section-crypto-chart" id="secCryptoChart" style="margin-bottom: var(--sp-6);">
+      <div class="fg-history-panel">
+        <div class="fg-history-header-row">
+          <div class="section-heading">
+            <span class="section-kicker">02 // CRT HISTORICAL TIME-SERIES STUDIO</span>
+            <h3>Bitcoin &amp; Major Crypto Moving Average &amp; Volatility Studio</h3>
+            <span class="section-meta">Interactive dual-pane CRT coordinate canvas with 50D/200D SMAs, RSI momentum, and full-history timeline minimap scrubbing.</span>
+          </div>
+          <div class="macro-studio-controls" style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+            <div class="curve-span-pills" id="cryptoAssetPills">
+              <span class="span-label">ASSET:</span>
+              <button class="curve-span-pill active" data-ticker="BTC">BITCOIN (BTC)</button>
+              <button class="curve-span-pill" data-ticker="ETH">ETHEREUM (ETH)</button>
+              <button class="curve-span-pill" data-ticker="SOL">SOLANA (SOL)</button>
+            </div>
+            <div class="curve-span-pills" id="cryptoLookbackPills">
+              <span class="span-label">TIMEFRAME:</span>
+              <button class="curve-span-pill" data-days="90">3M (90D)</button>
+              <button class="curve-span-pill" data-days="180">6M (180D)</button>
+              <button class="curve-span-pill active" data-days="365">1Y (365D)</button>
+              <button class="curve-span-pill" data-days="730">2Y (730D / ALL)</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="fg-chart-card">
+          <div class="fg-chart-header">
+            <div class="fg-chart-legend">
+              <span class="legend-item"><span class="legend-dot" style="background:#ffaa00;"></span> Asset Spot Price ($)</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#34d399;"></span> 50-Day SMA</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#f472b6;"></span> 200-Day SMA</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#38bdf8;"></span> 14D RSI &amp; Volatility Track</span>
+            </div>
+            <div class="fg-chart-hover-readout font-mono" id="cryptoChartReadout">
+              Hover over chart to inspect daily historical crypto price &amp; indicators
+            </div>
+          </div>
+
+          <div class="fg-svg-chart-container" id="cryptoSvgChartContainer">
+            <!-- Rendered by crypto.js -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 03: Crypto Fear & Greed Index 2.0 -->
+    <section class="section-crypto-sentiment" id="secCryptoSentiment" style="margin-bottom: var(--sp-6);">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">03 // QUANTITATIVE CRYPTO SENTIMENT</span>
+          <h2>Crypto Fear &amp; Greed Multi-Factor Index</h2>
+          <span class="section-meta">Synthesizes spot volatility compression, exchange taker flow, perpetual funding rates, institutional ETF inflows, and dominance trends.</span>
+        </div>
+      </div>
+
+      <div class="fg-layout-grid">
+        <!-- Hero Gauge Card -->
+        <div class="fg-gauge-card">
+          <div class="fg-gauge-header">
+            <span class="gauge-kicker">COMPOSITE DIGITAL SENTIMENT</span>
+            <span class="gauge-sub">Multi-Factor Quantitative Model</span>
+          </div>
+          <div class="fg-hero-score-wrap">
+            <div class="fg-hero-score font-mono highlight-gold" id="cryptoSentimentScore">76.8</div>
+            <div class="fg-hero-label font-mono color-bull" id="cryptoSentimentLabel">EXTREME GREED</div>
+          </div>
+          <div class="fg-dial-wrap">
+            <div class="fg-dial-scale">
+              <span>0 FEAR</span>
+              <span>50 NEUTRAL</span>
+              <span>100 GREED</span>
+            </div>
+            <div class="fg-dial-track">
+              <div class="fg-dial-bar" id="cryptoSentimentDialBar" style="width: 76.8%; background: #38bdf8;"></div>
+            </div>
+          </div>
+          <p class="fg-hero-narrative" id="cryptoSentimentNarrative">
+            Institutional spot ETF inflows and derivatives funding rate stability confirm structural risk-on expansion, without extreme retail leverage froth.
+          </p>
+        </div>
+
+        <!-- 6 Factor Bars -->
+        <div class="fg-categories-panel">
+          <div class="card-header-row" style="margin-bottom: var(--sp-3);">
+            <span class="card-kicker">6 CONSTITUENT DRIVERS // WEIGHTED FACTOR ATTRIBUTION</span>
+          </div>
+          <div class="fg-categories-list" id="cryptoCategoriesList">
+            <!-- Rendered by crypto.js -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 04: Institutional Spot ETFs & Proxies -->
+    <section class="section-institutional-etfs" id="secInstitutionalEtfs" style="margin-bottom: var(--sp-6);">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">04 // INSTITUTIONAL SPOT ETFS &amp; TREASURIES</span>
+          <h2>BlackRock, Fidelity &amp; Corporate Treasury Proxies</h2>
+          <span class="section-meta">Audits institutional capital allocation across spot Bitcoin/Ethereum trusts (IBIT, FBTC, ETHA), MicroStrategy Bitcoin NAV multiple, and Coinbase custodial infrastructure.</span>
+        </div>
+      </div>
+
+      <div class="table-responsive is-auto-height">
+        <table class="blotter-table" id="etfTable">
+          <thead>
+            <tr>
+              <th style="min-width:130px;">VEHICLE / PROXY</th>
+              <th style="min-width:150px;">ISSUER / SPONSOR</th>
+              <th class="text-right" style="min-width:90px;">SPOT PRICE</th>
+              <th class="text-right" style="min-width:105px;">TOTAL AUM</th>
+              <th class="text-right" style="min-width:120px;">30D NET INFLOWS</th>
+              <th class="text-right" style="min-width:105px;">PREMIUM / NAV</th>
+              <th class="text-right" style="min-width:110px;">DAILY VOLUME</th>
+              <th class="text-center" style="min-width:120px;">EXPENSE RATIO</th>
+              <th class="text-center" style="min-width:130px;">CUSTODIAN</th>
+            </tr>
+          </thead>
+          <tbody id="etfTbody">
+            <!-- Rendered by crypto.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 05: Bitcoin 4-Year Halving Cycle Progression -->
+    <section class="section-halving-cycles" id="secHalvingCycles" style="margin-bottom: var(--sp-6);">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">05 // BITCOIN 4-YEAR HALVING DYNAMICS</span>
+          <h2>Macro Cycle Trajectory Comparison (2012 vs 2016 vs 2020 vs 2024-2026)</h2>
+          <span class="section-meta">Normalizes days elapsed post-halving (Day 0 = Block Reward Halving Event) to benchmark return multiples and cycle peak velocity.</span>
+        </div>
+      </div>
+
+      <div class="whale-cards-grid" id="halvingCardsGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:var(--sp-4);">
+        <!-- Rendered by crypto.js -->
+      </div>
+    </section>
+
+    <!-- Section 06: Cross-Asset Beta & Correlation Matrix -->
+    <section class="section-crypto-correlations" id="secCryptoCorrelations" style="margin-bottom: var(--sp-6);">
+      <div class="section-title-row">
+        <div class="section-heading">
+          <span class="section-kicker">06 // MACRO CORRELATION &amp; CROSS-ASSET BETA</span>
+          <h2>Rolling 90-Day Cross-Asset Correlation Matrix</h2>
+          <span class="section-meta">Measures systemic co-movement between Bitcoin, Ethereum, Solana, S&amp;P 500 (SPY), Nasdaq 100 (QQQ), Gold (GLD), Treasuries (TLT), and US Dollar (UUP).</span>
+        </div>
+      </div>
+
+      <div class="table-responsive is-auto-height">
+        <table class="blotter-table compact-table" id="cryptoCorrTable">
+          <thead id="cryptoCorrThead">
+            <!-- Rendered by crypto.js -->
+          </thead>
+          <tbody id="cryptoCorrTbody">
+            <!-- Rendered by crypto.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-meta">
+        <span>MoQ-CRYPTO // INSTITUTIONAL DIGITAL ASSETS &amp; SPOT DERIVATIVES INTELLIGENCE</span>
+        <span>MASSIVE.COM AGGREGATES // CONTINUOUS OBSERVED LIQUIDITY</span>
+        <span>OPEN SPECIFICATION // VERIFIED ON-CHAIN &amp; EXCHANGE RECORD</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="terminal.js"></script>
+  <script src="crypto.js"></script>
+</body>
+</html>

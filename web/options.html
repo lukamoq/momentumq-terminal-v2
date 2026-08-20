@@ -22,12 +22,13 @@
         <span class="nav-brand-suite">OPTIONS &amp; VOLATILITY SURFACE</span>
       </div>
       <div class="nav-tabs-wrapper">
-        <a href="index.html" class="nav-page-btn"><span class="nav-page-num">01</span> Forecasts</a>
-        <a href="mag7.html" class="nav-page-btn"><span class="nav-page-num">02</span> Mag 7 Tech</a>
-        <a href="seasonality.html" class="nav-page-btn"><span class="nav-page-num">03</span> Seasonality</a>
-        <a href="options.html" class="nav-page-btn active" aria-current="page"><span class="nav-page-num">04</span> Options &amp; GEX</a>
-        <a href="macro.html" class="nav-page-btn"><span class="nav-page-num">05</span> Macro Regime</a>
-        <a href="agents.html" class="nav-page-btn"><span class="nav-page-num">06</span> AI Agents</a>
+        <a href="index.html" class="nav-page-btn"><span class="nav-page-num">01</span> Forecasts<kbd class="nav-page-fkey">F3</kbd></a>
+        <a href="mag7.html" class="nav-page-btn"><span class="nav-page-num">02</span> Mag 7 Tech<kbd class="nav-page-fkey">F4</kbd></a>
+        <a href="seasonality.html" class="nav-page-btn"><span class="nav-page-num">03</span> Seasonality<kbd class="nav-page-fkey">F5</kbd></a>
+        <a href="options.html" class="nav-page-btn active" aria-current="page"><span class="nav-page-num">04</span> Options &amp; GEX<kbd class="nav-page-fkey">F6</kbd></a>
+        <a href="macro.html" class="nav-page-btn"><span class="nav-page-num">05</span> Macro Regime<kbd class="nav-page-fkey">F7</kbd></a>
+        <a href="agents.html" class="nav-page-btn"><span class="nav-page-num">06</span> AI Agents<kbd class="nav-page-fkey">F8</kbd></a>
+        <a href="crypto.html" class="nav-page-btn"><span class="nav-page-num">07</span> Crypto<kbd class="nav-page-fkey">F9</kbd></a>
       </div>
       <div class="nav-status-badge">
         <span class="live-pulse"></span>
@@ -181,7 +182,7 @@
         <div class="section-heading">
           <span class="section-kicker">03 // SURFACE INTERPOLATION</span>
           <h2>Constant-Maturity Term Structure &amp; 25-Delta Skew</h2>
-          <span class="section-meta">Implied volatility interpolated in total variance ($\sigma^2 T$ linear in $T$) ensuring absence of calendar arbitrage. True 25&Delta; skew read at exact $|\Delta| = 0.25$ strike.</span>
+          <span class="section-meta">Implied volatility interpolated in total variance (<span class="math">&sigma;<sup>2</sup>T</span> linear in <span class="math">T</span>) ensuring absence of calendar arbitrage. True 25&Delta; skew read at exact <span class="math">|&Delta;|&nbsp;=&nbsp;0.25</span> strike.</span>
         </div>
       </div>
 
@@ -207,7 +208,7 @@
         <div class="section-heading">
           <span class="section-kicker">04 // RISK BOUNDS</span>
           <h2>Statistical Diffusion Expected Move Cones</h2>
-          <span class="section-meta">Exact BSM diffusion cones ($\pm 1\sigma = S \cdot \sigma_T \sqrt{T}$, $\pm 2\sigma = 2 \cdot S \cdot \sigma_T \sqrt{T}$) priced at each tenor's own constant-maturity implied volatility.</span>
+          <span class="section-meta">Exact BSM diffusion cones (<span class="math">&plusmn;1&sigma;&nbsp;=&nbsp;S&nbsp;&middot;&nbsp;&sigma;<sub>T</sub>&nbsp;&radic;<span class="radicand">T</span></span>, <span class="math">&plusmn;2&sigma;&nbsp;=&nbsp;2&nbsp;&middot;&nbsp;S&nbsp;&middot;&nbsp;&sigma;<sub>T</sub>&nbsp;&radic;<span class="radicand">T</span></span>) priced at each tenor's own constant-maturity implied volatility.</span>
         </div>
       </div>
 

@@ -807,6 +807,46 @@ def get_alpha_smart_money() -> Response:
     return _cached_json_response("alpha_smart_money", lambda: compute_smart_money_whales(get_connection()))
 
 
+# ==============================================================================
+# Crypto & Digital Asset Analytics Endpoints (Page 07)
+# ==============================================================================
+
+@app.get("/api/crypto/overview")
+def get_crypto_overview() -> Response:
+    """Return spot crypto universe, market dominance, and institutional ETF flows."""
+    from scorecard.crypto import compute_crypto_overview
+    return _cached_json_response("crypto_overview", lambda: compute_crypto_overview(get_connection()))
+
+
+@app.get("/api/crypto/sentiment")
+def get_crypto_sentiment() -> Response:
+    """Return 6-factor Crypto Fear & Greed Index (0-100)."""
+    from scorecard.crypto import compute_crypto_sentiment
+    return _cached_json_response("crypto_sentiment", lambda: compute_crypto_sentiment(get_connection()))
+
+
+@app.get("/api/crypto/halving-cycles")
+def get_crypto_halving_cycles() -> Response:
+    """Return 4-year Bitcoin halving cycle trajectories (2012, 2016, 2020, 2024-2026)."""
+    from scorecard.crypto import compute_bitcoin_halving_cycles
+    return _cached_json_response("crypto_halving_cycles", lambda: compute_bitcoin_halving_cycles(get_connection()))
+
+
+@app.get("/api/crypto/correlations")
+def get_crypto_correlations() -> Response:
+    """Return rolling cross-asset crypto vs equities, gold, and treasury correlations."""
+    from scorecard.crypto import compute_crypto_correlations
+    return _cached_json_response("crypto_correlations", lambda: compute_crypto_correlations(get_connection()))
+
+
+@app.get("/api/crypto/history")
+def get_crypto_history(ticker: str = "BTC", lookback: int = 365) -> Response:
+    """Return historical OHLCV, 50D/200D SMAs, RSI, and realized volatility for crypto."""
+    from scorecard.crypto import compute_crypto_historical_series
+    cache_key = f"crypto_history_{ticker.upper()}_{lookback}"
+    return _cached_json_response(cache_key, lambda: compute_crypto_historical_series(get_connection(), ticker, lookback))
+
+
 if WEB_DIR.exists():
     app.mount("/", StaticFiles(directory=str(WEB_DIR), html=True), name="web")
 

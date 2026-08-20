@@ -8,7 +8,7 @@
  * 3. Terminal CRT Themes (Obsidian Dark / Amber CRT / Phosphor Green)
  * 4. Web Audio Synthesized Sound Effects Engine (subtle clicks / terminal chimes)
  * 5. Quick Ticker Snapshot Inspector Drawer (SPY, NVDA, AAPL, MSFT, etc.)
- * 6. Function Keys Ribbon ([F1 HELP] [F2 CMD] [F3 SCORE] [F4 MAG7] [F5 SEAS] [F6 GEX] [F7 SYNC] [F8 EXPORT] [F9 CRT])
+ * 6. Function Key bindings (F1-F10); the nav tabs carry their own key hints
  * 7. Terminal Help & Shortcuts Cheat Sheet
  */
 
@@ -52,9 +52,21 @@
       { sym: 'USO', name: 'United States Oil Fund (Crude Oil / Brent Proxy)', type: 'COMMODITY ETF', sector: 'Energy' },
       { sym: 'SLV', name: 'iShares Silver Trust', type: 'COMMODITY ETF', sector: 'Precious Metals' },
       { sym: 'DBC', name: 'Invesco DB Commodity Index Tracking Fund', type: 'COMMODITY ETF', sector: 'Broad Commodities' },
-      { sym: 'UUP', name: 'Invesco DB US Dollar Index Bullish Fund', type: 'CURRENCY ETF', sector: 'FX' }
+      { sym: 'UUP', name: 'Invesco DB US Dollar Index Bullish Fund', type: 'CURRENCY ETF', sector: 'FX' },
+      { sym: 'BTC', name: 'Bitcoin (BTC/USD Spot)', type: 'DIGITAL ASSET', sector: 'Crypto / Sovereign Store of Value' },
+      { sym: 'ETH', name: 'Ethereum (ETH/USD Spot)', type: 'DIGITAL ASSET', sector: 'Crypto / Smart Contracts' },
+      { sym: 'SOL', name: 'Solana (SOL/USD Spot)', type: 'DIGITAL ASSET', sector: 'Crypto / High-Throughput L1' },
+      { sym: 'IBIT', name: 'iShares Bitcoin Trust ETF (BlackRock)', type: 'SPOT ETF', sector: 'Institutional Crypto' },
+      { sym: 'MSTR', name: 'Strategy Inc (Bitcoin Treasury)', type: 'CORPORATE PROXY', sector: 'Institutional Crypto' }
     ],
     commands: [
+      { cmd: 'BTC <GO>', desc: 'Bitcoin spot, halving cycles, ETF flows & on-chain metrics', action: () => navigateTo('crypto.html') },
+      { cmd: 'ETH <GO>', desc: 'Ethereum spot, smart contract adoption & ETF flows', action: () => navigateTo('crypto.html') },
+      { cmd: 'SOL <GO>', desc: 'Solana spot, DeFi throughput & momentum metrics', action: () => navigateTo('crypto.html') },
+      { cmd: 'CRYPTO <GO>', desc: 'Jump to Page 07 Crypto & Digital Assets Institutional Studio', action: () => navigateTo('crypto.html') },
+      { cmd: 'HALVING <GO>', desc: 'Jump to Bitcoin 4-Year Halving Cycle Comparison', action: () => navigateTo('crypto.html#secHalvingCycles') },
+      { cmd: 'IBIT <GO>', desc: 'BlackRock Spot Bitcoin ETF flows, AUM & NAV premium', action: () => navigateTo('crypto.html#secInstitutionalEtfs') },
+      { cmd: 'MSTR <GO>', desc: 'Strategy Corporate Bitcoin Treasury multiplier & holdings', action: () => navigateTo('crypto.html#secInstitutionalEtfs') },
       { cmd: 'SPY <GO>', desc: 'Quick quantitative audit & Greeks snapshot for SPY', action: () => openTickerSnapshot('SPY') },
       { cmd: 'NVDA <GO>', desc: 'NVIDIA Corp audit, targets & seasonality', action: () => openTickerSnapshot('NVDA') },
       { cmd: 'AAPL <GO>', desc: 'Apple Inc audit, targets & seasonality', action: () => openTickerSnapshot('AAPL') },
@@ -83,7 +95,7 @@
       { cmd: 'VIX <GO>', desc: 'Jump to Implied Volatility Term Structure & Slope', action: () => navigateTo('macro.html#secVixTerm') },
       { cmd: 'SECTORS <GO>', desc: 'Jump to 11-Sector Rotation Breadth Table', action: () => navigateTo('macro.html#secSectorRotation') },
       { cmd: 'CORR <GO>', desc: 'Jump to Cross-Asset Correlation Matrix', action: () => navigateTo('macro.html#secCorrelation') },
-      { cmd: 'COMMODITIES <GO>', desc: 'Jump to Section 06 Commodities & Energy Benchmarks', action: () => navigateTo('macro.html#secCommodities') },
+      { cmd: 'INSIDER <GO>', desc: 'Jump to SEC Form 4 Insider Radar & 13F Whales', action: () => navigateTo('macro.html#secInsiderWhales') },
       { cmd: 'AGENTS <GO>', desc: 'Jump to 06 Gemini 3.7 Flash Autonomous AI Agents & Dossiers', action: () => navigateTo('agents.html') },
       { cmd: 'EOW <GO>', desc: 'Generate End-of-Week Executive Intelligence Dossier', action: () => navigateTo('agents.html') },
       { cmd: 'REPORT <GO>', desc: 'Generate on-demand multi-agent quantitative report', action: () => navigateTo('agents.html') },
@@ -318,56 +330,6 @@
   /* ==========================================================================
      Terminal Function Keys Bar
      ========================================================================== */
-
-  function renderFunctionKeysBar() {
-    const existing = document.getElementById('terminalFuncBar');
-    if (existing) return;
-
-    const funcBar = document.createElement('div');
-    funcBar.id = 'terminalFuncBar';
-    funcBar.className = 'terminal-func-bar';
-    funcBar.innerHTML = `
-      <button class="func-key" data-action="help"><span class="f-num">F1</span> <span class="f-label">HELP</span></button>
-      <button class="func-key highlight-cmd" data-action="cmd"><span class="f-num">F2</span> <span class="f-label">COMMAND &gt;_</span></button>
-      <button class="func-key" data-action="forecasts"><span class="f-num">F3</span> <span class="f-label">01 FORECASTS</span></button>
-      <button class="func-key" data-action="mag7"><span class="f-num">F4</span> <span class="f-label">02 MAG 7</span></button>
-      <button class="func-key" data-action="seasonality"><span class="f-num">F5</span> <span class="f-label">03 SEAS</span></button>
-      <button class="func-key" data-action="options"><span class="f-num">F6</span> <span class="f-label">04 OPTIONS / GEX</span></button>
-      <button class="func-key" data-action="macro"><span class="f-num">F7</span> <span class="f-label">05 MACRO</span></button>
-      <button class="func-key highlight-gold" data-action="agents"><span class="f-num">F8</span> <span class="f-label">06 AI AGENTS</span></button>
-      <button class="func-key" data-action="sync"><span class="f-num">F9</span> <span class="f-label">&#8635; SYNC</span></button>
-      <button class="func-key" data-action="theme"><span class="f-num">F10</span> <span class="f-label">CRT THEME</span></button>
-    `;
-
-    const nav = document.querySelector('.app-global-nav') || document.querySelector('.header-inner');
-    if (nav && nav.parentNode) {
-      nav.parentNode.insertBefore(funcBar, nav.nextSibling);
-    } else {
-      document.body.insertBefore(funcBar, document.body.children[1] || null);
-    }
-
-    funcBar.addEventListener('click', (e) => {
-      const btn = e.target.closest('.func-key');
-      if (!btn) return;
-      playKeyClick();
-      const act = btn.dataset.action;
-      if (act === 'help') openHelpModal();
-      else if (act === 'cmd') openCommandModal();
-      else if (act === 'forecasts' || act === 'scorecard') navigateTo('index.html');
-      else if (act === 'mag7') navigateTo('mag7.html');
-      else if (act === 'seasonality') navigateTo('seasonality.html');
-      else if (act === 'options') navigateTo('options.html');
-      else if (act === 'macro') navigateTo('macro.html');
-      else if (act === 'agents') navigateTo('agents.html');
-      else if (act === 'sync') triggerLiveSync();
-      else if (act === 'export') triggerActiveExport();
-      else if (act === 'theme') {
-        const themes = ['obsidian', 'amber', 'green'];
-        const nextTheme = themes[(themes.indexOf(terminalState.theme) + 1) % themes.length];
-        setTerminalTheme(nextTheme);
-      }
-    });
-  }
 
   /* ==========================================================================
      Command Omnibar Modal (Cmd+K / F2)
@@ -804,9 +766,10 @@
                 <div class="help-row"><kbd>F4</kbd><span>Jump to Page 02 (Mag 7 Big Tech)</span></div>
                 <div class="help-row"><kbd>F5</kbd><span>Jump to Page 03 (Seasonality &amp; Analytics)</span></div>
                 <div class="help-row"><kbd>F6</kbd><span>Jump to Options Volatility &amp; GEX Surface</span></div>
-                <div class="help-row"><kbd>F7</kbd><span>Trigger Live Pipeline Sync &amp; Recalculate</span></div>
-                <div class="help-row"><kbd>F8</kbd><span>Export Active Blotter Dataset to CSV</span></div>
-                <div class="help-row"><kbd>F9</kbd><span>Cycle CRT Themes (Obsidian / Amber / Green)</span></div>
+                <div class="help-row"><kbd>F7</kbd><span>Jump to Page 05 (Macro Regime &amp; Fear/Greed)</span></div>
+                <div class="help-row"><kbd>F8</kbd><span>Jump to Page 06 (AI Agents &amp; Dossiers)</span></div>
+                <div class="help-row"><kbd>F9</kbd><span>Trigger Live Pipeline Sync &amp; Recalculate</span></div>
+                <div class="help-row"><kbd>F10</kbd><span>Cycle CRT Themes (Obsidian / Amber / Green)</span></div>
                 <div class="help-row"><kbd>Esc</kbd><span>Dismiss Active Modal / Clear Search</span></div>
               </div>
             </div>
@@ -927,10 +890,15 @@
       }
       if (e.key === 'F9') {
         e.preventDefault();
-        triggerLiveSync();
+        navigateTo('crypto.html');
         return;
       }
       if (e.key === 'F10') {
+        e.preventDefault();
+        triggerLiveSync();
+        return;
+      }
+      if (e.key === 'F11') {
         e.preventDefault();
         const themes = ['obsidian', 'amber', 'green'];
         const nextTheme = themes[(themes.indexOf(terminalState.theme) + 1) % themes.length];
@@ -938,6 +906,55 @@
         return;
       }
     });
+  }
+
+  /* ==========================================================================
+     Horizontal overflow affordance for data tables
+
+     .table-responsive fades its right edge to signal "this table continues".
+     That hint is a lie once you have scrolled to the end, and noise when the
+     table fits, so the mask is switched off in both cases. Tables are rendered
+     asynchronously and re-rendered on filter changes, so this watches the DOM
+     rather than running once at load.
+     ========================================================================== */
+
+  function syncTableOverflowState(el) {
+    if (!el) return;
+    const overflowing = el.scrollWidth - el.clientWidth > 2;
+    el.classList.toggle('is-not-overflowing', !overflowing);
+    el.classList.toggle(
+      'is-scroll-end',
+      overflowing && el.scrollLeft >= el.scrollWidth - el.clientWidth - 2
+    );
+  }
+
+  function initTableOverflowAffordance() {
+    const seen = new WeakSet();
+
+    function attach(el) {
+      if (seen.has(el)) return;
+      seen.add(el);
+      el.addEventListener('scroll', () => syncTableOverflowState(el), { passive: true });
+      if (typeof ResizeObserver === 'function') {
+        const ro = new ResizeObserver(() => syncTableOverflowState(el));
+        ro.observe(el);
+        if (el.firstElementChild) ro.observe(el.firstElementChild);
+      }
+      syncTableOverflowState(el);
+    }
+
+    function scan() {
+      document.querySelectorAll('.table-responsive').forEach(attach);
+    }
+
+    scan();
+    // Table bodies are repainted on every filter / sort / "show more".
+    const mo = new MutationObserver(() => {
+      scan();
+      document.querySelectorAll('.table-responsive').forEach(syncTableOverflowState);
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener('resize', scan, { passive: true });
   }
 
   function escapeHtml(str) {
@@ -957,7 +974,7 @@
   function initTerminalEngine() {
     applyTerminalTheme(terminalState.theme);
     renderTerminalTape();
-    renderFunctionKeysBar();
+    initTableOverflowAffordance();
     setupGlobalTerminalShortcuts();
   }
 
