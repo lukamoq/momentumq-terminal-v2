@@ -102,18 +102,31 @@ async function triggerLiveRecalculate() {
   }
 }
 
+let lastFocusedElement = null;
+
+async function safeFetchJson(url, fallback) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn(`[SafeFetch] Failed to load ${url}:`, err);
+    return fallback;
+  }
+}
+
 async function fetchAppData(silent = false) {
   const syncBtn = document.getElementById('syncNowBtn');
   if (syncBtn && !silent) syncBtn.classList.add('spinning');
 
   try {
     const [statsRes, scorecardRes, timelineRes, callsRes, partnersRes, macroRes] = await Promise.all([
-      fetch('/api/stats').then(r => r.json()),
-      fetch('/api/scorecard').then(r => r.json()),
-      fetch('/api/timeline').then(r => r.json()),
-      fetch('/api/calls').then(r => r.json()),
-      fetch('/api/partners').then(r => r.json()),
-      fetch('/api/macro').then(r => r.json()),
+      safeFetchJson('/api/stats', {}),
+      safeFetchJson('/api/scorecard', []),
+      safeFetchJson('/api/timeline', { market_path: [], banks: [], institutions: [] }),
+      safeFetchJson('/api/calls', []),
+      safeFetchJson('/api/partners', []),
+      safeFetchJson('/api/macro', { allocations: [], probabilities: [] }),
     ]);
 
     state.stats = statsRes;
@@ -129,7 +142,7 @@ async function fetchAppData(silent = false) {
       localStorage.setItem(state.STORAGE_KEY, now.toISOString());
     } catch (_) {}
 
-    if (!state.viewport.fullMinDate) {
+    if (!state.viewport.fullMinDate && state.timeline && state.timeline.market_path?.length) {
       initTimelineViewport();
     }
 
@@ -261,9 +274,10 @@ function setupEventListeners() {
     });
   });
 
-  // Scorecard table sorting
-  document.querySelectorAll('#scorecardTable th.sortable').forEach(th => {
-    th.addEventListener('click', () => {
+  // Scorecard table sorting with keyboard accessibility
+  const scorecardHeaders = document.querySelectorAll('#scorecardTable th.sortable');
+  scorecardHeaders.forEach(th => {
+    const triggerSort = () => {
       const sortField = th.dataset.sort;
       if (state.sortBy === sortField) {
         state.sortOrder = state.sortOrder === 'asc' ? 'desc' : 'asc';
@@ -272,6 +286,14 @@ function setupEventListeners() {
         state.sortOrder = 'desc';
       }
       renderScorecard();
+    };
+
+    th.addEventListener('click', triggerSort);
+    th.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        triggerSort();
+      }
     });
   });
 
@@ -304,13 +326,28 @@ function setupEventListeners() {
     });
   }
 
-  // Calls Log Search & Horizon Filters
+  // Calls Log Search & Clear Button
   const searchInput = document.getElementById('callsSearchInput');
+  const clearBtn = document.getElementById('callsSearchClearBtn');
+
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       state.callSearchQuery = e.target.value.toLowerCase().trim();
       state.callsVisibleCount = 25;
+      if (clearBtn) {
+        clearBtn.classList.toggle('is-active', state.callSearchQuery.length > 0);
+      }
       renderCallsTable();
+    });
+  }
+
+  if (clearBtn && searchInput) {
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      state.callSearchQuery = '';
+      clearBtn.classList.remove('is-active');
+      renderCallsTable();
+      searchInput.focus();
     });
   }
 
@@ -388,11 +425,27 @@ function setupEventListeners() {
     });
   }
 
-  // Keyboard Navigation Shortcuts
+  // Global Keyboard Navigation Shortcuts
   window.addEventListener('keydown', (e) => {
-    // If typing in search box, don't trigger timeline shortcuts
+    // Press '/' anywhere outside input to focus search
+    if (e.key === '/' && document.activeElement?.tagName !== 'INPUT') {
+      e.preventDefault();
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.select();
+      }
+      return;
+    }
+
+    // If typing in search box, handle Escape
     if (document.activeElement?.tagName === 'INPUT') {
       if (e.key === 'Escape') {
+        if (searchInput && searchInput.value) {
+          searchInput.value = '';
+          state.callSearchQuery = '';
+          if (clearBtn) clearBtn.classList.remove('is-active');
+          renderCallsTable();
+        }
         document.activeElement.blur();
       }
       return;
@@ -587,7 +640,18 @@ function setTimelineRangePreset(preset) {
   let newMin = state.viewport.fullMinDate;
   let newMax = state.viewport.fullMaxDate;
 
-  if (preset === '2026') {
+  if (preset === 'all') {
+    // "ALL" means all of the SCORED record, not all of the price history. The
+    // market path reaches back to 2000 for chart context, but the desk stance
+    // lanes only start at the first published call -- anchoring to fullMinDate
+    // squeezed every lane into the right-hand sliver of the chart.
+    const callDates = (state.timeline.calls || [])
+      .map(c => new Date(c.published_on).getTime())
+      .filter(t => !isNaN(t));
+    if (callDates.length) {
+      newMin = Math.min(...callDates) - (120 * 86400000);  // a little breathing room
+    }
+  } else if (preset === '2026') {
     newMin = new Date('2025-11-15').getTime();
     newMax = state.viewport.fullMaxDate;
   } else if (preset === '2025') {
@@ -849,9 +913,14 @@ function renderTimeline() {
   if (!state.timeline || !state.timeline.market_path.length) return;
 
   const marketPath = state.timeline.market_path;
-  const institutions = state.timeline.institutions;
   const calls = state.timeline.calls.filter(c => c.call_type === 'direction');
   const flips = state.timeline.flips;
+  // Only desks that actually took a direction stance get a lane. Desks whose
+  // record is purely probability calls (recession odds and the like) have no
+  // stance to draw, and a permanently blank lane reads as a rendering fault
+  // rather than as the absence of a call. They stay scored on the Brier path.
+  const deskWithStance = new Set(calls.map(c => c.institution_id));
+  const institutions = state.timeline.institutions.filter(i => deskWithStance.has(i.id));
 
   const width = Math.max(1000, container.clientWidth - 32);
   const institutionCount = Math.max(1, institutions.length);
@@ -1301,6 +1370,16 @@ function renderScorecard() {
     data = data.filter(d => d.is_always_bullish === 1);
   }
 
+  const scorecardHeaders = document.querySelectorAll('#scorecardTable th.sortable');
+  scorecardHeaders.forEach(th => {
+    const field = th.dataset.sort;
+    if (field === state.sortBy) {
+      th.setAttribute('aria-sort', state.sortOrder === 'asc' ? 'ascending' : 'descending');
+    } else {
+      th.setAttribute('aria-sort', 'none');
+    }
+  });
+
   data.sort((a, b) => {
     let valA = a[state.sortBy];
     let valB = b[state.sortBy];
@@ -1705,11 +1784,28 @@ function renderCallsTable() {
   if (filteredCalls.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="9" style="text-align:center; padding:2rem; color:var(--text-muted);">
-          No research calls matching filter "${escapeHtml(state.callSearchQuery || state.callHorizonFilter)}". Try another keyword or reset the horizon pill.
+        <td colspan="9">
+          <div class="empty-state-card">
+            <div class="empty-state-icon">⌕</div>
+            <div class="empty-state-title">No Matching Research Calls Found</div>
+            <div class="empty-state-desc">No curated institutional forecasts match "${escapeHtml(state.callSearchQuery || state.callHorizonFilter)}". Try adjusting your search term or reset the horizon pill.</div>
+            <button class="empty-state-reset-btn" id="emptyStateResetBtn">Reset Search &amp; Filters</button>
+          </div>
         </td>
       </tr>
     `;
+    document.getElementById('emptyStateResetBtn')?.addEventListener('click', () => {
+      state.callSearchQuery = '';
+      state.callHorizonFilter = 'all';
+      const sInput = document.getElementById('callsSearchInput');
+      const cBtn = document.getElementById('callsSearchClearBtn');
+      if (sInput) sInput.value = '';
+      if (cBtn) cBtn.classList.remove('is-active');
+      document.querySelectorAll('#horizonFilterPills .pill-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.horizon === 'all');
+      });
+      renderCallsTable();
+    });
     if (countEl) countEl.textContent = '0 OF 0 CALLS';
     if (moreBtn) moreBtn.hidden = true;
     return;
@@ -1770,13 +1866,19 @@ function renderCallsTable() {
    ========================================================================== */
 
 async function openCallModal(callId) {
+  lastFocusedElement = document.activeElement;
   const modal = document.getElementById('modalBackdrop');
   const body = document.getElementById('modalBody');
   const title = document.getElementById('modalTitle');
   const tag = document.getElementById('modalTag');
 
-  body.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-muted);">Loading call details...</div>';
+  body.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-muted); font-family:var(--font-mono);"><span class="sync-dot pulsing" style="display:inline-block; margin-right:8px;"></span> Loading call details...</div>';
   modal.style.display = 'flex';
+  document.body.classList.add('modal-open');
+  requestAnimationFrame(() => {
+    modal.classList.add('is-visible');
+    document.getElementById('modalCloseBtn')?.focus();
+  });
 
   try {
     const res = await fetch(`/api/calls/${callId}`);
@@ -2038,5 +2140,14 @@ async function openCallModal(callId) {
 }
 
 function closeModal() {
-  document.getElementById('modalBackdrop').style.display = 'none';
+  const modal = document.getElementById('modalBackdrop');
+  if (!modal) return;
+  modal.classList.remove('is-visible');
+  document.body.classList.remove('modal-open');
+  setTimeout(() => {
+    modal.style.display = 'none';
+    if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+      lastFocusedElement.focus();
+    }
+  }, 180);
 }

@@ -445,22 +445,24 @@
           <thead>
             <tr>
               <th style="min-width: 130px;">INDEX / SPOT</th>
-              <th class="text-center" style="min-width: 75px;">HORIZON IV</th>
-              <th class="text-center" style="min-width: 75px;">20D VOL</th>
-              <th class="text-center" style="min-width: 80px;">DELTA (&Delta;)</th>
-              <th class="text-center" style="min-width: 80px;">GAMMA (&Gamma;)</th>
-              <th class="text-center" style="min-width: 85px;">THETA (&Theta;/d)</th>
-              <th class="text-center" style="min-width: 80px;">VEGA (V)</th>
-              <th class="text-center" style="min-width: 75px;">RHO (&rho;)</th>
-              <th class="text-center" style="min-width: 75px;">VANNA</th>
-              <th class="text-center" style="min-width: 75px;">CHARM</th>
-              <th class="text-right" style="min-width: 90px;">MAX PAIN</th>
-              <th class="text-center" style="min-width: 120px;">GAMMA REGIME</th>
-              <th class="text-right" style="min-width: 110px;" id="optionsExpMoveHeader">EXP MOVE (&plusmn;1&sigma;)</th>
+              <th class="text-center" style="min-width: 75px;" title="Implied Volatility derived from at-the-money options across chosen horizon">HORIZON IV</th>
+              <th class="text-center" style="min-width: 75px;" title="20-day historical realized annualized volatility">20D VOL</th>
+              <th class="text-center" style="min-width: 80px;" title="First-order price sensitivity: change in option value per $1.00 move in spot">DELTA (&Delta;)</th>
+              <th class="text-center" style="min-width: 80px;" title="Second-order price sensitivity: change in Delta per $1.00 move in spot. Key for dealer hedging">GAMMA (&Gamma;)</th>
+              <th class="text-center" style="min-width: 85px;" title="Time decay rate: dollar value lost per 1 calendar day holding period">THETA (&Theta;/d)</th>
+              <th class="text-center" style="min-width: 80px;" title="Volatility sensitivity: change in option value per 1.0% (100 bps) shift in IV">VEGA (V)</th>
+              <th class="text-center" style="min-width: 75px;" title="Interest rate sensitivity: change in option value per 1.0% shift in risk-free baseline">RHO (&rho;)</th>
+              <th class="text-center" style="min-width: 75px;" title="Second-order cross-Greek (∂Δ/∂σ): rate of Delta change per 1% change in Implied Volatility">VANNA</th>
+              <th class="text-center" style="min-width: 75px;" title="Delta decay over time (∂Δ/∂t): rate of Delta bleed per calendar day passed">CHARM</th>
+              <th class="text-right" style="min-width: 90px;" title="Total open interest strike price where option writers minimize dollar payout upon expiration">MAX PAIN</th>
+              <th class="text-center" style="min-width: 120px;" title="Market maker Gamma exposure: Long Gamma dampens volatility, Short Gamma amplifies volatility">GAMMA REGIME</th>
+              <th class="text-right" style="min-width: 110px;" id="optionsExpMoveHeader" title="Diffusion expected move cone: S × IV × sqrt(T) representing 68.2% statistical confidence interval">EXP MOVE (&plusmn;1&sigma;)</th>
             </tr>
           </thead>
           <tbody id="optionsTrioTbody">
-            <!-- Rendered by seasonality.js -->
+            <tr class="skeleton-row"><td colspan="13"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+            <tr class="skeleton-row"><td colspan="13"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+            <tr class="skeleton-row"><td colspan="13"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
           </tbody>
         </table>
       </div>

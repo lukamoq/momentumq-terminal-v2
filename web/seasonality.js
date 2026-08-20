@@ -77,24 +77,35 @@ async function triggerLiveRecalculate() {
   }
 }
 
+async function safeFetchJson(url, fallback) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn(`[SafeFetch Seasonality] Failed to load ${url}:`, err);
+    return fallback;
+  }
+}
+
 async function initSeasonalityApp(silent = false) {
   const syncBtn = document.getElementById('syncNowBtn');
   if (syncBtn && !silent) syncBtn.classList.add('spinning');
 
   try {
     const [statsRes, trioRes, seasonRes, multiRes, curvesRes, callsRes, regimeRes, sectorsRes, corrRes, vixRes, fgRes, optRes] = await Promise.all([
-      fetch('/api/analytics/stats').then(r => r.json()),
-      fetch('/api/analytics/trio').then(r => r.json()),
-      fetch(`/api/analytics/seasonality?ticker=SPY`).then(r => r.json()),
-      fetch('/api/analytics/multi-asset').then(r => r.json()),
-      fetch(`/api/analytics/seasonality-curves?ticker=SPY`).then(r => r.json()),
-      fetch('/api/analytics/call-patterns').then(r => r.json()),
-      fetch('/api/macro/regime').then(r => r.json()),
-      fetch('/api/analytics/sectors').then(r => r.json()),
-      fetch('/api/analytics/correlation').then(r => r.json()),
-      fetch('/api/macro/vix-structure').then(r => r.json()),
-      fetch('/api/macro/fear-greed').then(r => r.json()),
-      fetch('/api/analytics/options').then(r => r.json()),
+      safeFetchJson('/api/analytics/stats', {}),
+      safeFetchJson('/api/analytics/trio', { tickers: {}, spreads: {} }),
+      safeFetchJson('/api/analytics/seasonality?ticker=SPY', { matrix: {}, summary: {} }),
+      safeFetchJson('/api/analytics/multi-asset', { assets: [] }),
+      safeFetchJson('/api/analytics/seasonality-curves?ticker=SPY', { curves: {} }),
+      safeFetchJson('/api/analytics/call-patterns', { quarters: [], months: [] }),
+      safeFetchJson('/api/macro/regime', { regime: 'UNKNOWN', factors: [] }),
+      safeFetchJson('/api/analytics/sectors', { sectors: [] }),
+      safeFetchJson('/api/analytics/correlation', { matrix: {}, tickers: [] }),
+      safeFetchJson('/api/macro/vix-structure', { state: 'CONTANGO', contango_ratio: 0 }),
+      safeFetchJson('/api/macro/fear-greed', { score: 50, label: 'NEUTRAL', categories: [] }),
+      safeFetchJson('/api/analytics/options', { assets: {} }),
     ]);
 
     seasonState.stats = statsRes;
@@ -220,10 +231,12 @@ function setupSeasonalityEventListeners() {
           renderSeasonalityTable();
           renderSeasonalityCurves();
         } else {
+          const tableContainer = document.querySelector('.section-seasonality-matrix .table-responsive');
+          if (tableContainer) tableContainer.style.opacity = '0.5';
           try {
             const [seasonRes, curvesRes] = await Promise.all([
-              fetch(`/api/analytics/seasonality?ticker=${ticker}`).then(r => r.json()),
-              fetch(`/api/analytics/seasonality-curves?ticker=${ticker}`).then(r => r.json())
+              safeFetchJson(`/api/analytics/seasonality?ticker=${ticker}`, { matrix: {}, summary: {} }),
+              safeFetchJson(`/api/analytics/seasonality-curves?ticker=${ticker}`, { curves: {} })
             ]);
             seasonState.cache.seasonality[ticker] = seasonRes;
             seasonState.cache.curves[ticker] = curvesRes;
@@ -234,6 +247,8 @@ function setupSeasonalityEventListeners() {
             renderSeasonalityCurves();
           } catch (err) {
             console.error(`Failed to load seasonality for ${ticker}:`, err);
+          } finally {
+            if (tableContainer) tableContainer.style.opacity = '1';
           }
         }
       }
@@ -280,6 +295,7 @@ function setupSeasonalityEventListeners() {
 
 function setupQuantToolingListeners() {
   const searchInput = document.getElementById('quantSearchInput');
+
   window.addEventListener('keydown', (e) => {
     if (e.key === '/' && document.activeElement !== searchInput) {
       e.preventDefault();
@@ -287,6 +303,16 @@ function setupQuantToolingListeners() {
         searchInput.focus();
         searchInput.select();
       }
+      return;
+    }
+
+    if (document.activeElement === searchInput && e.key === 'Escape') {
+      if (searchInput.value) {
+        searchInput.value = '';
+        const pillBtns = document.querySelectorAll('.season-pill-btn');
+        pillBtns.forEach(btn => btn.style.display = '');
+      }
+      searchInput.blur();
     }
   });
 
@@ -294,11 +320,13 @@ function setupQuantToolingListeners() {
     searchInput.addEventListener('input', (e) => {
       const q = e.target.value.trim().toUpperCase();
       const pillBtns = document.querySelectorAll('.season-pill-btn');
+      let visibleCount = 0;
       pillBtns.forEach(btn => {
         const text = btn.textContent.toUpperCase();
         const ticker = (btn.dataset.ticker || '').toUpperCase();
         if (!q || text.includes(q) || ticker.includes(q)) {
           btn.style.display = '';
+          visibleCount++;
         } else {
           btn.style.display = 'none';
         }

@@ -113,10 +113,10 @@
         <table class="blotter-table" id="mag7BankTable">
           <thead>
             <tr>
-              <th class="sortable" data-sort="name">INSTITUTION <span class="sort-icon">&updownarrow;</span></th>
+              <th class="sortable" tabindex="0" role="columnheader" aria-sort="none" data-sort="name">INSTITUTION <span class="sort-icon">&updownarrow;</span></th>
               <th class="text-center">GRADE</th>
-              <th class="text-right sortable" data-sort="hit_rate">HIT RATE <span class="sort-icon">&updownarrow;</span></th>
-              <th class="text-right sortable" data-sort="avg_alpha">AVG ALPHA VS SPY <span class="sort-icon">&updownarrow;</span></th>
+              <th class="text-right sortable" tabindex="0" role="columnheader" aria-sort="descending" data-sort="hit_rate">HIT RATE <span class="sort-icon">&updownarrow;</span></th>
+              <th class="text-right sortable" tabindex="0" role="columnheader" aria-sort="none" data-sort="avg_alpha">AVG ALPHA VS SPY <span class="sort-icon">&updownarrow;</span></th>
               <th class="text-center">HITS / CALLS</th>
               <th>STANDOUT BEST CALL (HIT)</th>
               <th>BIGGEST BLUNDER (MISS)</th>
@@ -124,7 +124,9 @@
             </tr>
           </thead>
           <tbody id="mag7BankTbody">
-            <!-- Rendered by mag7.js -->
+            <tr class="skeleton-row"><td colspan="8"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+            <tr class="skeleton-row"><td colspan="8"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+            <tr class="skeleton-row"><td colspan="8"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -215,7 +217,8 @@
         <div class="calls-filter-controls">
           <div class="search-input-wrapper">
             <span class="search-icon">&telrec;</span>
-            <input type="text" id="mag7SearchInput" placeholder="Filter by bank, analyst, ticker, headline, or keyword..." aria-label="Search Mag 7 calls">
+            <input type="text" id="mag7SearchInput" placeholder="Filter by bank, analyst, ticker, headline, or keyword... (/)" aria-label="Search Mag 7 calls">
+            <button class="search-clear-btn" id="mag7SearchClearBtn" aria-label="Clear search">&times;</button>
           </div>
           <div class="horizon-filter-pills" id="tickerFilterPills">
             <button class="pill-btn active" data-filter-ticker="all">ALL</button>
@@ -260,7 +263,9 @@
             </tr>
           </thead>
           <tbody id="mag7CallsTbody">
-            <!-- Rendered by mag7.js -->
+            <tr class="skeleton-row"><td colspan="12"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+            <tr class="skeleton-row"><td colspan="12"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+            <tr class="skeleton-row"><td colspan="12"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -302,14 +307,14 @@
   </div>
 
   <!-- Call Inspector Modal -->
-  <div class="modal-backdrop" id="mag7ModalBackdrop" style="display: none;">
+  <div class="modal-backdrop" id="mag7ModalBackdrop" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="mag7ModalTitle">
     <div class="modal-dialog">
       <div class="modal-header">
         <div class="modal-title-box">
           <span class="modal-tag" id="mag7ModalTag">MAG 7 CALL INSPECTOR</span>
           <h3 id="mag7ModalTitle">Nvidia — Bank of America (Vivek Arya)</h3>
         </div>
-        <button class="modal-close-btn" id="mag7ModalCloseBtn">&times;</button>
+        <button class="modal-close-btn" id="mag7ModalCloseBtn" aria-label="Close dialog">&times;</button>
       </div>
       <div class="modal-body" id="mag7ModalBody">
         <!-- Rendered by mag7.js -->
@@ -318,7 +323,7 @@
   </div>
 
   <!-- Floating Back to Top Button -->
-  <button id="backToTopBtn" class="back-to-top-btn" title="Back to top">&uarr;</button>
+  <button id="backToTopBtn" class="back-to-top-btn" title="Back to top" aria-label="Back to top">&uarr;</button>
 
   <script src="mag7.js"></script>
 </body>

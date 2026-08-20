@@ -92,7 +92,10 @@
         </div>
       </div>
       <div class="findings-grid" id="findingsGrid">
-        <!-- Rendered by app.js -->
+        <div class="skeleton-card skeleton-shimmer"><div class="skeleton-box" style="width:40%;"></div><div class="skeleton-box" style="width:75%; height:28px;"></div><div class="skeleton-box" style="width:90%;"></div></div>
+        <div class="skeleton-card skeleton-shimmer"><div class="skeleton-box" style="width:40%;"></div><div class="skeleton-box" style="width:75%; height:28px;"></div><div class="skeleton-box" style="width:90%;"></div></div>
+        <div class="skeleton-card skeleton-shimmer"><div class="skeleton-box" style="width:40%;"></div><div class="skeleton-box" style="width:75%; height:28px;"></div><div class="skeleton-box" style="width:90%;"></div></div>
+        <div class="skeleton-card skeleton-shimmer"><div class="skeleton-box" style="width:40%;"></div><div class="skeleton-box" style="width:75%; height:28px;"></div><div class="skeleton-box" style="width:90%;"></div></div>
       </div>
       <div class="alert-banner">
         <div class="alert-badge">METHODOLOGY NOTICE</div>
@@ -191,16 +194,18 @@
               <th colspan="2" class="group-start">HOW FAST DO THEY TURN?</th>
             </tr>
             <tr>
-              <th class="sortable" data-sort="name">DESK <span class="sort-icon">&updownarrow;</span></th>
+              <th class="sortable" tabindex="0" role="columnheader" aria-sort="none" data-sort="name">DESK <span class="sort-icon">&updownarrow;</span></th>
               <th>ACTIVE CALL</th>
-              <th class="sortable text-right group-start" data-sort="stance_day_edge">EDGE VS BASELINE <span class="sort-icon">&updownarrow;</span></th>
-              <th class="sortable text-right" data-sort="stance_day_hit_rate">HIT RATE / BASELINE <span class="sort-icon">&updownarrow;</span></th>
+              <th class="sortable text-right group-start" tabindex="0" role="columnheader" aria-sort="descending" data-sort="stance_day_edge">EDGE VS BASELINE <span class="sort-icon">&updownarrow;</span></th>
+              <th class="sortable text-right" tabindex="0" role="columnheader" aria-sort="none" data-sort="stance_day_hit_rate">HIT RATE / BASELINE <span class="sort-icon">&updownarrow;</span></th>
               <th class="text-right group-start">LAG RATIO</th>
               <th>FINDING</th>
             </tr>
           </thead>
           <tbody id="scorecardTbody">
-            <!-- Rendered by app.js -->
+            <tr class="skeleton-row"><td colspan="6"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+            <tr class="skeleton-row"><td colspan="6"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+            <tr class="skeleton-row"><td colspan="6"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -306,7 +311,8 @@
         <div class="calls-filter-controls">
           <div class="search-input-wrapper">
             <span class="search-icon">&telrec;</span>
-            <input type="text" id="callsSearchInput" placeholder="Filter by bank, strategist, target, or keyword..." aria-label="Search calls">
+            <input type="text" id="callsSearchInput" placeholder="Filter by bank, strategist, target, or keyword... (/)" aria-label="Search calls">
+            <button class="search-clear-btn" id="callsSearchClearBtn" aria-label="Clear search">&times;</button>
           </div>
           <div class="horizon-filter-pills" id="horizonFilterPills">
             <button class="pill-btn active" data-horizon="all">ALL</button>
@@ -334,7 +340,9 @@
             </tr>
           </thead>
           <tbody id="callsTbody">
-            <!-- Rendered by app.js -->
+            <tr class="skeleton-row"><td colspan="9"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+            <tr class="skeleton-row"><td colspan="9"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
+            <tr class="skeleton-row"><td colspan="9"><div class="skeleton-box skeleton-shimmer"></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -380,14 +388,14 @@
   </div>
 
   <!-- Call Detail Modal / Drawer -->
-  <div class="modal-backdrop" id="modalBackdrop" style="display: none;">
+  <div class="modal-backdrop" id="modalBackdrop" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-dialog">
       <div class="modal-header">
         <div class="modal-title-box">
           <span class="modal-tag" id="modalTag">CALL DETAIL INSPECTOR</span>
           <h3 id="modalTitle">JPMorgan — 2026-08-10 Target 8,000</h3>
         </div>
-        <button class="modal-close-btn" id="modalCloseBtn">&times;</button>
+        <button class="modal-close-btn" id="modalCloseBtn" aria-label="Close dialog">&times;</button>
       </div>
       <div class="modal-body" id="modalBody">
         <!-- Rendered by app.js -->
@@ -396,7 +404,7 @@
   </div>
 
   <!-- Floating Back to Top Button -->
-  <button id="backToTopBtn" class="back-to-top-btn" title="Back to top">&uarr;</button>
+  <button id="backToTopBtn" class="back-to-top-btn" title="Back to top" aria-label="Back to top">&uarr;</button>
 
   <script src="app.js"></script>
 </body>

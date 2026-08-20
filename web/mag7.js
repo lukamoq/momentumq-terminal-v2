@@ -117,18 +117,31 @@ async function triggerLiveRecalculate() {
   }
 }
 
+let lastFocusedMag7Element = null;
+
+async function safeFetchJson(url, fallback) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn(`[SafeFetch Mag7] Failed to load ${url}:`, err);
+    return fallback;
+  }
+}
+
 async function fetchMag7Data(silent = false) {
   const syncBtn = document.getElementById('syncNowBtn');
   if (syncBtn && !silent) syncBtn.classList.add('spinning');
 
   try {
     const [statsRes, banksRes, stocksRes, themesRes, callsRes, seriesRes] = await Promise.all([
-      fetch('/api/mag7/stats').then(r => r.json()),
-      fetch('/api/mag7/scorecard').then(r => r.json()),
-      fetch('/api/mag7/stocks').then(r => r.json()),
-      fetch('/api/mag7/themes').then(r => r.json()),
-      fetch('/api/mag7/calls').then(r => r.json()),
-      fetch('/api/mag7/market-series').then(r => r.json()),
+      safeFetchJson('/api/mag7/stats', {}),
+      safeFetchJson('/api/mag7/scorecard', []),
+      safeFetchJson('/api/mag7/stocks', []),
+      safeFetchJson('/api/mag7/themes', []),
+      safeFetchJson('/api/mag7/calls', []),
+      safeFetchJson('/api/mag7/market-series', { series: {}, base_date: null }),
     ]);
 
     mag7State.stats = statsRes;
@@ -200,6 +213,16 @@ function renderMag7BankLeaderboard() {
     list = list.filter(b => b.grade !== 'A+' && b.grade !== 'A' && b.grade !== 'A-');
   }
 
+  const bankHeaders = document.querySelectorAll('#mag7BankTable th.sortable');
+  bankHeaders.forEach(th => {
+    const field = th.getAttribute('data-sort');
+    if (field === mag7State.bankSortBy) {
+      th.setAttribute('aria-sort', mag7State.bankSortOrder === 'asc' ? 'ascending' : 'descending');
+    } else {
+      th.setAttribute('aria-sort', 'none');
+    }
+  });
+
   // Sort
   list.sort((a, b) => {
     let valA, valB;
@@ -208,12 +231,12 @@ function renderMag7BankLeaderboard() {
       valB = b.institution_name.toLowerCase();
       return mag7State.bankSortOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
     } else if (mag7State.bankSortBy === 'avg_alpha') {
-      valA = a.avg_alpha;
-      valB = b.avg_alpha;
+      valA = a.avg_alpha ?? -999;
+      valB = b.avg_alpha ?? -999;
     } else {
       // hit_rate
-      valA = a.hit_rate;
-      valB = b.hit_rate;
+      valA = a.hit_rate ?? -999;
+      valB = b.hit_rate ?? -999;
     }
     return mag7State.bankSortOrder === 'asc' ? (valA - valB) : (valB - valA);
   });
@@ -1034,7 +1057,32 @@ function renderMag7CallsTable() {
   }
 
   if (list.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="12" class="text-center empty-state">No research calls match your search and filter criteria.</td></tr>`;
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="12">
+          <div class="empty-state-card">
+            <div class="empty-state-icon">⌕</div>
+            <div class="empty-state-title">No Matching Mag 7 Calls Found</div>
+            <div class="empty-state-desc">No curated institutional tech calls match your current keyword or verdict filters. Try resetting your criteria.</div>
+            <button class="empty-state-reset-btn" id="mag7EmptyStateResetBtn">Reset Search &amp; Filters</button>
+          </div>
+        </td>
+      </tr>
+    `;
+    document.getElementById('mag7EmptyStateResetBtn')?.addEventListener('click', () => {
+      mag7State.callSearchQuery = '';
+      mag7State.callTickerFilter = 'all';
+      mag7State.callVerdictFilter = 'all';
+      mag7State.callExitFilter = 'dual';
+      const sInput = document.getElementById('mag7SearchInput');
+      const cBtn = document.getElementById('mag7SearchClearBtn');
+      if (sInput) sInput.value = '';
+      if (cBtn) cBtn.classList.remove('is-active');
+      document.querySelectorAll('#tickerFilterPills button').forEach(b => b.classList.toggle('active', b.getAttribute('data-filter-ticker') === 'all'));
+      document.querySelectorAll('#verdictFilterPills button').forEach(b => b.classList.toggle('active', b.getAttribute('data-filter-verdict') === 'all'));
+      document.querySelectorAll('#exitFilterPills button').forEach(b => b.classList.toggle('active', b.getAttribute('data-filter-exit') === 'dual'));
+      renderMag7CallsTable();
+    });
     return;
   }
 
@@ -1133,6 +1181,7 @@ function openMag7CallModal(callId) {
   const call = mag7State.calls.find(c => c.id === callId);
   if (!call) return;
 
+  lastFocusedMag7Element = document.activeElement;
   const backdrop = document.getElementById('mag7ModalBackdrop');
   const title = document.getElementById('mag7ModalTitle');
   const tag = document.getElementById('mag7ModalTag');
@@ -1277,11 +1326,24 @@ function openMag7CallModal(callId) {
   `;
 
   backdrop.style.display = 'flex';
+  document.body.classList.add('modal-open');
+  requestAnimationFrame(() => {
+    backdrop.classList.add('is-visible');
+    document.getElementById('mag7ModalCloseBtn')?.focus();
+  });
 }
 
 function closeMag7Modal() {
   const backdrop = document.getElementById('mag7ModalBackdrop');
-  if (backdrop) backdrop.style.display = 'none';
+  if (!backdrop) return;
+  backdrop.classList.remove('is-visible');
+  document.body.classList.remove('modal-open');
+  setTimeout(() => {
+    backdrop.style.display = 'none';
+    if (lastFocusedMag7Element && typeof lastFocusedMag7Element.focus === 'function') {
+      lastFocusedMag7Element.focus();
+    }
+  }, 180);
 }
 
 function filterCallsByStock(ticker) {
@@ -1357,10 +1419,10 @@ function setupMag7EventListeners() {
     });
   }
 
-  // Bank Sort Headers
+  // Bank Sort Headers with Keyboard Accessibility
   const bankTableHeaders = document.querySelectorAll('#mag7BankTable th.sortable');
   bankTableHeaders.forEach(th => {
-    th.addEventListener('click', () => {
+    const triggerSort = () => {
       const field = th.getAttribute('data-sort');
       if (mag7State.bankSortBy === field) {
         mag7State.bankSortOrder = mag7State.bankSortOrder === 'asc' ? 'desc' : 'asc';
@@ -1369,6 +1431,14 @@ function setupMag7EventListeners() {
         mag7State.bankSortOrder = 'desc';
       }
       renderMag7BankLeaderboard();
+    };
+
+    th.addEventListener('click', triggerSort);
+    th.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        triggerSort();
+      }
     });
   });
 
@@ -1394,12 +1464,25 @@ function setupMag7EventListeners() {
     });
   });
 
-  // Calls Search Input
+  // Calls Search Input & Clear Button
   const searchInput = document.getElementById('mag7SearchInput');
+  const clearBtn = document.getElementById('mag7SearchClearBtn');
+
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       mag7State.callSearchQuery = e.target.value;
+      if (clearBtn) clearBtn.classList.toggle('is-active', mag7State.callSearchQuery.length > 0);
       renderMag7CallsTable();
+    });
+  }
+
+  if (clearBtn && searchInput) {
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      mag7State.callSearchQuery = '';
+      clearBtn.classList.remove('is-active');
+      renderMag7CallsTable();
+      searchInput.focus();
     });
   }
 
@@ -1462,8 +1545,36 @@ function setupMag7EventListeners() {
     });
   }
 
-  // Window Resize re-render SVG Chart (debounced — a full redraw per resize
-  // event repainted ~8k path points on every pixel of a drag).
+  // Global Keyboard Shortcuts
+  window.addEventListener('keydown', (e) => {
+    if (e.key === '/' && document.activeElement?.tagName !== 'INPUT') {
+      e.preventDefault();
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.select();
+      }
+      return;
+    }
+
+    if (document.activeElement?.tagName === 'INPUT') {
+      if (e.key === 'Escape') {
+        if (searchInput && searchInput.value) {
+          searchInput.value = '';
+          mag7State.callSearchQuery = '';
+          if (clearBtn) clearBtn.classList.remove('is-active');
+          renderMag7CallsTable();
+        }
+        document.activeElement.blur();
+      }
+      return;
+    }
+
+    if (e.key === 'Escape') {
+      closeMag7Modal();
+    }
+  });
+
+  // Window Resize re-render SVG Chart (debounced)
   let resizeTimer = null;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
