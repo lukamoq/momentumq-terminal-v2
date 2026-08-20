@@ -687,25 +687,26 @@ def compute_bitcoin_halving_cycles(conn: Optional[sqlite3.Connection] = None) ->
     }
 
     # 7. Multi-Cycle Full 4-Year Trajectory Curves (Day 0 to Day 1,460 - Halving to Halving)
+    cur_mult = round(current_btc / 63800.0, 2)
     cycle_curves = [
-        {"day": 0, "cycle1": 1.0, "cycle2": 1.0, "cycle3": 1.0, "cycle4": 1.0, "median": 1.0, "phase": "Halving Day 0 (1.0x)"},
-        {"day": 50, "cycle1": 1.4, "cycle2": 0.95, "cycle3": 1.15, "cycle4": 1.02, "median": 1.08, "phase": "Post-Halving Chop"},
-        {"day": 100, "cycle1": 3.2, "cycle2": 1.05, "cycle3": 1.25, "cycle4": 0.98, "median": 1.15, "phase": "Miner Capitulation"},
-        {"day": 165, "cycle1": 7.5, "cycle2": 1.38, "cycle3": 1.49, "cycle4": 1.05, "median": 1.44, "phase": "Breakout Inflection"},
-        {"day": 250, "cycle1": 22.0, "cycle2": 2.10, "cycle3": 3.20, "cycle4": 1.08, "median": 2.65, "phase": "Parabolic Golden Window"},
-        {"day": 371, "cycle1": 93.8, "cycle2": 6.80, "cycle3": 6.50, "cycle4": 1.09, "median": 6.65, "phase": "Cycle 1 Peak ($1,150)"},
-        {"day": 526, "cycle1": 42.0, "cycle2": 30.3, "cycle3": 7.80, "cycle4": None, "median": 19.05, "phase": "Cycle 2 Peak ($19,700)"},
-        {"day": 548, "cycle1": 38.0, "cycle2": 26.0, "cycle3": 8.02, "cycle4": None, "median": 17.01, "phase": "Cycle 3 Peak ($69,000)"},
-        {"day": 680, "cycle1": 22.0, "cycle2": 9.8, "cycle3": 3.60, "cycle4": None, "median": 6.70, "phase": "Bear Market Liquidation"},
-        {"day": 776, "cycle1": 13.9, "cycle2": 5.8, "cycle3": 2.30, "cycle4": None, "median": 4.05, "phase": "Cycle 1 Bottom ($170)"},
-        {"day": 853, "cycle1": 15.5, "cycle2": 5.1, "cycle3": 1.95, "cycle4": round(current_btc / 63800.0, 2), "median": 3.52, "phase": "Current Spot Position (Day 853)"},
-        {"day": 882, "cycle1": 16.2, "cycle2": 4.85, "cycle3": 1.88, "cycle4": None, "median": 3.36, "phase": "Cycle 2 Bottom ($3,150)"},
-        {"day": 918, "cycle1": 17.0, "cycle2": 5.20, "cycle3": 1.81, "cycle4": None, "median": 3.50, "phase": "Cycle 3 Bottom ($15,600)"},
-        {"day": 1000, "cycle1": 19.2, "cycle2": 5.85, "cycle3": 2.65, "cycle4": None, "median": 4.25, "phase": "Winter Base Accumulation"},
-        {"day": 1090, "cycle1": 24.5, "cycle2": 18.2, "cycle3": 3.14, "cycle4": None, "median": 10.67, "phase": "When It Rises Again (12 Mo Pre-Halving)"},
-        {"day": 1250, "cycle1": 38.0, "cycle2": 12.5, "cycle3": 4.85, "cycle4": None, "median": 8.68, "phase": "Pre-Halving Expansion"},
-        {"day": 1380, "cycle1": 48.5, "cycle2": 11.2, "cycle3": 8.58, "cycle4": None, "median": 9.89, "phase": "Pre-Halving Peak Push"},
-        {"day": 1460, "cycle1": 53.06, "cycle2": 13.23, "cycle3": 7.42, "cycle4": None, "median": 10.33, "phase": "Next Block Reward Halving (Day 1,460)"},
+        {"day": 0, "cycle1": 1.0, "cycle2": 1.0, "cycle3": 1.0, "cycle4": 1.0, "cycle4_proj": None, "median": 1.0, "phase": "Halving Day 0 (1.0x)"},
+        {"day": 50, "cycle1": 1.4, "cycle2": 0.95, "cycle3": 1.15, "cycle4": 1.02, "cycle4_proj": None, "median": 1.08, "phase": "Post-Halving Chop"},
+        {"day": 100, "cycle1": 3.2, "cycle2": 1.05, "cycle3": 1.25, "cycle4": 0.98, "cycle4_proj": None, "median": 1.15, "phase": "Miner Capitulation"},
+        {"day": 165, "cycle1": 7.5, "cycle2": 1.38, "cycle3": 1.49, "cycle4": 1.05, "cycle4_proj": None, "median": 1.44, "phase": "Breakout Inflection"},
+        {"day": 250, "cycle1": 22.0, "cycle2": 2.10, "cycle3": 3.20, "cycle4": 1.08, "cycle4_proj": None, "median": 2.65, "phase": "Parabolic Golden Window"},
+        {"day": 371, "cycle1": 93.8, "cycle2": 6.80, "cycle3": 6.50, "cycle4": 1.09, "cycle4_proj": None, "median": 6.65, "phase": "Cycle 1 Peak ($1,150)"},
+        {"day": 526, "cycle1": 42.0, "cycle2": 30.3, "cycle3": 7.80, "cycle4": None, "cycle4_proj": None, "median": 19.05, "phase": "Cycle 2 Peak ($19,700)"},
+        {"day": 548, "cycle1": 38.0, "cycle2": 26.0, "cycle3": 8.02, "cycle4": None, "cycle4_proj": None, "median": 17.01, "phase": "Cycle 3 Peak ($69,000)"},
+        {"day": 680, "cycle1": 22.0, "cycle2": 9.8, "cycle3": 3.60, "cycle4": None, "cycle4_proj": None, "median": 6.70, "phase": "Bear Market Liquidation"},
+        {"day": 776, "cycle1": 13.9, "cycle2": 5.8, "cycle3": 2.30, "cycle4": None, "cycle4_proj": None, "median": 4.05, "phase": "Cycle 1 Bottom ($170)"},
+        {"day": 853, "cycle1": 15.5, "cycle2": 5.1, "cycle3": 1.95, "cycle4": cur_mult, "cycle4_proj": cur_mult, "median": 3.52, "phase": "Current Spot Position (Day 853)"},
+        {"day": 882, "cycle1": 16.2, "cycle2": 4.85, "cycle3": 1.88, "cycle4": None, "cycle4_proj": 1.05, "median": 3.36, "phase": "Cycle 2 Bottom ($3,150)"},
+        {"day": 918, "cycle1": 17.0, "cycle2": 5.20, "cycle3": 1.81, "cycle4": None, "cycle4_proj": 1.01, "median": 3.50, "phase": "Cycle 3 Bottom ($15,600)"},
+        {"day": 1000, "cycle1": 19.2, "cycle2": 5.85, "cycle3": 2.65, "cycle4": None, "cycle4_proj": 1.25, "median": 4.25, "phase": "Winter Base Accumulation"},
+        {"day": 1090, "cycle1": 24.5, "cycle2": 18.2, "cycle3": 3.14, "cycle4": None, "cycle4_proj": 2.80, "median": 10.67, "phase": "When It Rises Again (12 Mo Pre-Halving)"},
+        {"day": 1250, "cycle1": 38.0, "cycle2": 12.5, "cycle3": 4.85, "cycle4": None, "cycle4_proj": 4.50, "median": 8.68, "phase": "Pre-Halving Expansion"},
+        {"day": 1380, "cycle1": 48.5, "cycle2": 11.2, "cycle3": 8.58, "cycle4": None, "cycle4_proj": 6.20, "median": 9.89, "phase": "Pre-Halving Peak Push"},
+        {"day": 1460, "cycle1": 53.06, "cycle2": 13.23, "cycle3": 7.42, "cycle4": None, "cycle4_proj": 7.50, "median": 10.33, "phase": "Next Block Reward Halving (Day 1,460)"},
     ]
 
     # 8. Full End-to-End Halving-to-Halving Chronological Cycle Flows

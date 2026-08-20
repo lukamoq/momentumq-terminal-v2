@@ -820,6 +820,7 @@
     const path2 = buildPath('cycle2');
     const path3 = buildPath('cycle3');
     const path4 = buildPath('cycle4');
+    const path4Proj = buildPath('cycle4_proj');
 
     // Current Cycle 4 spot data
     const activeHud = cryptoState.halving.active_cycle_hud || {};
@@ -875,11 +876,12 @@
         <text x="${getX(d)}" y="${padT + plotH + 16}" fill="#94a3b8" font-family="var(--font-mono)" font-size="8.5" text-anchor="middle">Day ${d}</text>
       `).join('')}
 
-      <!-- Curves (Full Cycles 1, 2, 3, and Active 4) -->
-      <path d="${path1}" fill="none" stroke="#ef4444" stroke-width="1.6" stroke-dasharray="4,2" opacity="0.75"/>
-      <path d="${path2}" fill="none" stroke="#f59e0b" stroke-width="1.8" opacity="0.85"/>
-      <path d="${path3}" fill="none" stroke="#3b82f6" stroke-width="2.0" opacity="0.9"/>
+      <!-- Curves (Full Cycles 1, 2, 3, Active 4, and Projected 4 to Halving #5) -->
+      <path d="${path1}" fill="none" stroke="#ef4444" stroke-width="1.8" stroke-dasharray="4,2" opacity="0.8"/>
+      <path d="${path2}" fill="none" stroke="#f59e0b" stroke-width="2.0" opacity="0.9"/>
+      <path d="${path3}" fill="none" stroke="#3b82f6" stroke-width="2.2" opacity="0.95"/>
       <path d="${path4}" fill="none" stroke="#10b981" stroke-width="3.8" stroke-linecap="round"/>
+      <path d="${path4Proj}" fill="none" stroke="#34d399" stroke-width="2.2" stroke-dasharray="4,3" opacity="0.85"/>
 
       <!-- Golden Breakout Marker at Day 165 -->
       <line x1="${getX(165)}" y1="${padT}" x2="${getX(165)}" y2="${padT + plotH}" stroke="#34d399" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.7"/>
