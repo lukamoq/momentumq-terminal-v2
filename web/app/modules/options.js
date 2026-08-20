@@ -53,10 +53,17 @@ export async function mount(ctx) {
     return { destroy() {} };
   }
 
+  // A URL is typed and shared by hand, so every param is validated against the
+  // values that actually exist. An unrecognised one falls back rather than
+  // rendering a panel full of dashes.
+  const pick = (value, allowed, fallback) => (allowed.includes(value) ? value : fallback);
+  const hzKeys = HORIZONS.map((x) => x.value).filter((k) => Object.keys(indices[tickers[0]]?.horizons || {}).includes(k));
+  const validHz = hzKeys.length ? hzKeys : HORIZONS.map((x) => x.value);
+
   const st = {
-    u: tickers.includes(ctx.params.u) ? ctx.params.u : (tickers.includes(ctx.prefs.u) ? ctx.prefs.u : tickers[0]),
-    hz: ctx.params.h || ctx.prefs.hz || '1_month',
-    volView: ctx.prefs.volView || 'smile',
+    u: pick(ctx.params.u, tickers, pick(ctx.prefs.u, tickers, tickers[0])),
+    hz: pick(ctx.params.h, validHz, pick(ctx.prefs.hz, validHz, validHz[validHz.length - 1])),
+    volView: pick(ctx.prefs.volView, ['smile', 'term'], 'smile'),
   };
 
   const cur = () => indices[st.u] || {};
@@ -197,9 +204,29 @@ export async function mount(ctx) {
     if (st.volView === 'smile') {
       const smile = x.skew?.smile || [];
       if (!smile.length) { pVol.empty('No smile could be read off this chain at the required deltas.'); return; }
+      // The smile belongs to one observed expiry. Marking the selected tenor's
+      // own measured points on it shows how the skew moves with maturity, and
+      // makes the tenor control visibly drive this chart rather than only the
+      // side panel.
+      const hz = x.horizons?.[st.hz];
+      const tenorMarks = [];
+      if (hz && isNum(x.spot)) {
+        const pt = (g, name, mny, iv) => {
+          if (!isNum(iv)) return;
+          tenorMarks.push({
+            xv: mny, y: iv, color: 'var(--gold)', r: 3.6,
+            title: `${hz.dte}D ${name} — IV ${num(iv, 2)}%`,
+          });
+        };
+        if (hz.put_25d) pt(hz.put_25d, '25Δ put', (hz.put_25d.strike / x.spot - 1) * 100, hz.put_25d.iv);
+        pt(hz.atm, 'ATM', 0, hz.iv);
+        if (hz.call_25d) pt(hz.call_25d, '25Δ call', (hz.call_25d.strike / x.spot - 1) * 100, hz.call_25d.iv);
+      }
+
       volChart = LineChart(volBox, {
         x: smile.map((p) => p.moneyness_pct),
         series: [{ label: 'Implied vol', color: 'var(--brand-fg)', y: smile.map((p) => p.iv), thick: true, area: 'var(--brand)', areaOpacity: 0.1 }],
+        markers: tenorMarks,
         yFmt: (v) => `${num(v, 0)}%`,
         xFmt: (v) => `${v > 0 ? '+' : ''}${v}%`,
         vLines: [{ i: smile.findIndex((p) => p.is_atm), color: 'var(--ink-3)', label: 'ATM' }],
@@ -214,7 +241,10 @@ export async function mount(ctx) {
         label: 'Implied volatility across moneyness',
       });
       fill(volLegend, h('div.row', { style: { justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' } },
-        legend([{ color: 'var(--brand-fg)', label: `${st.u} implied volatility` }]),
+        legend([
+          { color: 'var(--brand-fg)', label: `${st.u} smile — observed expiry ${date(x.skew?.expiry)}` },
+          tenorMarks.length ? { color: 'var(--gold)', label: `${hz.dte}D constant-maturity points`, box: true } : null,
+        ].filter(Boolean)),
         h('span.tbar__count', x.skew?.measured
           ? `25Δ skew ${num(x.skew.skew_25d, 2)} pts · put ${num(x.skew.put_25d_iv, 2)}% vs call ${num(x.skew.call_25d_iv, 2)}% · expiry ${date(x.skew.expiry)}`
           : 'skew not measurable on this chain')));
@@ -242,6 +272,10 @@ export async function mount(ctx) {
       yFmt: (v) => `${num(v, 1)}%`,
       xFmt: (v) => `${v}D`,
       xTickCount: pts.length,
+      vLines: (() => {
+        const i = pts.findIndex((p) => p.d === (x.horizons?.[st.hz]?.dte));
+        return i > -1 ? [{ i, color: 'var(--gold)', label: 'selected tenor' }] : [];
+      })(),
       tipTitle: (i) => `${pts[i].label} tenor`,
       tipFmt: (v) => `${num(v, 2)}%`,
       label: 'Implied volatility term structure',
@@ -256,8 +290,14 @@ export async function mount(ctx) {
   }
 
   /* -------------------------------------------------------------- side */
-  const hzSeg = segmented(HORIZONS, st.hz, (v) => { st.hz = v; ctx.savePrefs({ hz: v }); ctx.patch({ h: v }); drawSide(); }, { label: 'Horizon' });
-  pSide.tools.prepend(hzSeg);
+  const hzSeg = segmented(HORIZONS, st.hz, (v) => {
+    st.hz = v;
+    ctx.savePrefs({ hz: v });
+    ctx.patch({ h: v });
+    drawSide();
+    drawVol();   // the surface marks the selected tenor, so it moves too
+  }, { label: 'Horizon' });
+  pSide.tools.prepend(h('span.label', { style: { flex: 'none' } }, 'Tenor'), hzSeg);
 
   function drawSide() {
     const x = cur();
@@ -268,14 +308,15 @@ export async function mount(ctx) {
     const emKey = st.hz === '1_week' ? 'weekly' : st.hz === 'next_week' ? 'next_week' : 'monthly';
     const move = em[emKey];
 
-    pSide.setTitle(`${st.u} greeks`);
-    pSide.setMeta(hz ? `${hz.dte} DTE · IV ${num(hz.iv, 2)}%` : 'no horizon data');
+    pSide.setTitle(hz ? `${st.u} greeks · ${hz.dte}D` : `${st.u} greeks`);
+    pSide.setMeta(hz ? `constant maturity ${hz.dte} DTE` : 'no horizon data');
     pSide.render(padScroller(h('div.stack',
       kpiGrid(2,
         kpi({ label: 'Spot', value: isNum(x.spot) ? '$' + num(x.spot, 2) : DASH, sub: `as of ${date(x.as_of_date)}` }),
-        kpi({ label: '30D implied vol', value: isNum(x.vol_index_30d) ? `${num(x.vol_index_30d, 2)}%` : DASH,
-              t: x.iv_premium > 0 ? 'down' : 'up',
-              sub: `realised 20D ${num(x.realized_vol_20d, 2)}% · premium ${num(x.iv_premium, 2)} pts` })),
+        kpi({ label: hz ? `${hz.dte}D implied vol` : 'Implied vol',
+              value: isNum(hz?.iv) ? `${num(hz.iv, 2)}%` : DASH,
+              t: hz && x.realized_vol_20d > hz.iv ? 'up' : 'down',
+              sub: `30D index ${num(x.vol_index_30d, 2)}% · realised 20D ${num(x.realized_vol_20d, 2)}%` })),
 
       move ? h('div', subhead(`Expected move · ${st.hz.replace('_', ' ')}`),
         h('div.flow',

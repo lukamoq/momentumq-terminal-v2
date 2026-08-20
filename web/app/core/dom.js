@@ -147,11 +147,17 @@ export function icon(name, size = 14) {
 export function onResize(el, fn) {
   let raf = 0;
   let last = '';
+  let first = true;
   const ro = new ResizeObserver((entries) => {
     const r = entries[0].contentRect;
     const key = `${Math.round(r.width)}x${Math.round(r.height)}`;
     if (key === last) return;
     last = key;
+    // The first measurement paints straight away. Deferring it to a frame
+    // callback means a chart built in response to a click has to wait for the
+    // next paint, and never arrives at all if the tab is not being rendered.
+    // Later resizes stay debounced, which is what the frame callback is for.
+    if (first) { first = false; fn(r.width, r.height); return; }
     if (raf) cancelAnimationFrame(raf);
     raf = requestAnimationFrame(() => { raf = 0; fn(r.width, r.height); });
   });

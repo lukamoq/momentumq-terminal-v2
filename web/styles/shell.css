@@ -67,6 +67,9 @@
   font-family: var(--font-mono); font-size: var(--t-label); letter-spacing: 0.14em;
   color: var(--ink-4); border-left: 1px solid var(--line); padding-left: 9px;
 }
+/* The wordmark is decoration and the module menu is function, so the wordmark
+   is what gives way first when the bar runs out of room. */
+@media (max-width: 1280px) { .bar__brand-mark { display: none; } }
 
 /* Module tabs — the primary navigation. Numbered because 1-7 jumps to them. */
 .tabs { display: flex; align-items: center; gap: 2px; min-width: 0; }

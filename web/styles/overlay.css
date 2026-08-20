@@ -161,3 +161,82 @@ mark { background: none; color: var(--gold-fg); font-weight: 600; }
   animation: toast-in var(--d-3) var(--ease);
 }
 .coach[hidden] { display: none; }
+
+/* ==========================================================================
+   Module menu — the clickable way in.
+   Small, anchored, and it names what each module holds so the terminal is
+   navigable by someone who has never seen the number shortcuts.
+   ========================================================================== */
+
+.navbtn {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 26px; padding: 0 7px 0 8px;
+  border: 1px solid var(--line); border-radius: var(--r-2);
+  background: var(--s-raised); color: var(--ink-2);
+  font-size: var(--t-meta); white-space: nowrap;
+  transition: background var(--d-1) var(--ease), border-color var(--d-1) var(--ease),
+              color var(--d-1) var(--ease);
+}
+.navbtn:hover { background: var(--s-hover); border-color: var(--line-strong); color: var(--ink-1); }
+.navbtn[aria-expanded='true'] {
+  background: var(--brand-wash); border-color: var(--brand-line); color: var(--brand-fg);
+}
+.navbtn__c { display: flex; color: var(--ink-4); transform: rotate(90deg); transition: transform var(--d-2) var(--ease); }
+.navbtn[aria-expanded='true'] .navbtn__c { transform: rotate(270deg); color: var(--brand-fg); }
+
+.menu {
+  position: fixed; z-index: 115;
+  width: min(340px, calc(100vw - 24px));
+  display: flex; flex-direction: column;
+  background: var(--s-panel);
+  border: 1px solid var(--line-strong); border-radius: var(--r-3);
+  box-shadow: var(--sh-pop);
+  opacity: 0; transform: translateY(-4px);
+  transition: opacity var(--d-2) var(--ease), transform var(--d-2) var(--ease);
+  overflow: hidden;
+}
+.menu.is-on { opacity: 1; transform: none; }
+.menu[hidden] { display: none; }
+
+.menu__head {
+  padding: var(--sp-3) var(--sp-4) var(--sp-2);
+  font-family: var(--font-mono); font-size: var(--t-micro);
+  letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-4);
+}
+.menu__list { display: flex; flex-direction: column; padding-bottom: var(--sp-2); }
+
+.menu__i {
+  display: flex; align-items: flex-start; gap: var(--sp-3);
+  width: 100%; padding: 7px var(--sp-4); text-align: left;
+  color: var(--ink-2); border-left: 2px solid transparent;
+  transition: background var(--d-1) var(--ease);
+}
+.menu__i:hover, .menu__i:focus-visible {
+  background: var(--s-hover); color: var(--ink-1); box-shadow: none; outline: none;
+}
+.menu__i:focus-visible { border-left-color: var(--brand); background: var(--brand-wash); }
+.menu__i[aria-current='true'] { border-left-color: var(--brand-fg); }
+.menu__ico { color: var(--ink-4); flex: none; padding-top: 1px; }
+.menu__i[aria-current='true'] .menu__ico, .menu__i:focus-visible .menu__ico { color: var(--brand-fg); }
+.menu__b { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1 1 auto; }
+.menu__n {
+  display: flex; align-items: center; gap: 6px;
+  font-size: var(--t-body); font-weight: 500; color: var(--ink-1);
+}
+.menu__here {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--brand-fg);
+  background: var(--brand-wash); border: 1px solid var(--brand-line);
+  border-radius: var(--r-1); padding: 0 4px;
+}
+.menu__d { font-size: var(--t-micro); color: var(--ink-4); line-height: 1.4; }
+.menu__i kbd { flex: none; margin-top: 1px; }
+
+.menu__foot {
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--line); background: var(--s-raised);
+  font-size: var(--t-micro); color: var(--ink-4); line-height: 1.7;
+}
+.menu__foot kbd { margin: 0 1px; vertical-align: baseline; }
+
+@media (max-width: 1024px) { .navbtn__t { display: none; } }

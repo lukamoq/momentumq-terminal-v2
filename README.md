@@ -274,6 +274,9 @@ The front end is a fixed-viewport workspace rather than a set of scrolling
 pages. Nothing scrolls at the document level; each panel scrolls its own body,
 so the answer is always on screen and navigation never loses your place.
 
+- **Modules** in the top-left opens a small menu naming every module and what
+  is in it — the way in if you have never met the keyboard shortcuts. It shows
+  the key beside each one, so you pick them up by using it.
 - <kbd>⌘K</kbd> / <kbd>Ctrl K</kbd> — command palette. Every module, instrument,
   desk, report and view is reachable from it.
 - <kbd>1</kbd>–<kbd>7</kbd> or <kbd>F3</kbd>–<kbd>F9</kbd> — switch module.
@@ -282,6 +285,7 @@ so the answer is always on screen and navigation never loses your place.
 - <kbd>F</kbd> maximise the panel under the cursor, <kbd>Esc</kbd> restore.
 - <kbd>J</kbd>/<kbd>K</kbd> move through a blotter, <kbd>↵</kbd> opens the row in
   the inspector, <kbd>⌘F</kbd> focuses the panel filter.
+- <kbd>M</kbd> opens the module menu.
 - <kbd>D</kbd> density, <kbd>T</kbd> theme (obsidian / amber / phosphor),
   <kbd>\</kbd> side rail, <kbd>R</kbd> refresh, <kbd>?</kbd> every shortcut.
 

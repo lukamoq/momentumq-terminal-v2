@@ -154,7 +154,16 @@ export function LineChart(host, cfg) {
 
     // event markers
     for (const m of cfg.markers || []) {
-      const mk = idx ? nearestK(idx, m.i) : m.i;
+      let pos;
+      if (m.xv !== undefined) {
+        // Placed by domain value: interpolate a fractional index so the mark
+        // lands where the value actually is, not on the nearest sample.
+        const f = fracIndex(cfg.x, m.xv);
+        pos = idx ? nearestK(idx, f) : f;
+      } else {
+        pos = idx ? nearestK(idx, m.i) : m.i;
+      }
+      const mk = pos;
       const cx = sx(mk);
       const cy = sy(m.y);
       if (!Number.isFinite(cx) || !Number.isFinite(cy)) continue;
@@ -180,6 +189,20 @@ export function LineChart(host, cfg) {
       });
     }
   }, { label: cfg.label });
+}
+
+/** Fractional position of a value inside a sorted numeric x array. */
+function fracIndex(xs, v) {
+  if (!xs.length) return 0;
+  if (v <= xs[0]) return 0;
+  if (v >= xs[xs.length - 1]) return xs.length - 1;
+  for (let i = 1; i < xs.length; i++) {
+    if (xs[i] >= v) {
+      const span = xs[i] - xs[i - 1];
+      return span ? (i - 1) + (v - xs[i - 1]) / span : i - 1;
+    }
+  }
+  return xs.length - 1;
 }
 
 function nearestK(idx, i) {

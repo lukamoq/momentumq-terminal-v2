@@ -15,6 +15,7 @@ import { bind, clearScope, install as installKeys, describe, keycaps, IS_MAC } f
 import { Panel } from './ui/panel.js';
 import { Tape } from './ui/tape.js';
 import { Palette, Sheet } from './ui/palette.js';
+import { NavMenu } from './ui/navmenu.js';
 import { Drawer, toast } from './ui/overlays.js';
 import { date, ago, num } from './core/fmt.js';
 
@@ -24,25 +25,25 @@ import { date, ago, num } from './core/fmt.js';
    so the switch itself is a render rather than a round trip. */
 
 const MODULES = [
-  { id: 'forecasts',   title: 'Forecasts',   short: 'FCST', icon: 'target',   fkey: 'f3',
+  { id: 'forecasts',   title: 'Forecasts',   short: 'FCST', icon: 'target', blurb: 'Sell-side price targets scored against what the market did',   fkey: 'f3',
     load: () => import('./modules/forecasts.js'),
     endpoints: ['/api/stats', '/api/scorecard', '/api/partners', '/api/timeline', '/api/calls'] },
-  { id: 'mag7',        title: 'Mag 7',       short: 'MAG7', icon: 'layers',   fkey: 'f4',
+  { id: 'mag7',        title: 'Mag 7',       short: 'MAG7', icon: 'layers', blurb: 'Big-tech calls audited for alpha against SPY',   fkey: 'f4',
     load: () => import('./modules/mag7.js'),
     endpoints: ['/api/mag7/stats', '/api/mag7/stocks', '/api/mag7/scorecard', '/api/mag7/themes', '/api/mag7/market-series'] },
-  { id: 'seasonality', title: 'Seasonality', short: 'SEAS', icon: 'calendar', fkey: 'f5',
+  { id: 'seasonality', title: 'Seasonality', short: 'SEAS', icon: 'calendar', blurb: '27 years of monthly returns and day-of-year paths', fkey: 'f5',
     load: () => import('./modules/seasonality.js'),
     endpoints: ['/api/analytics/multi-asset', '/api/analytics/seasonality', '/api/analytics/seasonality-curves', '/api/analytics/call-patterns'] },
-  { id: 'options',     title: 'Options',     short: 'OPT',  icon: 'sliders',  fkey: 'f6',
+  { id: 'options',     title: 'Options',     short: 'OPT',  icon: 'sliders', blurb: 'Greeks, skew and dealer gamma from the observed chain',  fkey: 'f6',
     load: () => import('./modules/options.js'),
     endpoints: ['/api/analytics/options'] },
-  { id: 'macro',       title: 'Macro',       short: 'MACR', icon: 'radio',    fkey: 'f7',
+  { id: 'macro',       title: 'Macro',       short: 'MACR', icon: 'radio', blurb: 'Regime, fear & greed, rotation and the volatility curve',    fkey: 'f7',
     load: () => import('./modules/macro.js'),
     endpoints: ['/api/macro/regime', '/api/macro/fear-greed', '/api/macro/vix-structure', '/api/macro/commodities', '/api/analytics/sectors', '/api/analytics/correlation', '/api/macro/history'] },
-  { id: 'agents',      title: 'AI Desk',     short: 'AI',   icon: 'cpu',      fkey: 'f8',
+  { id: 'agents',      title: 'AI Desk',     short: 'AI',   icon: 'cpu', blurb: 'News wire, insider flow and the research desk',      fkey: 'f8',
     load: () => import('./modules/agents.js'),
     endpoints: ['/api/agents/status', '/api/news/feed', '/api/news/market-wraps', '/api/alpha/insider-trades', '/api/alpha/smart-money'] },
-  { id: 'crypto',      title: 'Crypto',      short: 'CRYP', icon: 'coin',     fkey: 'f9',
+  { id: 'crypto',      title: 'Crypto',      short: 'CRYP', icon: 'coin', blurb: 'Spot, ETF flows and the Bitcoin halving cycle',     fkey: 'f9',
     load: () => import('./modules/crypto.js'),
     endpoints: ['/api/crypto/overview', '/api/crypto/sentiment', '/api/crypto/halving-cycles', '/api/crypto/correlations', '/api/crypto/history'] },
 ];
@@ -93,10 +94,18 @@ const omnibox = h('button.omnibox', {
 const liveDot = h('span.dot.dot--live');
 const livePill = h('span.pill', liveDot, h('span', 'LIVE'));
 
+const navMenu = NavMenu({
+  modules: MODULES,
+  isCurrent: (id) => router.route().id === id,
+  onPick: (id) => router.go(id, {}),
+  onSearch: () => palette.show(),
+});
+
 const bar = h('header.bar',
   h('div.bar__brand',
     h('img', { src: 'images/logo.png', alt: 'MomentumQ', height: 18 }),
-    h('span.bar__brand-mark', 'TERMINAL')),
+    h('span.bar__brand-mark', 'TERMINAL'),
+    navMenu.trigger),
   tabsEl,
   h('div.bar__right',
     omnibox,
@@ -122,7 +131,7 @@ const status = h('footer.status', { role: 'contentinfo' },
 
 const shell = h('div#shell', tape.el, bar, work, status);
 
-document.body.append(shell, palette.scrim, palette.el, drawer.scrim, drawer.el, sheet.scrim, sheet.el);
+document.body.append(shell, navMenu.el, palette.scrim, palette.el, drawer.scrim, drawer.el, sheet.scrim, sheet.el);
 
 /* ------------------------------ module lifecycle ------------------------- */
 
@@ -268,6 +277,7 @@ installKeys();
 bind('global', 'mod+k', () => (palette.isOpen ? palette.close() : palette.show()), { label: 'Command palette', group: 'Global' });
 bind('global', '/', () => palette.show(), { label: 'Search', group: 'Global', hidden: true });
 bind('global', '?', () => sheet.show(), { label: 'Keyboard shortcuts', group: 'Global' });
+bind('global', 'm', () => navMenu.show(), { label: 'Browse all modules', group: 'Navigation' });
 
 MODULES.forEach((m, i) => {
   bind('global', [String(i + 1), m.fkey], () => router.go(m.id, {}), {
@@ -388,6 +398,7 @@ palette.provide('shell', () => {
     { id: 'x:refresh', group: 'Data', title: 'Refresh this module', icon: 'refresh', hint: 'R', pinned: true, run: refresh },
     { id: 'x:sync', group: 'Data', title: 'Run pipeline sync now', icon: 'bolt', pinned: true, run: runSync },
     { id: 'x:keys', group: 'Help', title: 'Keyboard shortcuts', icon: 'keyboard', hint: '?', pinned: true, run: () => sheet.show() },
+    { id: 'x:menu', group: 'Help', title: 'Browse all modules', icon: 'grid', hint: 'M', pinned: true, run: () => navMenu.show() },
     { id: 'x:reset', group: 'Help', title: 'Reset saved layout and preferences', icon: 'warn', pinned: true,
       run: () => { store.reset(); applyChrome(); toast('Preferences reset', 'ok'); location.reload(); } },
   );
