@@ -454,9 +454,125 @@
       `;
     }).join('');
 
+    renderHalvingHud();
+    renderHalvingMilestonesTable();
+    renderHalvingFormulas();
     renderHalvingRoadmap();
     renderHalvingPhases();
     renderHalvingTrajectoryChart();
+  }
+
+  function renderHalvingHud() {
+    const el = document.getElementById('halvingHudContainer');
+    if (!el || !cryptoState.halving) return;
+
+    const hud = cryptoState.halving.active_cycle_hud || {};
+    el.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span class="status-badge live font-mono" style="font-size:10px;">CYCLE 4 ACTIVE HUD</span>
+          <span class="highlight-gold font-mono" style="font-size:13px; font-weight:700;">HALVING #4 PROGRESSION: 2024 &rarr; 2028</span>
+        </div>
+        <div class="font-mono text-muted" style="font-size:11px;">
+          Snapshot Date: <strong class="color-bull">${hud.current_date || '2026-08-20'}</strong> (${hud.days_elapsed || 853} Days Post-Halving)
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:12px;">
+        <div style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:4px; padding:10px;">
+          <div class="font-mono text-muted" style="font-size:10px;">HALVING DATE</div>
+          <div class="font-mono highlight-gold" style="font-size:14px; font-weight:700;">${hud.halving_date || '2024-04-19'}</div>
+          <div class="text-muted" style="font-size:10.5px;">Block #840,000 ($63,800)</div>
+        </div>
+        <div style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:4px; padding:10px;">
+          <div class="font-mono text-muted" style="font-size:10px;">CURRENT CYCLE PHASE</div>
+          <div class="font-mono color-bull" style="font-size:13px; font-weight:700;">Day ${hud.days_elapsed || 853} Post-Halving</div>
+          <div class="text-muted" style="font-size:10.5px;">Bottom Accumulation Window</div>
+        </div>
+        <div style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:4px; padding:10px;">
+          <div class="font-mono text-muted" style="font-size:10px;">WHEN BTC RISES AGAIN</div>
+          <div class="font-mono highlight-cyan" style="font-size:14px; font-weight:700;">Spring 2027 (~Apr 15)</div>
+          <div class="text-muted" style="font-size:10.5px;">~238 Days to Next Secular Ignition</div>
+        </div>
+        <div style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:4px; padding:10px;">
+          <div class="font-mono text-muted" style="font-size:10px;">NEXT HALVING #5</div>
+          <div class="font-mono" style="font-size:14px; font-weight:700; color:#c084fc;">${hud.next_halving_date || 'April 17, 2028'}</div>
+          <div class="text-muted" style="font-size:10.5px;">~605 Days to Issuance Cut (1.5625 BTC)</div>
+        </div>
+      </div>
+      <div style="background:rgba(0,0,0,0.3); border-left:3px solid #fbbf24; padding:8px 12px; font-size:11.5px; font-family:var(--font-mono); color:var(--text-secondary); line-height:1.45;">
+        <strong class="highlight-gold">&#9888; CRITICAL RULE:</strong> ${hud.key_takeaway || 'Bitcoin does not wait for Halving #5 (2028) to rally. The quantitative model projects the next major secular climb to ignite in Spring 2027 (approx April 2027).'}
+      </div>
+    `;
+  }
+
+  function renderHalvingMilestonesTable() {
+    const tbody = document.getElementById('halvingMilestonesTbody');
+    if (!tbody || !cryptoState.halving) return;
+
+    const milestones = cryptoState.halving.milestones_ledger || [];
+    tbody.innerHTML = milestones.map(m => {
+      const isActive = m.status === 'ACTIVE_CYCLE';
+      const isProj = m.status === 'PROJECTED';
+      const rowStyle = isActive ? 'background:rgba(251,191,36,0.06); font-weight:600;' : '';
+
+      return `
+        <tr style="${rowStyle}">
+          <td>
+            <div style="font-weight:700; color:${isActive ? '#fbbf24' : (isProj ? '#c084fc' : 'var(--text-primary)')};">${escapeHtml(m.cycle_label)}</div>
+            <span class="status-badge ${isActive ? 'live' : ''}" style="font-size:9px;">${m.status}</span>
+          </td>
+          <td>
+            <div class="font-mono">${m.halving_date}</div>
+            <span class="text-muted font-mono" style="font-size:10.5px;">${typeof m.halving_price === 'number' ? `$${fmtNum(m.halving_price, 2)}` : m.halving_price}</span>
+          </td>
+          <td>
+            <div class="font-mono highlight-cyan">${m.breakout_date}</div>
+            <span class="text-muted font-mono" style="font-size:10.5px;">Day ${m.breakout_days} (${typeof m.breakout_price === 'number' ? `$${fmtNum(m.breakout_price, 2)}` : m.breakout_price})</span>
+          </td>
+          <td>
+            <div class="font-mono highlight-gold">${m.peak_date}</div>
+            <span class="text-muted font-mono" style="font-size:10.5px;">${m.peak_multiple}</span>
+          </td>
+          <td>
+            <div class="font-mono color-bear">${m.bottom_date}</div>
+            <span class="text-muted font-mono" style="font-size:10.5px;">${m.drawdown}</span>
+          </td>
+          <td>
+            <div class="font-mono color-bull" style="font-weight:700;">${m.rise_again_date}</div>
+            <span class="text-muted font-mono" style="font-size:10.5px;">${m.rise_again_lead} (Day ${m.rise_again_days})</span>
+          </td>
+          <td>
+            <span class="font-mono ${isActive || isProj ? 'highlight-gold' : 'color-bull'}" style="font-size:11px;">${m.pre_halving_rally}</span>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function renderHalvingFormulas() {
+    const grid = document.getElementById('halvingFormulasGrid');
+    if (!grid || !cryptoState.halving) return;
+
+    const formulas = cryptoState.halving.calculation_formulas || [];
+    grid.innerHTML = formulas.map(f => `
+      <div style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:4px; padding:12px; display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <div class="font-mono highlight-gold" style="font-size:11.5px; font-weight:700; margin-bottom:4px;">${escapeHtml(f.milestone)}</div>
+          <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08); border-radius:4px; padding:6px 10px; font-family:var(--font-mono); font-size:11.5px; color:#38bdf8; margin-bottom:8px;">
+            ${escapeHtml(f.formula)}
+          </div>
+          <div style="font-size:11px; font-family:var(--font-mono); color:var(--text-muted); margin-bottom:6px;">
+            <strong>Historical Data:</strong> <span style="color:var(--text-secondary);">${escapeHtml(f.historical_data)}</span>
+          </div>
+          <p style="font-size:11px; color:var(--text-secondary); line-height:1.45; margin-bottom:8px;">
+            ${escapeHtml(f.derivation)}
+          </p>
+        </div>
+        <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2); border-radius:3px; padding:4px 8px; font-size:10.5px; font-family:var(--font-mono); color:#34d399;">
+          <strong>Target:</strong> ${escapeHtml(f.next_target_date)}
+        </div>
+      </div>
+    `).join('');
   }
 
   function renderHalvingRoadmap() {
